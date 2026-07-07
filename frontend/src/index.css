@@ -1,0 +1,403 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-bg: var(--color-bg);
+  --color-panel: var(--color-panel);
+  --color-panel-border: var(--color-panel-border);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-success: var(--color-success);
+  --color-danger: var(--color-danger);
+  --color-warning: var(--color-warning);
+  --color-surface: var(--color-surface);
+}
+
+:root {
+  --font-sans:
+    "Inter", "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Theme Colors - Light Mode */
+  --color-bg: #f9fafb;
+  --color-panel: #ffffff;
+  --color-panel-border: rgba(0, 0, 0, 0.06);
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+
+  --color-primary: #8B5CF6;
+  --color-secondary: #EC4899;
+  --color-accent: #F59E0B;
+  --color-success: #55B580;
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+  --color-surface: #F3F4F6;
+
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.dark {
+  /* Theme Colors - Dark Mode */
+  --color-bg: #0B0F19;
+  --color-panel: #161B26;
+  --color-panel-border: rgba(255, 255, 255, 0.05);
+  --color-text-primary: #F3F4F6;
+  --color-text-secondary: #94A3B8;
+
+  --color-primary: #a78bfa;
+  --color-secondary: #f472b6;
+  --color-accent: #fbbf24;
+  --color-success: #68a384;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+  --color-surface: #1e293b;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: var(--color-bg);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 9999px;
+  border: 3px solid var(--color-bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+/* --- Claymorphism Design System --- */
+
+.clay-card {
+  background-color: var(--color-panel);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    10px 14px 24px rgba(0, 0, 0, 0.04),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.85),
+    inset -4px -4px 10px rgba(99, 102, 241, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clay-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    12px 18px 30px rgba(0, 0, 0, 0.06),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.95),
+    inset -5px -5px 12px rgba(99, 102, 241, 0.08);
+}
+
+.dark .clay-card {
+  background-color: var(--color-panel);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    12px 16px 28px rgba(0, 0, 0, 0.2),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.1),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark .clay-card:hover {
+  box-shadow:
+    14px 20px 36px rgba(0, 0, 0, 0.25),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.15),
+    inset -5px -5px 12px rgba(0, 0, 0, 0.4);
+}
+
+.clay-inset {
+  border-radius: 20px;
+  background-color: var(--color-bg);
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.04),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .clay-inset {
+  background-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.25),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.clay-btn {
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    4px 6px 12px rgba(0, 0, 0, 0.05),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+    inset -3px -3px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.clay-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    6px 10px 18px rgba(0, 0, 0, 0.08),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.7),
+    inset -4px -4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.clay-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    2px 3px 6px rgba(0, 0, 0, 0.05),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.5),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.clay-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clay-input {
+  background-color: var(--color-bg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.04),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.clay-input:focus {
+  border-color: var(--color-primary);
+  box-shadow:
+    inset 2px 2px 4px rgba(0, 0, 0, 0.04),
+    0 0 12px rgba(99, 102, 241, 0.25);
+}
+
+.dark .clay-input {
+  background-color: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.2),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.03);
+}
+
+.dark .clay-input:focus {
+  border-color: var(--color-primary);
+  box-shadow:
+    inset 2px 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 12px rgba(99, 102, 241, 0.3);
+}
+
+/* Compatibility Layer for Skeuomorphism */
+.skeuo-panel {
+  composes: clay-card;
+  background-color: var(--color-panel);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    10px 14px 24px rgba(0, 0, 0, 0.04),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.85),
+    inset -4px -4px 10px rgba(99, 102, 241, 0.05);
+}
+.dark .skeuo-panel {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    12px 16px 28px rgba(0, 0, 0, 0.2),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.1),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.skeuo-inset-panel {
+  composes: clay-inset;
+  border-radius: 20px;
+  background-color: var(--color-bg);
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.04),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.dark .skeuo-inset-panel {
+  background-color: rgba(0, 0, 0, 0.2);
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.25),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.skeuo-button {
+  composes: clay-btn;
+}
+
+.skeuo-input {
+  composes: clay-input;
+}
+
+.skeuo-screen {
+  background-color: var(--color-panel);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    8px 10px 20px rgba(0, 0, 0, 0.04),
+    inset 3px 3px 6px rgba(255, 255, 255, 0.8),
+    inset -4px -4px 8px rgba(0, 0, 0, 0.05);
+}
+.dark .skeuo-screen {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    10px 12px 24px rgba(0, 0, 0, 0.2),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.1),
+    inset -4px -4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.led-bg {
+  background: var(--color-bg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.04),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+}
+.dark .led-bg {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.25),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.03);
+}
+
+/* Clay Colors - Clean Minimal White / Dark Slate */
+
+.clay-purple,
+.clay-orange,
+.clay-blue,
+.clay-green,
+.clay-pink {
+  background-color: #ffffff;
+  color: var(--color-text-primary);
+}
+
+.dark .clay-purple,
+.dark .clay-orange,
+.dark .clay-blue,
+.dark .clay-green,
+.dark .clay-pink {
+  background-color: var(--color-panel);
+  color: var(--color-text-primary);
+}
+
+/* Float Animations for Landing */
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(3deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+.float-node {
+  animation: float 6s ease-in-out infinite;
+}
+
+.float-node-delayed {
+  animation: float 8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+/* Animated Blobs and Shapes */
+@keyframes blob-bounce {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(35px, -60px) scale(1.15);
+  }
+  66% {
+    transform: translate(-25px, 25px) scale(0.9);
+  }
+}
+
+.clay-blob-1 {
+  background: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.15) 0%,
+    rgba(139, 92, 246, 0.02) 70%
+  );
+  filter: blur(40px);
+  animation: blob-bounce 14s infinite alternate ease-in-out;
+}
+
+.clay-blob-2 {
+  background: radial-gradient(
+    circle,
+    rgba(6, 182, 212, 0.15) 0%,
+    rgba(34, 197, 94, 0.02) 70%
+  );
+  filter: blur(40px);
+  animation: blob-bounce 18s infinite alternate-reverse ease-in-out;
+}
+
+@keyframes shape-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(15deg);
+  }
+}
+
+.clay-shape-sphere {
+  background: radial-gradient(circle at 30% 30%, #d2e8ff, #6366f1);
+  box-shadow:
+    5px 5px 15px rgba(99, 102, 241, 0.25),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.15);
+  animation: shape-float 7s infinite ease-in-out;
+}
+
+.clay-shape-cone {
+  background: radial-gradient(circle at 30% 30%, #ffe0ce, #f59e0b);
+  box-shadow:
+    5px 5px 15px rgba(245, 158, 11, 0.25),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.15);
+  animation: shape-float 9s infinite ease-in-out;
+  animation-delay: 1.5s;
+}
+
+.clay-shape-cube {
+  background: radial-gradient(circle at 30% 30%, #fcd8eb, #ef4444);
+  box-shadow:
+    5px 5px 15px rgba(239, 68, 68, 0.25),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.15);
+  animation: shape-float 8s infinite ease-in-out;
+  animation-delay: 3s;
+}
