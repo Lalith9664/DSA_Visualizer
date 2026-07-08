@@ -5069,5 +5069,443 @@ class MinHeap:
         "java": "private void fixInsert(RBNode node) {\n    while (node.parent != null && node.parent.color == RED) {\n        RBNode uncle = getUncle(node);\n        if (uncle != null && uncle.color == RED) {\n            node.parent.color = BLACK;\n            uncle.color = BLACK;\n            node.parent.parent.color = RED;\n            node = node.parent.parent;\n        } else { rotate(node); }\n    }\n    root.color = BLACK;\n}",
         "cpp": "void fixInsert(RBNode* node) {\n    while (node->parent && node->parent->color == RED) {\n        auto uncle = getUncle(node);\n        if (uncle && uncle->color == RED) {\n            node->parent->color = BLACK;\n            uncle->color = BLACK;\n            node->parent->parent->color = RED;\n            node = node->parent->parent;\n        } else { rotate(node); }\n    }\n    root->color = BLACK;\n}"
     }
-}
+  }
 };
+
+// ============================================================
+// COMPLETE ROADMAP EXTENSIONS (DYNAMIC INJECTION)
+// ============================================================
+export const COUNTERPARTS = {
+  // --- 1. ARRAYS ---
+  "array-traversal": "linear-search",
+  "array-insertion": "reverse-array",
+  "array-deletion": "reverse-array",
+  "array-searching": "linear-search",
+  "array-updating": "reverse-array",
+  "splitting-arrays": "merge-arrays",
+  "suffix-sum": "prefix-sum",
+  "difference-array": "prefix-sum",
+  "dutch-national-flag-algorithm": "quick-sort",
+  "moores-voting-algorithm": "frequency-count",
+  "boyer-moore-majority-vote": "frequency-count",
+  "spiral-matrix": "rotate-array",
+  "matrix-rotation": "rotate-array",
+  "matrix-traversal": "dfs",
+  "matrix-multiplication": "merge-arrays",
+  "transpose-matrix": "rotate-array",
+
+  // --- 2. STRINGS ---
+  "string-traversal": "reverse-string",
+  "string-searching": "linear-search",
+  "string-comparison": "palindrome-check",
+  "string-concatenation": "reverse-string",
+  "anagram": "group-anagrams",
+  "string-matching": "kmp-search",
+  "pattern-matching": "kmp-search",
+  "z-algorithm": "kmp-search",
+  "manachers-algorithm": "palindrome-check",
+  "rolling-hash": "rabin-karp",
+  "longest-palindromic-substring": "palindrome-check",
+  "longest-common-substring": "lcs-dp",
+  "minimum-window-substring": "sliding-window",
+  "string-subsequence": "lcs-dp",
+  "string-substring": "kmp-search",
+  "string-compression": "frequency-count",
+  "lexicographical-order": "bubble-sort",
+
+  // --- 3. LINKED LIST ---
+  "list-search": "linked-list-traversal",
+  "list-insertion": "linked-list-traversal",
+  "list-deletion": "linked-list-traversal",
+  "remove-cycle": "cycle-detection",
+  "palindrome-linked-list": "palindrome-check",
+  "intersection-point": "middle-node",
+  "rotate-linked-list": "reverse-list",
+  "sort-linked-list": "merge-sorted-lists",
+  "partition-linked-list": "middle-node",
+  "doubly-linked-list-traversal": "linked-list-traversal",
+  "doubly-linked-list-insertion": "linked-list-traversal",
+  "doubly-linked-list-deletion": "linked-list-traversal",
+  "circular-linked-list-traversal": "linked-list-traversal",
+  "josephus-problem": "circular-queue",
+
+  // --- 4. STACK ---
+  "stack-peek": "stack-operations",
+  "stack-size": "stack-operations",
+  "stack-is-empty": "stack-operations",
+  "infix-to-postfix": "stack-operations",
+  "infix-to-prefix": "stack-operations",
+  "prefix-evaluation": "stack-operations",
+  "postfix-evaluation": "stack-operations",
+  "previous-greater-element": "next-greater-element",
+  "next-smaller-element": "next-greater-element",
+  "previous-smaller-element": "next-greater-element",
+  "largest-rectangle-in-histogram": "stack-operations",
+  "stock-span-problem": "next-greater-element",
+  "undo-redo": "stack-operations",
+  "browser-history": "stack-operations",
+
+  // --- 5. QUEUE ---
+  "queue-front": "queue-operations",
+  "queue-rear": "queue-operations",
+  "priority-queue-type": "min-heap",
+  "deque-type": "queue-operations",
+  "task-scheduling": "circular-queue",
+  "cpu-scheduling": "circular-queue",
+  "printer-queue": "queue-operations",
+  "lru-cache-queue": "circular-queue",
+
+  // --- 6. HASHING ---
+  "hash-set": "hash-map",
+  "duplicate-detection": "frequency-count",
+  "longest-consecutive-sequence": "two-sum",
+  "pair-sum": "two-sum",
+  "count-distinct-elements": "frequency-count",
+  "subarray-sum-equals-k": "prefix-sum",
+  "cache-implementation": "hash-map",
+
+  // --- 7. TREES ---
+  "preorder-traversal": "bst-traversal",
+  "postorder-traversal": "bst-traversal",
+  "diameter-of-tree": "tree-height",
+  "balanced-tree": "tree-height",
+  "symmetric-tree": "bst-traversal",
+  "left-view": "level-order-traversal",
+  "right-view": "level-order-traversal",
+  "top-view": "level-order-traversal",
+  "bottom-view": "level-order-traversal",
+  "boundary-traversal": "bst-traversal",
+  "zigzag-traversal": "level-order-traversal",
+  "vertical-traversal": "level-order-traversal",
+  "serialize-tree": "level-order-traversal",
+  "deserialize-tree": "level-order-traversal",
+  "bst-floor": "bst-search",
+  "bst-ceil": "bst-search",
+  "validate-bst": "bst-traversal",
+  "recover-bst": "bst-traversal",
+  "kth-smallest": "bst-traversal",
+  "kth-largest": "bst-traversal",
+  "avl-rotations": "avl-insert",
+  "priority-queue-heap": "min-heap",
+  "kth-largest-element": "min-heap",
+  "kth-smallest-element": "max-heap",
+  "merge-k-sorted-lists": "min-heap",
+  "median-finder": "min-heap",
+  "trie-insert": "trie-search",
+  "trie-delete": "trie-search",
+  "trie-prefix-search": "trie-search",
+  "trie-auto-complete": "trie-search",
+  "trie-spell-checker": "trie-search",
+  "trie-dictionary": "trie-search",
+  "trie-xor-problems": "trie-search",
+  "build-segment-tree": "segment-tree",
+  "range-sum-query": "segment-tree",
+  "range-minimum-query": "segment-tree",
+  "range-maximum-query": "segment-tree",
+  "lazy-propagation": "segment-tree",
+  "fenwick-tree-prefix-sum": "fenwick-tree",
+  "fenwick-tree-range-query": "fenwick-tree",
+  "fenwick-tree-update": "fenwick-tree",
+
+  // --- 8. GRAPHS ---
+  "adjacency-matrix-repr": "bfs",
+  "adjacency-list-repr": "dfs",
+  "connected-components": "dfs",
+  "cycle-detection-graph": "union-find-cycle",
+  "bipartite-graph": "bfs",
+  "strongly-connected-components": "dfs",
+  "bridges-in-graph": "dfs",
+  "articulation-points": "dfs",
+  "euler-path": "dfs",
+  "hamiltonian-path": "dfs",
+  "johnson-algorithm": "floyd-warshall",
+  "prims-algorithm": "dijkstra",
+  "kruskals-algorithm": "union-find-cycle",
+  "union-find-make-set": "union-find-cycle",
+  "union-find-find": "union-find-cycle",
+  "union-find-union": "union-find-cycle",
+  "union-find-path-compression": "union-find-cycle",
+  "union-find-union-by-rank": "union-find-cycle",
+  "tarjan-algorithm": "topological-sort",
+  "kosaraju-algorithm": "dfs",
+
+  // --- 9. RECURSION ---
+  "recursion-factorial": "fibonacci-recursion",
+  "recursion-power-function": "fast-exponentiation",
+  "recursion-binary-search": "binary-search",
+  "recursion-tree-traversal": "bst-traversal",
+  "recursion-merge-sort": "merge-sort",
+  "recursion-quick-sort": "quick-sort",
+
+  // --- 10. BACKTRACKING ---
+  "letter-combinations": "generate-parentheses",
+  "palindrome-partitioning": "generate-parentheses",
+  "permutations": "generate-parentheses",
+  "crossword-solver": "sudoku-solver",
+
+  // --- 11. DYNAMIC PROGRAMMING ---
+  "dp-memoization-concept": "climbing-stairs",
+  "dp-tabulation-concept": "climbing-stairs",
+  "dp-space-optimization": "climbing-stairs",
+  "dp-fibonacci": "climbing-stairs",
+  "dp-house-robber": "climbing-stairs",
+  "dp-unbounded-knapsack": "knapsack-dp",
+  "dp-rod-cutting": "knapsack-dp",
+  "dp-matrix-chain-multiplication": "lcs-dp",
+  "dp-longest-increasing-subsequence": "lcs-dp",
+  "dp-longest-palindromic-subsequence": "lcs-dp",
+  "dp-edit-distance": "lcs-dp",
+  "dp-wildcard-matching": "lcs-dp",
+  "dp-partition-equal-subset-sum": "knapsack-dp",
+  "dp-egg-dropping": "lcs-dp",
+  "dp-burst-balloons": "lcs-dp",
+  "dp-palindrome-partitioning": "lcs-dp",
+
+  // --- 12. GREEDY ALGORITHMS ---
+  "job-scheduling": "activity-selection",
+  "minimum-platforms": "activity-selection",
+  "gas-station": "activity-selection",
+  "jump-game": "activity-selection",
+  "candy-distribution": "activity-selection",
+
+  // --- 13. SEARCHING ALGORITHMS ---
+  "interpolation-search": "binary-search",
+  "exponential-search": "binary-search",
+  "binary-search-on-answer": "binary-search",
+  "search-in-rotated-sorted-array": "binary-search",
+  "peak-element": "binary-search",
+  "first-and-last-occurrence": "binary-search",
+
+  // --- 14. SORTING ALGORITHMS ---
+  "bucket-sort": "radix-sort",
+  "tim-sort": "merge-sort",
+
+  // --- 15. BIT MANIPULATION ---
+  "bitmask-xor": "xor-operations",
+  "bitmask-and": "xor-operations",
+  "bitmask-or": "xor-operations",
+  "bitmask-not": "xor-operations",
+  "bit-left-shift": "xor-operations",
+  "bit-right-shift": "xor-operations",
+  "bit-gray-code": "count-set-bits",
+  "bitmasking-concept": "count-set-bits",
+  "generate-subsets-using-bitmask": "count-set-bits",
+
+  // --- 16. MATHEMATICAL ALGORITHMS ---
+  "math-lcm": "gcd-euclidean",
+  "math-modular-arithmetic": "gcd-euclidean",
+  "math-modular-inverse": "gcd-euclidean",
+  "math-ncr-computation": "pascal-triangle",
+
+  // --- 17. SLIDING WINDOW ---
+  "fixed-size-window": "sliding-window",
+  "variable-size-window": "sliding-window",
+  "maximum-sum-subarray": "kadane",
+  "longest-substring-no-repeat": "sliding-window",
+  "minimum-window-substring-window": "sliding-window",
+  "fruits-into-baskets": "sliding-window",
+
+  // --- 18. TWO POINTER TECHNIQUE ---
+  "three-sum": "two-sum-two-pointer",
+  "four-sum": "two-sum-two-pointer",
+  "container-with-most-water": "two-pointer",
+  "trapping-rain-water-pointer": "trapping-rain-water",
+  "merge-sorted-arrays-pointer": "merge-arrays",
+
+  // --- 19. PREFIX SUM ---
+  "prefix-sum-array": "prefix-sum",
+  "suffix-sum-array": "prefix-sum",
+  "difference-array-prefix": "prefix-sum",
+  "range-sum-query-prefix": "prefix-sum",
+  "subarray-sum-prefix": "prefix-sum",
+
+  // --- 20. MONOTONIC STACK & QUEUE ---
+  "previous-greater-element-mono": "next-greater-element",
+  "next-smaller-element-mono": "next-greater-element",
+  "previous-smaller-element-mono": "next-greater-element",
+  "largest-rectangle-mono": "next-greater-element",
+  "daily-temperatures": "next-greater-element",
+  "sliding-window-max-mono": "sliding-window-max",
+  "remove-k-digits": "next-greater-element",
+
+  // --- 21. UNION FIND (DSU) ---
+  "dsu-make-set": "union-find-cycle",
+  "dsu-find": "union-find-cycle",
+  "dsu-union": "union-find-cycle",
+  "dsu-path-compression": "union-find-cycle",
+  "dsu-union-by-rank": "union-find-cycle",
+  "dsu-number-of-islands": "dfs",
+
+  // --- 22. ADVANCED DATA STRUCTURES ---
+  "b-tree": "b-tree",
+  "b-plus-tree": "b-plus-tree",
+  "splay-tree": "splay-tree",
+  "treap": "treap",
+  "skip-list": "linked-list-traversal",
+  "rope-ds": "reverse-string",
+  "kd-tree": "kd-tree",
+  "quad-tree": "quad-tree",
+  "octree": "octree",
+  "interval-tree": "interval-tree",
+  "suffix-tree": "suffix-tree",
+  "suffix-array": "suffix-tree",
+  "cartesian-tree": "cartesian-tree",
+  "bloom-filter": "hash-map",
+  "lru-cache-advanced": "circular-queue",
+  "lfu-cache-advanced": "circular-queue",
+
+  // --- 23. ADVANCED ALGORITHMS ---
+  "divide-and-conquer-concept": "merge-sort",
+  "branch-and-bound-concept": "n-queens",
+  "meet-in-the-middle": "binary-search",
+  "randomized-algorithms": "quick-sort",
+  "computational-geometry-concept": "dijkstra",
+  "convex-hull": "dijkstra",
+  "line-sweep-algorithm": "dijkstra",
+  "z-algorithm-adv": "kmp-search",
+  "manachers-algorithm-adv": "palindrome-check",
+  "a-star-search": "dijkstra",
+  "beam-search": "dijkstra",
+  "ford-fulkerson": "dijkstra",
+  "edmonds-karp": "dijkstra",
+  "dinics-algorithm": "dijkstra"
+};
+
+// Dynamically populate missing algorithms in ALGORITHMS and CATEGORIES
+Object.entries(COUNTERPARTS).forEach(([key, counterpartKey]) => {
+  const counterpartAlgo = ALGORITHMS[counterpartKey];
+  if (counterpartAlgo) {
+    const catId = counterpartAlgo.category;
+    const category = CATEGORIES.find(c => c.id === catId);
+    if (category && !category.algorithms.includes(key)) {
+      category.algorithms.push(key);
+      category.algorithmsCount = category.algorithms.length;
+    }
+
+    if (!ALGORITHMS[key]) {
+      const derivedName = key
+        .split("-")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+
+      ALGORITHMS[key] = {
+        ...counterpartAlgo,
+        id: key,
+        name: derivedName,
+        isRoadmapAlias: true,
+        counterpartId: counterpartKey,
+        description: `Concept Visualizer representing the ${derivedName} concept. Visually simulated using the underlying ${counterpartAlgo.name} solver.`,
+      };
+    }
+  }
+});
+// ─────────────────────────────────────────────────────────────
+// DEDICATED ALGORITHM OVERRIDES — Topic-specific inputTypes
+// ─────────────────────────────────────────────────────────────
+
+
+// ARRAYS — Override with specific inputTypes
+if (ALGORITHMS["array-traversal"]) ALGORITHMS["array-traversal"] = { ...ALGORITHMS["array-traversal"], id: "array-traversal", name: "Array Traversal", inputType: "array", defaultInput: "5 3 8 1 9 4 7", description: "Visit every element in the array from index 0 to n-1." };
+if (ALGORITHMS["array-insertion"]) ALGORITHMS["array-insertion"] = { ...ALGORITHMS["array-insertion"], id: "array-insertion", name: "Array Insertion", inputType: "array", defaultInput: "5 3 8 1 9", description: "Insert an element at a given position by shifting elements right." };
+if (ALGORITHMS["array-deletion"]) ALGORITHMS["array-deletion"] = { ...ALGORITHMS["array-deletion"], id: "array-deletion", name: "Array Deletion", inputType: "array", defaultInput: "5 3 8 1 9 4", description: "Remove an element by shifting subsequent elements left." };
+if (ALGORITHMS["traversal"]) ALGORITHMS["traversal"] = ALGORITHMS["array-traversal"];
+if (ALGORITHMS["insertion"]) ALGORITHMS["insertion"] = ALGORITHMS["array-insertion"];
+if (ALGORITHMS["deletion"]) ALGORITHMS["deletion"] = ALGORITHMS["array-deletion"];
+
+// SPIRAL MATRIX
+ALGORITHMS["spiral-matrix"] = { id: "spiral-matrix", name: "Spiral Matrix", category: "arrays", difficulty: "Medium", inputType: "spiral-matrix", defaultInput: "4", description: "Traverse a 2D matrix in spiral order: Right → Down → Left → Up.", timeComplexity: { best: "O(n²)", average: "O(n²)", worst: "O(n²)" }, spaceComplexity: "O(n²)", applications: ["Image processing"], advantages: ["Single pass"], disadvantages: ["Complex boundaries"], realWorldUses: ["GPS mapping layers"] };
+if (ALGORITHMS["matrix-rotation"]) ALGORITHMS["matrix-rotation"] = { ...ALGORITHMS["matrix-rotation"], inputType: "spiral-matrix", defaultInput: "4" };
+if (ALGORITHMS["matrix-traversal"]) ALGORITHMS["matrix-traversal"] = { ...ALGORITHMS["matrix-traversal"], inputType: "spiral-matrix", defaultInput: "4" };
+if (ALGORITHMS["transpose-matrix"]) ALGORITHMS["transpose-matrix"] = { ...ALGORITHMS["transpose-matrix"], inputType: "spiral-matrix", defaultInput: "4" };
+
+// MATRIX MULTIPLICATION
+ALGORITHMS["matrix-multiplication"] = { id: "matrix-multiplication", name: "Matrix Multiplication", category: "arrays", difficulty: "Hard", inputType: "matrix-mult", defaultInput: "1 2\n3 4\n---\n5 6\n7 8", description: "Multiply matrices A and B: C[i][j] = Σ A[i][k] × B[k][j].", timeComplexity: { best: "O(n³)", average: "O(n³)", worst: "O(n³)" }, spaceComplexity: "O(n²)", applications: ["Linear algebra", "Graphics"], advantages: ["Foundation of ML"], disadvantages: ["O(n³) time"], realWorldUses: ["3D rendering", "Neural networks"] };
+
+// Z-ALGORITHM
+ALGORITHMS["z-algorithm"] = { id: "z-algorithm", name: "Z-Algorithm", category: "strings", difficulty: "Medium", inputType: "z-algorithm", defaultInput: "aabxaa\naa", description: "Compute Z-array: Z[i] = length of longest substring from i matching a prefix of s.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Pattern matching"], advantages: ["Linear time"], disadvantages: ["Harder than KMP"], realWorldUses: ["Search engines", "DNA matching"] };
+if (ALGORITHMS["rolling-hash"]) ALGORITHMS["rolling-hash"] = { ...ALGORITHMS["rolling-hash"], inputType: "z-algorithm", defaultInput: "aabxaa\naa" };
+
+// MANACHER'S
+ALGORITHMS["manachers-algorithm"] = { id: "manachers-algorithm", name: "Manacher's Algorithm", category: "strings", difficulty: "Hard", inputType: "manacher", defaultInput: "abacaba", description: "Find all palindromic substrings in O(n) time.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Palindrome finding"], advantages: ["Linear time"], disadvantages: ["Complex"], realWorldUses: ["Bioinformatics"] };
+if (ALGORITHMS["longest-palindromic-substring"]) ALGORITHMS["longest-palindromic-substring"] = { ...ALGORITHMS["longest-palindromic-substring"], inputType: "manacher", defaultInput: "abacaba" };
+
+// STRING COMPRESSION
+ALGORITHMS["string-compression"] = { id: "string-compression", name: "String Compression", category: "strings", difficulty: "Easy", inputType: "string-compress", defaultInput: "aaabbbccddddee", description: "Run-length encoding: consecutive same characters grouped with count.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Data compression"], advantages: ["Simple encoding"], disadvantages: ["May expand small strings"], realWorldUses: ["Image compression", "File archiving"] };
+
+// EXPRESSION CONVERSIONS (Stack)
+ALGORITHMS["infix-to-postfix"] = { id: "infix-to-postfix", name: "Infix to Postfix", category: "stack", difficulty: "Medium", inputType: "stack", defaultInput: "A+B*C", description: "Convert infix to postfix using operator stack and precedence rules.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Compiler design"], advantages: ["No parentheses needed"], disadvantages: ["Requires stack"], realWorldUses: ["Calculator apps", "Compilers"] };
+ALGORITHMS["infix-to-prefix"] = { id: "infix-to-prefix", name: "Infix to Prefix", category: "stack", difficulty: "Medium", inputType: "stack", defaultInput: "A+B*C", description: "Convert infix to prefix by reversing, postfix-converting, then reversing result.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["LISP", "Expression trees"], advantages: ["Unambiguous without parentheses"], disadvantages: ["Two reversal steps"], realWorldUses: ["LISP interpreters"] };
+ALGORITHMS["postfix-evaluation"] = { id: "postfix-evaluation", name: "Postfix Evaluation", category: "stack", difficulty: "Easy", inputType: "stack", defaultInput: "2 3 4 * +", description: "Evaluate postfix: scan left-to-right, push operands, pop and compute on operators.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Stack-based calculators"], advantages: ["No precedence rules needed"], disadvantages: ["Unreadable for humans"], realWorldUses: ["HP calculators", "Forth"] };
+ALGORITHMS["prefix-evaluation"] = { id: "prefix-evaluation", name: "Prefix Evaluation", category: "stack", difficulty: "Easy", inputType: "stack", defaultInput: "+ * 2 3 4", description: "Evaluate prefix: scan right-to-left and use an operand stack.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Functional expressions"], advantages: ["Natural for recursion"], disadvantages: ["Counter-intuitive"], realWorldUses: ["LISP/Scheme"] };
+
+// STACK APPLICATIONS
+ALGORITHMS["next-smaller-element"] = { id: "next-smaller-element", name: "Next Smaller Element", category: "stack", difficulty: "Medium", inputType: "array", defaultInput: "4 8 5 2 25", description: "For each element, find nearest smaller element to its right using monotonic stack.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Temperature span", "Histograms"], advantages: ["O(n) using stack"], disadvantages: ["O(n) auxiliary space"], realWorldUses: ["Financial analysis"] };
+ALGORITHMS["previous-greater-element"] = { id: "previous-greater-element", name: "Previous Greater Element", category: "stack", difficulty: "Medium", inputType: "array", defaultInput: "10 4 6 8 3 2", description: "For each element, find nearest greater element to its left using monotonic stack.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Span calculations"], advantages: ["Linear time"], disadvantages: ["O(n) space"], realWorldUses: ["Stock span"] };
+ALGORITHMS["largest-rectangle-histogram"] = { id: "largest-rectangle-histogram", name: "Largest Rectangle in Histogram", category: "stack", difficulty: "Hard", inputType: "array", defaultInput: "2 1 5 6 2 3", description: "Find largest rectangle area in histogram using monotonic stack.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Maximal rectangle"], advantages: ["O(n) optimal"], disadvantages: ["Tricky boundaries"], realWorldUses: ["Image processing"] };
+ALGORITHMS["stock-span"] = { id: "stock-span", name: "Stock Span Problem", category: "stack", difficulty: "Medium", inputType: "array", defaultInput: "100 80 60 70 60 75 85", description: "Compute consecutive days before today where stock price was ≤ today's.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Financial data"], advantages: ["O(n) using stack"], disadvantages: ["Stack overhead"], realWorldUses: ["Stock market analysis"] };
+
+// TREES — NEW VIEWS
+const _treeBase = { category: "trees", difficulty: "Medium", inputType: "tree", defaultInput: "1 2 3 4 5 6 7", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Tree visualization"], advantages: ["Intuitive tree view"], disadvantages: ["BFS required"], realWorldUses: ["Tree rendering"] };
+ALGORITHMS["tree-top-view"] = { ..._treeBase, id: "tree-top-view", name: "Tree Top View", description: "Show first visible node per horizontal column (top perspective)." };
+ALGORITHMS["top-view"] = ALGORITHMS["tree-top-view"];
+ALGORITHMS["tree-bottom-view"] = { ..._treeBase, id: "tree-bottom-view", name: "Tree Bottom View", description: "Show last visible node per horizontal column (bottom perspective)." };
+ALGORITHMS["bottom-view"] = ALGORITHMS["tree-bottom-view"];
+ALGORITHMS["tree-left-view"] = { ..._treeBase, id: "tree-left-view", name: "Tree Left View", description: "Show first node visible from the left at each tree level." };
+ALGORITHMS["left-view"] = ALGORITHMS["tree-left-view"];
+ALGORITHMS["tree-right-view"] = { ..._treeBase, id: "tree-right-view", name: "Tree Right View", description: "Show last node visible from the right at each tree level." };
+ALGORITHMS["right-view"] = ALGORITHMS["tree-right-view"];
+ALGORITHMS["zigzag-traversal"] = { ..._treeBase, id: "zigzag-traversal", name: "Zigzag Level Order Traversal", description: "Level-order traversal alternating left-to-right and right-to-left per level." };
+ALGORITHMS["tree-diameter"] = { ..._treeBase, id: "tree-diameter", name: "Tree Diameter", description: "Find the longest path between any two leaf nodes in the binary tree." };
+ALGORITHMS["diameter-of-tree"] = ALGORITHMS["tree-diameter"];
+ALGORITHMS["validate-bst"] = { ..._treeBase, id: "validate-bst", name: "Validate BST", description: "Verify BST property by checking in-order traversal is strictly increasing." };
+ALGORITHMS["kth-smallest"] = { ..._treeBase, id: "kth-smallest", name: "Kth Smallest in BST", defaultInput: "5 3 7 2 4 6 8", description: "Find kth smallest element in BST using in-order traversal with a counter." };
+
+// GRAPHS — NEW
+ALGORITHMS["kruskals-algorithm"] = { id: "kruskals-algorithm", name: "Kruskal's Algorithm", category: "graphs", difficulty: "Hard", inputType: "graph", defaultInput: "0 1 4\n0 2 3\n1 2 1\n1 3 2\n2 3 5", description: "Minimum Spanning Tree: sort edges by weight, use Union-Find to avoid cycles.", timeComplexity: { best: "O(E log E)", average: "O(E log E)", worst: "O(E log E)" }, spaceComplexity: "O(V+E)", applications: ["Network design", "Cluster analysis"], advantages: ["Simple edge-based MST"], disadvantages: ["Edge sorting required"], realWorldUses: ["Cable/road design", "Image segmentation"] };
+ALGORITHMS["prims-algorithm"] = { id: "prims-algorithm", name: "Prim's Algorithm", category: "graphs", difficulty: "Hard", inputType: "graph", defaultInput: "0 1 4\n0 2 3\n1 2 1\n1 3 2\n2 3 5", description: "MST by greedily extending from a start node with minimum-weight edges.", timeComplexity: { best: "O(E log V)", average: "O(E log V)", worst: "O(E log V)" }, spaceComplexity: "O(V)", applications: ["Network span", "Road maps"], advantages: ["Good for dense graphs"], disadvantages: ["Needs priority queue"], realWorldUses: ["Telecom networks", "Water pipes"] };
+ALGORITHMS["bipartite-graph"] = { id: "bipartite-graph", name: "Bipartite Check", category: "graphs", difficulty: "Medium", inputType: "graph", defaultInput: "0 1\n1 2\n2 3\n3 0", description: "2-color graph with BFS. If no two adjacent nodes share same color, it's bipartite.", timeComplexity: { best: "O(V+E)", average: "O(V+E)", worst: "O(V+E)" }, spaceComplexity: "O(V)", applications: ["Matching", "Scheduling"], advantages: ["Simple BFS coloring"], disadvantages: ["Undirected graphs only"], realWorldUses: ["Job matching", "Social analysis"] };
+ALGORITHMS["bipartite-check"] = ALGORITHMS["bipartite-graph"];
+ALGORITHMS["connected-components"] = { id: "connected-components", name: "Connected Components", category: "graphs", difficulty: "Medium", inputType: "graph", defaultInput: "0 1\n1 2\n3 4", description: "Count and identify all connected components using DFS.", timeComplexity: { best: "O(V+E)", average: "O(V+E)", worst: "O(V+E)" }, spaceComplexity: "O(V)", applications: ["Network analysis", "Image segmentation"], advantages: ["Linear time DFS"], disadvantages: ["Requires full scan"], realWorldUses: ["Social network clusters", "Connected regions"] };
+
+// SEARCHING — EXPONENTIAL AND INTERPOLATION
+ALGORITHMS["exponential-search"] = { id: "exponential-search", name: "Exponential Search", category: "searching", difficulty: "Medium", inputType: "search", defaultInput: "1 3 5 7 9 11 13 15 17", description: "Double bound to find range, then binary search within [bound/2, min(bound,n-1)].", timeComplexity: { best: "O(1)", average: "O(log n)", worst: "O(log n)" }, spaceComplexity: "O(1)", applications: ["Unbounded sorted arrays"], advantages: ["Faster than binary for small indices"], disadvantages: ["Extra doubling phase"], realWorldUses: ["DB engines", "Infinite sorted sequences"] };
+ALGORITHMS["interpolation-search"] = { id: "interpolation-search", name: "Interpolation Search", category: "searching", difficulty: "Medium", inputType: "search", defaultInput: "10 20 30 40 50 60 70", description: "Estimate probe position by value distribution: pos = lo + (target-arr[lo])*(hi-lo)/(arr[hi]-arr[lo]).", timeComplexity: { best: "O(1)", average: "O(log log n)", worst: "O(n)" }, spaceComplexity: "O(1)", applications: ["Uniformly distributed sorted data"], advantages: ["O(log log n) for uniform data"], disadvantages: ["O(n) worst case"], realWorldUses: ["Phone book", "Dictionary lookup"] };
+
+// SORTING — NEW
+ALGORITHMS["shell-sort"] = { id: "shell-sort", name: "Shell Sort", category: "sorting", difficulty: "Medium", inputType: "array", defaultInput: "64 34 25 12 22 11 90", description: "Generalization of insertion sort using diminishing gap sequences for faster pre-sorting.", timeComplexity: { best: "O(n log n)", average: "O(n log²n)", worst: "O(n²)" }, spaceComplexity: "O(1)", applications: ["Embedded systems"], advantages: ["Better than insertion for large n"], disadvantages: ["Gap sequence matters"], realWorldUses: ["Linux kernel uClib", "Embedded sorting"] };
+ALGORITHMS["bucket-sort"] = { id: "bucket-sort", name: "Bucket Sort", category: "sorting", difficulty: "Medium", inputType: "array", defaultInput: "29 25 3 49 9 37 21 43", description: "Distribute into buckets, sort each, concatenate. O(n) for uniform distribution.", timeComplexity: { best: "O(n+k)", average: "O(n+k)", worst: "O(n²)" }, spaceComplexity: "O(n+k)", applications: ["Float sorting", "Histogram-based"], advantages: ["O(n) for uniform data"], disadvantages: ["Range required"], realWorldUses: ["External sorting", "Histogram equalization"] };
+
+// DP — NEW
+ALGORITHMS["longest-increasing-subsequence"] = { id: "longest-increasing-subsequence", name: "Longest Increasing Subsequence", category: "dynamic-programming", difficulty: "Hard", inputType: "dp", defaultInput: "10 9 2 5 3 7 101 18", description: "Find longest subsequence where each element is strictly greater than previous.", timeComplexity: { best: "O(n log n)", average: "O(n²)", worst: "O(n²)" }, spaceComplexity: "O(n)", applications: ["Activity scheduling", "Stock analysis"], advantages: ["Classic DP problem"], disadvantages: ["O(n²) naive"], realWorldUses: ["Activity scheduling", "DNA alignment"] };
+ALGORITHMS["edit-distance"] = { id: "edit-distance", name: "Edit Distance (Levenshtein)", category: "dynamic-programming", difficulty: "Hard", inputType: "dp", defaultInput: "kitten\nsitting", description: "Minimum insert/delete/replace operations to transform s1 into s2.", timeComplexity: { best: "O(m·n)", average: "O(m·n)", worst: "O(m·n)" }, spaceComplexity: "O(m·n)", applications: ["Spell checking", "DNA alignment"], advantages: ["Optimal via DP"], disadvantages: ["O(m·n) space"], realWorldUses: ["Spell checkers", "Git diff", "DNA alignment"] };
+ALGORITHMS["longest-palindromic-subsequence"] = { id: "longest-palindromic-subsequence", name: "Longest Palindromic Subsequence", category: "dynamic-programming", difficulty: "Hard", inputType: "dp", defaultInput: "bbbab", description: "Find longest palindromic subsequence by computing LCS of s with its reverse.", timeComplexity: { best: "O(n²)", average: "O(n²)", worst: "O(n²)" }, spaceComplexity: "O(n²)", applications: ["DNA analysis"], advantages: ["Reduces to LCS"], disadvantages: ["O(n²) time/space"], realWorldUses: ["Bioinformatics"] };
+ALGORITHMS["house-robber"] = { id: "house-robber", name: "House Robber", category: "dynamic-programming", difficulty: "Medium", inputType: "array", defaultInput: "2 7 9 3 1", description: "Max non-adjacent sum: dp[i] = max(dp[i-1], dp[i-2] + arr[i]).", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Resource selection"], advantages: ["Simple O(n) DP"], disadvantages: ["Linear scan only"], realWorldUses: ["Resource allocation", "Scheduling"] };
+
+// GREEDY — NEW
+ALGORITHMS["job-scheduling"] = { id: "job-scheduling", name: "Job Scheduling", category: "greedy", difficulty: "Medium", inputType: "greedy-interval", defaultInput: "J1 2 100\nJ2 1 19\nJ3 2 27\nJ4 1 25\nJ5 3 15", description: "Maximize profit by assigning jobs to latest available slots before deadlines.", timeComplexity: { best: "O(n log n)", average: "O(n²)", worst: "O(n²)" }, spaceComplexity: "O(n)", applications: ["Task scheduling"], advantages: ["Greedy is optimal"], disadvantages: ["Deadline knowledge required"], realWorldUses: ["CPU scheduling", "Project management"] };
+ALGORITHMS["minimum-platforms"] = { id: "minimum-platforms", name: "Minimum Platforms", category: "greedy", difficulty: "Medium", inputType: "greedy-interval", defaultInput: "arrivals: 900 940 950 1100 1500 1800\ndepartures: 910 1200 1120 1130 1900 2000", description: "Minimum train platforms so no train waits: sort arrivals/departures and sweep.", timeComplexity: { best: "O(n log n)", average: "O(n log n)", worst: "O(n log n)" }, spaceComplexity: "O(n)", applications: ["Station management"], advantages: ["Sorting + sweep is optimal"], disadvantages: ["Full schedule required"], realWorldUses: ["Railway management", "Airport gates"] };
+ALGORITHMS["jump-game"] = { id: "jump-game", name: "Jump Game", category: "greedy", difficulty: "Medium", inputType: "array", defaultInput: "2 3 1 1 4", description: "Can we reach the last index? arr[i] = max jump. Track global max reachable index.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(1)", applications: ["Reachability problems"], advantages: ["O(n) greedy"], disadvantages: ["No optimal path info"], realWorldUses: ["Game AI", "Network reachability"] };
+ALGORITHMS["candy-distribution"] = { id: "candy-distribution", name: "Candy Distribution", category: "greedy", difficulty: "Hard", inputType: "array", defaultInput: "1 0 2", description: "Minimum candies so each child has ≥1 and more than neighbors with lower ratings (two-pass greedy).", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)", applications: ["Fair distribution"], advantages: ["Two-pass is optimal"], disadvantages: ["Two passes required"], realWorldUses: ["Reward systems", "Grade distribution"] };
+
+// MATH — NEW
+ALGORITHMS["lcm"] = { id: "lcm", name: "LCM", category: "mathematical", difficulty: "Easy", inputType: "math-gcd", defaultInput: "12 18", description: "LCM(a,b) = (a×b)/GCD(a,b). Uses Euclidean algorithm for GCD.", timeComplexity: { best: "O(log min(a,b))", average: "O(log min(a,b))", worst: "O(log min(a,b))" }, spaceComplexity: "O(1)", applications: ["Fraction arithmetic", "Scheduling"], advantages: ["Leverages GCD"], disadvantages: ["Overflow risk for large numbers"], realWorldUses: ["Clock synchronization", "LCD refresh rates"] };
+ALGORITHMS["ncr-computation"] = { id: "ncr-computation", name: "nCr Computation", category: "mathematical", difficulty: "Easy", inputType: "math-ncr", defaultInput: "5 2", description: "C(n,r) via Pascal's triangle DP: C(n,r) = C(n-1,r-1) + C(n-1,r).", timeComplexity: { best: "O(n²)", average: "O(n²)", worst: "O(n²)" }, spaceComplexity: "O(n²)", applications: ["Combinatorics", "Probability"], advantages: ["No overflow with DP"], disadvantages: ["O(n²) space"], realWorldUses: ["Statistics", "Cryptography"] };
+ALGORITHMS["gray-code"] = { id: "gray-code", name: "Gray Code", category: "bit-manipulation", difficulty: "Easy", inputType: "bit-value", defaultInput: "3", description: "n-bit Gray code: G(i) = i XOR (i>>1). Adjacent codes differ by exactly 1 bit.", timeComplexity: { best: "O(2ⁿ)", average: "O(2ⁿ)", worst: "O(2ⁿ)" }, spaceComplexity: "O(2ⁿ)", applications: ["Error correction", "Digital electronics"], advantages: ["Simple XOR formula"], disadvantages: ["Exponential number of codes"], realWorldUses: ["ADC encoders", "Rotary encoders"] };
+
+// ADVANCED — LRU CACHE
+ALGORITHMS["lru-cache"] = { id: "lru-cache", name: "LRU Cache", category: "hashing", difficulty: "Hard", inputType: "lru-cache", defaultInput: "capacity 3\nput 1 10\nput 2 20\nget 1\nput 3 30\nput 4 40\nget 2", description: "O(1) get/put cache using doubly-linked list + hashmap with LRU eviction policy.", timeComplexity: { best: "O(1)", average: "O(1)", worst: "O(1)" }, spaceComplexity: "O(capacity)", applications: ["Cache management", "Query caching"], advantages: ["O(1) all operations"], disadvantages: ["Extra pointer overhead"], realWorldUses: ["CPU caches", "Redis LRU", "Browser cache"] };
+if (ALGORITHMS["lru-cache-advanced"]) ALGORITHMS["lru-cache-advanced"] = ALGORITHMS["lru-cache"];
+if (ALGORITHMS["cache-implementation"]) ALGORITHMS["cache-implementation"] = ALGORITHMS["lru-cache"];
+
+// NEW ADVANCED TREES CONFIGURATIONS
+ALGORITHMS["fenwick-tree"] = { id: "fenwick-tree", name: "Fenwick Tree", category: "trees", difficulty: "Medium", inputType: "array", defaultInput: "1 3 5 7 9 11", description: "Binary Indexed Tree for efficient prefix sum queries and point updates.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(log n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["b-tree"] = { id: "b-tree", name: "B Tree", category: "trees", difficulty: "Hard", inputType: "array", defaultInput: "10 20 30 40 50 60 70", description: "Self-balancing search tree maintaining sorted data with logarithmic amortized operations.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(log n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["b-plus-tree"] = { id: "b-plus-tree", name: "B+ Tree", category: "trees", difficulty: "Hard", inputType: "array", defaultInput: "10 20 30 40 50 60 70", description: "B-Tree variant where all keys are at leaves, linked for sequential access.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(log n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["splay-tree"] = { id: "splay-tree", name: "Splay Tree", category: "trees", difficulty: "Medium", inputType: "array", defaultInput: "50 30 70 20 40", description: "Self-adjusting BST where recently accessed elements are splayed to the root.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["treap"] = { id: "treap", name: "Treap", category: "trees", difficulty: "Medium", inputType: "array", defaultInput: "50 30 70 20 40", description: "Cartesian tree combining BST value ordering and Heap random priority ordering.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["kd-tree"] = { id: "kd-tree", name: "K-Dimensional Tree", category: "trees", difficulty: "Hard", inputType: "kd-tree", defaultInput: "3,6 17,15 13,15 6,12", description: "Space-partitioning tree for organizing points in k-dimensional space.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["quad-tree"] = { id: "quad-tree", name: "Quad Tree", category: "trees", difficulty: "Medium", inputType: "quad-tree", defaultInput: "3,6 17,15 13,15 6,12", description: "Space-partitioning tree where each node has exactly four children.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["octree"] = { id: "octree", name: "Octree", category: "trees", difficulty: "Medium", inputType: "octree", defaultInput: "10,20,30", description: "Space-partitioning tree where each node has exactly eight children.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["interval-tree"] = { id: "interval-tree", name: "Interval Tree", category: "trees", difficulty: "Medium", inputType: "interval-tree", defaultInput: "15,20 10,30 17,19 5,20", description: "BST holding intervals ordered by low endpoint, maintaining max high endpoints.", timeComplexity: { best: "O(log n)", average: "O(log n)", worst: "O(n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["suffix-tree"] = { id: "suffix-tree", name: "Suffix Tree", category: "trees", difficulty: "Hard", inputType: "suffix-tree", defaultInput: "banana", description: "Compressed trie containing all suffixes of a given string.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)" };
+ALGORITHMS["cartesian-tree"] = { id: "cartesian-tree", name: "Cartesian Tree", category: "trees", difficulty: "Medium", inputType: "array", defaultInput: "10 20 5 30 15", description: "Binary tree derived from a sequence maintaining inorder and heap properties.", timeComplexity: { best: "O(n)", average: "O(n)", worst: "O(n)" }, spaceComplexity: "O(n)" };

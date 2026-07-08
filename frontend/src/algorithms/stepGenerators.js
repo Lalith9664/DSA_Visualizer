@@ -3247,7 +3247,7 @@ export const ternarySearchSteps = (arr, target) => {
   return steps;
 };
 
-export const ratInAMazeSteps = (mazeGridStr) => {
+export const ratInAMazeSteps = (mazeGridStr, directionOrderStr) => {
   const steps = [];
   const lines = mazeGridStr.trim().split("\n");
   const size = 4;
@@ -3264,11 +3264,40 @@ export const ratInAMazeSteps = (mazeGridStr) => {
   const sol = Array.from({ length: size }, () => Array(size).fill(0));
   const visited = Array.from({ length: size }, () => Array(size).fill(false));
 
+  // Parse custom direction order (e.g. "D R U L", "Right Down Left Up")
+  const dirMap = {
+    'D': [1, 0, 'Down'],
+    'R': [0, 1, 'Right'],
+    'U': [-1, 0, 'Up'],
+    'L': [0, -1, 'Left'],
+    'DOWN': [1, 0, 'Down'],
+    'RIGHT': [0, 1, 'Right'],
+    'UP': [-1, 0, 'Up'],
+    'LEFT': [0, -1, 'Left']
+  };
+
+  const cleanOrder = (directionOrderStr || "D R U L")
+    .toUpperCase()
+    .replace(/[^A-Z\s]/g, "")
+    .trim()
+    .split(/\s+/);
+
+  const dirs = [];
+  cleanOrder.forEach(token => {
+    if (dirMap[token]) {
+      dirs.push(dirMap[token]);
+    }
+  });
+
+  if (dirs.length === 0) {
+    dirs.push([1, 0, 'Down'], [0, 1, 'Right'], [-1, 0, 'Up'], [0, -1, 'Left']);
+  }
+
   steps.push({
     data: { maze, path: Array.from({ length: size }, () => Array(size).fill(0)) },
     gridState: { currentRow: -1, currentCol: -1, mazeSize: size, phase: 'searching' },
     highlights: {},
-    explanation: "Initialize maze search. Starting at cell (0, 0).",
+    explanation: `Initialize maze search. Direction search order priority: ${dirs.map(d => d[2]).join(" → ")}.`,
     stats: { comparisons: 0, swaps: 0, step: 0 }
   });
 
@@ -3299,7 +3328,6 @@ export const ratInAMazeSteps = (mazeGridStr) => {
       return true;
     }
 
-    const dirs = [[1, 0, 'Down'], [0, 1, 'Right'], [-1, 0, 'Up'], [0, -1, 'Left']];
     for (let [dr, dc, dirName] of dirs) {
       const nr = r + dr;
       const nc = c + dc;
@@ -5163,94 +5191,128 @@ function cloneNodes(nodes) {
 // ============================================================
 export const bstInsertSteps = (arr, insertVal) => {
   const steps = [];
-  const baseNodes = buildTreeNodes(arr);
-  const ins = insertVal !== undefined ? insertVal : arr[arr.length - 1] + 5;
+  const baseNodes = [];
+  let idCounter = 0;
+  
+  const insertList = [...arr];
+  if (insertVal !== undefined && insertVal !== null) {
+    insertList.push(insertVal);
+  }
 
-  // Step 1: Show initial tree
+  if (insertList.length === 0) return steps;
+
+  // Step 1: Initial empty tree state
   steps.push({
-    data: cloneNodes(baseNodes),
+    data: [],
     highlights: {},
-    explanation: `BST Insert: Inserting value ${ins} into the BST. Starting at the root.`,
-    treeState: {},
+    explanation: "Initial BST state: Empty tree. Ready to insert elements.",
+    treeState: { path: [] },
     stats: { comparisons: 0, swaps: 0, step: 1 }
   });
 
-  // Simulate BST traversal to find insertion point
-  let curr = baseNodes[0];
-  const path = [];
-  let comparisons = 0;
-  while (curr) {
-    path.push(curr.val);
-    comparisons++;
-    const hiCopy = {};
-    baseNodes.forEach(n => {
-      if (n.id === curr.id) hiCopy[n.id] = 'compare';
-      else if (path.includes(n.val)) hiCopy[n.id] = 'sorted';
-    });
+  const cloneNodes = (nodes) => JSON.parse(JSON.stringify(nodes));
 
-    if (ins <= curr.val) {
+  let comparisons = 0;
+  let swaps = 0;
+
+  for (let idx = 0; idx < insertList.length; idx++) {
+    const val = insertList[idx];
+    
+    if (baseNodes.length === 0) {
+      const rootNode = { id: idCounter++, val, left: null, right: null, x: 50, y: 40 };
+      baseNodes.push(rootNode);
+      
       steps.push({
         data: cloneNodes(baseNodes),
-        highlights: hiCopy,
-        explanation: `${ins} ≤ ${curr.val} → go LEFT`,
-        treeState: { path: [...path] },
-        stats: { comparisons, swaps: 0, step: steps.length + 1 }
+        highlights: { [rootNode.id]: 'swap' },
+        explanation: `Tree is empty. Inserting first element ${val} as root.`,
+        treeState: { path: [val] },
+        stats: { comparisons, swaps: ++swaps, step: steps.length + 1 }
       });
-      if (!curr.left) {
-        // Insert here
-        const newId = baseNodes.length;
-        const newNode = { id: newId, val: ins, left: null, right: null };
-        curr.left = newNode;
-        baseNodes.push(newNode);
-        assignPositions(baseNodes, baseNodes[0]);
-        const hiInsert = { ...hiCopy, [newId]: 'swap' };
+      continue;
+    }
+
+    let curr = baseNodes[0];
+    const path = [];
+    
+    while (curr) {
+      path.push(curr.val);
+      comparisons++;
+      
+      const hiCopy = {};
+      baseNodes.forEach(n => {
+        if (n.id === curr.id) hiCopy[n.id] = 'compare';
+        else if (path.includes(n.val)) hiCopy[n.id] = 'sorted';
+      });
+
+      if (val <= curr.val) {
         steps.push({
           data: cloneNodes(baseNodes),
-          highlights: hiInsert,
-          explanation: `Found empty left child of ${curr.val}. Inserting ${ins} here!`,
-          treeState: { path: [...path, ins] },
-          stats: { comparisons, swaps: 1, step: steps.length + 1 }
+          highlights: hiCopy,
+          explanation: `Inserting ${val}: ${val} ≤ ${curr.val} → go LEFT`,
+          treeState: { path: [...path] },
+          stats: { comparisons, swaps, step: steps.length + 1 }
         });
-        break;
-      }
-      curr = curr.left;
-    } else {
-      steps.push({
-        data: cloneNodes(baseNodes),
-        highlights: hiCopy,
-        explanation: `${ins} > ${curr.val} → go RIGHT`,
-        treeState: { path: [...path] },
-        stats: { comparisons, swaps: 0, step: steps.length + 1 }
-      });
-      if (!curr.right) {
-        const newId = baseNodes.length;
-        const newNode = { id: newId, val: ins, left: null, right: null };
-        curr.right = newNode;
-        baseNodes.push(newNode);
-        assignPositions(baseNodes, baseNodes[0]);
-        const hiInsert = { ...hiCopy, [newId]: 'swap' };
+
+        if (!curr.left) {
+          const newId = idCounter++;
+          const newNode = { id: newId, val, left: null, right: null };
+          curr.left = newNode;
+          baseNodes.push(newNode);
+          
+          assignPositions(baseNodes, baseNodes[0]);
+          
+          const hiInsert = { ...hiCopy, [newId]: 'swap' };
+          steps.push({
+            data: cloneNodes(baseNodes),
+            highlights: hiInsert,
+            explanation: `Found empty left child of ${curr.val}. Inserting ${val} here!`,
+            treeState: { path: [...path, val] },
+            stats: { comparisons, swaps: ++swaps, step: steps.length + 1 }
+          });
+          break;
+        }
+        curr = curr.left;
+      } else {
         steps.push({
           data: cloneNodes(baseNodes),
-          highlights: hiInsert,
-          explanation: `Found empty right child of ${curr.val}. Inserting ${ins} here!`,
-          treeState: { path: [...path, ins] },
-          stats: { comparisons, swaps: 1, step: steps.length + 1 }
+          highlights: hiCopy,
+          explanation: `Inserting ${val}: ${val} > ${curr.val} → go RIGHT`,
+          treeState: { path: [...path] },
+          stats: { comparisons, swaps, step: steps.length + 1 }
         });
-        break;
+
+        if (!curr.right) {
+          const newId = idCounter++;
+          const newNode = { id: newId, val, left: null, right: null };
+          curr.right = newNode;
+          baseNodes.push(newNode);
+          
+          assignPositions(baseNodes, baseNodes[0]);
+          
+          const hiInsert = { ...hiCopy, [newId]: 'swap' };
+          steps.push({
+            data: cloneNodes(baseNodes),
+            highlights: hiInsert,
+            explanation: `Found empty right child of ${curr.val}. Inserting ${val} here!`,
+            treeState: { path: [...path, val] },
+            stats: { comparisons, swaps: ++swaps, step: steps.length + 1 }
+          });
+          break;
+        }
+        curr = curr.right;
       }
-      curr = curr.right;
     }
   }
 
-  // Final step: show complete tree
   const finalHi = {};
   baseNodes.forEach(n => finalHi[n.id] = 'sorted');
   steps.push({
     data: cloneNodes(baseNodes),
     highlights: finalHi,
-    explanation: `✅ BST Insert complete. ${ins} is now in the tree. BST property maintained.`,
-    treeState: { path },
-    stats: { comparisons, swaps: 1, step: steps.length + 1 }
+    explanation: `BST Insertion sequence complete. Final tree holds: [${insertList.join(', ')}].`,
+    treeState: { path: [] },
+    stats: { comparisons, swaps, step: steps.length + 1 }
   });
 
   return steps;
@@ -5423,11 +5485,13 @@ export const bstDeleteSteps = (arr, deleteVal) => {
 // ============================================================
 export const avlInsertSteps = (arr, insertVal) => {
   const steps = [];
-  // Use insertVal or pick a new value
-  const ins = insertVal !== undefined ? insertVal : (Math.max(...arr) + 5);
-  const workArr = [...arr];
+  const insertList = [...arr];
+  if (insertVal !== undefined && insertVal !== null) {
+    insertList.push(insertVal);
+  }
 
-  // Simulate building AVL tree step by step
+  if (insertList.length === 0) return steps;
+
   function height(node) { return node ? node.h : 0; }
   function bf(node) { return node ? height(node.left) - height(node.right) : 0; }
   function updateHeight(node) { if (node) node.h = 1 + Math.max(height(node.left), height(node.right)); }
@@ -5468,17 +5532,6 @@ export const avlInsertSteps = (arr, insertVal) => {
     return node;
   }
 
-  let root = null;
-  // Build initial tree without steps
-  function insertAVL(node, val) {
-    if (!node) return newNode(val);
-    if (val <= node.val) node.left = insertAVL(node.left, val);
-    else node.right = insertAVL(node.right, val);
-    return balanceNode(node);
-  }
-  workArr.forEach(v => root = insertAVL(root, v));
-
-  // Assign positions
   function getAllNodes(node, result = []) {
     if (!node) return result;
     result.push(node);
@@ -5492,72 +5545,145 @@ export const avlInsertSteps = (arr, insertVal) => {
     assignPos(node.left, x - spread, y + 56, spread / 2);
     assignPos(node.right, x + spread, y + 56, spread / 2);
   }
-  assignPos(root);
 
-  const initNodes = getAllNodes(root).map(n => ({ ...n, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
+  let root = null;
+  let comparisons = 0;
+  let swaps = 0;
 
+  // Step 1: Initial empty tree state
   steps.push({
-    data: initNodes,
+    data: [],
     highlights: {},
-    explanation: `AVL Insert: Inserting ${ins} into the AVL tree. Starting at root ${root?.val}.`,
+    explanation: "Initial AVL Tree: Empty. Ready to insert elements.",
     treeState: {},
     stats: { comparisons: 0, swaps: 0, step: 1 }
   });
 
-  // Now simulate inserting ins with steps
   const visited = [];
-  function insertWithSteps(node, val) {
-    if (!node) return newNode(val);
+
+  function insertWithSteps(node, val, parent = null, isLeft = false) {
+    if (!node) {
+      const n = newNode(val);
+      if (!root) root = n;
+      return n;
+    }
+
     visited.push(node.id);
     const dir = val <= node.val ? 'LEFT' : 'RIGHT';
     const hiCurr = {};
     visited.forEach(id => hiCurr[id] = 'sorted');
     hiCurr[node.id] = 'compare';
+    comparisons++;
 
     assignPos(root);
-    const snapNodes = getAllNodes(root).map(n => ({ ...n, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
+    const snapNodes = getAllNodes(root).map(n => ({
+      ...n,
+      result: `BF:${bf(n)}`,
+      left: n.left ? { id: n.left.id } : null,
+      right: n.right ? { id: n.right.id } : null
+    }));
     steps.push({
       data: snapNodes,
       highlights: hiCurr,
-      explanation: `${val} ${val <= node.val ? '≤' : '>'} ${node.val} → go ${dir}. BF=${bf(node)}`,
+      explanation: `Inserting ${val}: ${val} ${val <= node.val ? '≤' : '>'} ${node.val} → go ${dir}. BF=${bf(node)}`,
       treeState: {},
-      stats: { comparisons: visited.length, swaps: 0, step: steps.length + 1 }
+      stats: { comparisons, swaps, step: steps.length + 1 }
     });
 
-    if (val <= node.val) node.left = insertWithSteps(node.left, val);
-    else node.right = insertWithSteps(node.right, val);
+    if (val <= node.val) node.left = insertWithSteps(node.left, val, node, true);
+    else node.right = insertWithSteps(node.right, val, node, false);
 
     const oldBf = bf(node);
     const balanced = balanceNode(node);
     const newBf = bf(balanced);
 
+    // Update parent pointer immediately so root traversal sees it before we push the step!
+    if (parent) {
+      if (isLeft) parent.left = balanced;
+      else parent.right = balanced;
+    } else {
+      root = balanced;
+    }
+
     if (oldBf !== newBf || balanced.id !== node.id) {
+      swaps++;
       assignPos(root);
-      const rotNodes = getAllNodes(root).map(n => ({ ...n, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
+      const rotNodes = getAllNodes(root).map(n => ({
+        ...n,
+        result: `BF:${bf(n)}`,
+        left: n.left ? { id: n.left.id } : null,
+        right: n.right ? { id: n.right.id } : null
+      }));
       steps.push({
         data: rotNodes,
         highlights: { [balanced.id]: 'pivot' },
         explanation: `Rebalancing at node ${balanced.val}: BF changed from ${oldBf} → ${newBf}. Rotation applied!`,
         treeState: {},
-        stats: { comparisons: visited.length, swaps: 1, step: steps.length + 1 }
+        stats: { comparisons, swaps, step: steps.length + 1 }
       });
     }
 
     return balanced;
   }
 
-  root = insertWithSteps(root, ins);
-  assignPos(root);
-  const finalNodes = getAllNodes(root).map(n => ({ ...n, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
-  const finalHi = {};
-  finalNodes.forEach(n => finalHi[n.id] = 'sorted');
+  for (let idx = 0; idx < insertList.length; idx++) {
+    const val = insertList[idx];
+    visited.length = 0;
+    
+    if (!root) {
+      root = newNode(val);
+      assignPos(root);
+      const snapNodes = getAllNodes(root).map(n => ({
+        ...n,
+        result: `BF:${bf(n)}`,
+        left: n.left ? { id: n.left.id } : null,
+        right: n.right ? { id: n.right.id } : null
+      }));
+      steps.push({
+        data: snapNodes,
+        highlights: { [root.id]: 'swap' },
+        explanation: `Tree is empty. Inserting first element ${val} as root.`,
+        treeState: {},
+        stats: { comparisons, swaps: ++swaps, step: steps.length + 1 }
+      });
+    } else {
+      root = insertWithSteps(root, val);
+      assignPos(root);
+      const snapNodes = getAllNodes(root).map(n => ({
+        ...n,
+        result: `BF:${bf(n)}`,
+        left: n.left ? { id: n.left.id } : null,
+        right: n.right ? { id: n.right.id } : null
+      }));
+      const hiInsert = {};
+      snapNodes.forEach(n => {
+        if (n.val === val) hiInsert[n.id] = 'swap';
+      });
+      steps.push({
+        data: snapNodes,
+        highlights: hiInsert,
+        explanation: `Successfully inserted ${val} into AVL tree and balanced.`,
+        treeState: {},
+        stats: { comparisons, swaps, step: steps.length + 1 }
+      });
+    }
+  }
 
+  const finalHi = {};
+  getAllNodes(root).forEach(n => finalHi[n.id] = 'sorted');
+  assignPos(root);
+  const finalNodes = getAllNodes(root).map(n => ({
+    ...n,
+    result: `BF:${bf(n)}`,
+    left: n.left ? { id: n.left.id } : null,
+    right: n.right ? { id: n.right.id } : null
+  }));
   steps.push({
     data: finalNodes,
     highlights: finalHi,
-    explanation: `✅ AVL Insert complete. ${ins} inserted. Tree rebalanced. All balance factors in [-1, 0, 1].`,
+    explanation: `AVL Insertion sequence complete. Final balanced tree holds: [${insertList.join(', ')}].`,
     treeState: {},
-    stats: { comparisons: visited.length, swaps: steps.filter(s => s.stats.swaps > 0).length, step: steps.length + 1 }
+    stats: { comparisons, swaps, step: steps.length + 1 }
   });
 
   return steps;
@@ -5575,8 +5701,8 @@ export const avlDeleteSteps = (arr, deleteVal) => {
   function bf(node) { return height(node?.left) - height(node?.right); }
   let idCounter = 0;
   function newNode(val) { return { id: idCounter++, val, left: null, right: null, h: 1 }; }
-  function rotateRight(y) { const x = y.left; x.right = y; y.left = null; updateHeight(y); updateHeight(x); return x; }
-  function rotateLeft(x) { const y = x.right; y.left = x; x.right = null; updateHeight(x); updateHeight(y); return y; }
+  function rotateRight(y) { const x = y.left; const T2 = x.right; x.right = y; y.left = T2; updateHeight(y); updateHeight(x); return x; }
+  const rotateLeft = (x) => { const y = x.right; const T2 = y.left; y.left = x; x.right = T2; updateHeight(x); updateHeight(y); return y; }
   function balanceNode(node) {
     updateHeight(node);
     const b = bf(node);
@@ -5602,7 +5728,12 @@ export const avlDeleteSteps = (arr, deleteVal) => {
   }
   function snap(highlights = {}, explanation = '', swaps = 0) {
     assignPos(root);
-    const nodes = getAllNodes(root).map(n => ({ ...n, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
+    const nodes = getAllNodes(root).map(n => ({
+      ...n,
+      result: `BF:${bf(n)}`,
+      left: n.left ? { id: n.left.id } : null,
+      right: n.right ? { id: n.right.id } : null
+    }));
     steps.push({ data: nodes, highlights, explanation, treeState: {}, stats: { comparisons: steps.length, swaps, step: steps.length + 1 } });
   }
 
@@ -5650,66 +5781,82 @@ export const avlDeleteSteps = (arr, deleteVal) => {
 // ============================================================
 export const btInsertSteps = (arr, insertVal) => {
   const steps = [];
-  const ins = insertVal !== undefined ? insertVal : (Math.max(...arr) + 1);
+  const insertList = [...arr];
+  if (insertVal !== undefined && insertVal !== null) {
+    insertList.push(insertVal);
+  }
+
+  if (insertList.length === 0) return steps;
 
   let idCounter = 0;
   function newNode(val) { return { id: idCounter++, val, left: null, right: null }; }
 
-  // Build BT (level-order)
-  const root = newNode(arr[0]);
-  const queue = [root];
-  for (let i = 1; i < arr.length; i++) {
-    const curr = queue[0];
-    const node = newNode(arr[i]);
-    if (!curr.left) { curr.left = node; }
-    else { curr.right = node; queue.shift(); }
-    queue.push(node);
+  function getAllNodes(node, result = []) { 
+    if (!node) return result; 
+    result.push(node); 
+    getAllNodes(node.left, result); 
+    getAllNodes(node.right, result); 
+    return result; 
   }
-
-  function getAllNodes(node, result = []) { if (!node) return result; result.push(node); getAllNodes(node.left, result); getAllNodes(node.right, result); return result; }
   function assignPos(node, x = 50, y = 40, spread = 25) {
-    if (!node) return; node.x = x; node.y = y;
+    if (!node) return; 
+    node.x = x; node.y = y;
     assignPos(node.left, x - spread, y + 56, spread / 2);
     assignPos(node.right, x + spread, y + 56, spread / 2);
   }
-  function snap(node, hi = {}, explanation = '', swaps = 0) {
-    assignPos(node);
-    const nodes = getAllNodes(node).map(n => ({ ...n, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
+  function snap(rootNode, hi = {}, explanation = '', swaps = 0) {
+    if (!rootNode) { 
+      steps.push({ data: [], highlights: {}, explanation, treeState: {}, stats: { comparisons: steps.length, swaps, step: steps.length + 1 } }); 
+      return; 
+    }
+    assignPos(rootNode);
+    const nodes = getAllNodes(rootNode).map(n => ({ ...n, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
     steps.push({ data: nodes, highlights: hi, explanation, treeState: {}, stats: { comparisons: steps.length, swaps, step: steps.length + 1 } });
   }
 
-  snap(root, {}, `BT Insert: Inserting ${ins} using level-order (BFS). Scanning for first empty child slot.`);
+  let root = null;
+  let swaps = 0;
 
-  // BFS to find insertion point with steps
-  const bfsQ = [root];
-  let inserted = false;
-  while (bfsQ.length && !inserted) {
-    const curr = bfsQ.shift();
-    snap(root, { [curr.id]: 'compare' }, `Checking node ${curr.val}: left=${curr.left?.val ?? 'NULL'}, right=${curr.right?.val ?? 'NULL'}`);
+  snap(null, {}, "Initial Binary Tree state: Empty tree. Ready for level-order insertions.");
 
-    if (!curr.left) {
-      const newN = newNode(ins);
-      curr.left = newN;
-      assignPos(root);
-      snap(root, { [curr.id]: 'compare', [newN.id]: 'swap' }, `Inserted ${ins} as LEFT child of ${curr.val}!`, 1);
-      inserted = true;
-    } else {
-      bfsQ.push(curr.left);
-      if (!curr.right) {
-        const newN = newNode(ins);
-        curr.right = newN;
-        assignPos(root);
-        snap(root, { [curr.id]: 'compare', [newN.id]: 'swap' }, `Inserted ${ins} as RIGHT child of ${curr.val}!`, 1);
+  for (let idx = 0; idx < insertList.length; idx++) {
+    const val = insertList[idx];
+    
+    if (!root) {
+      root = newNode(val);
+      snap(root, { [root.id]: 'swap' }, `Tree is empty. Inserting first element ${val} as root.`, ++swaps);
+      continue;
+    }
+
+    const queue = [root];
+    let inserted = false;
+    
+    while (queue.length && !inserted) {
+      const curr = queue.shift();
+      snap(root, { [curr.id]: 'compare' }, `Scanning node ${curr.val} for empty child slot.`);
+
+      if (!curr.left) {
+        const newN = newNode(val);
+        curr.left = newN;
+        snap(root, { [curr.id]: 'compare', [newN.id]: 'swap' }, `Inserted ${val} as LEFT child of ${curr.val}!`, ++swaps);
         inserted = true;
       } else {
-        bfsQ.push(curr.right);
+        queue.push(curr.left);
+        if (!curr.right) {
+          const newN = newNode(val);
+          curr.right = newN;
+          snap(root, { [curr.id]: 'compare', [newN.id]: 'swap' }, `Inserted ${val} as RIGHT child of ${curr.val}!`, ++swaps);
+          inserted = true;
+        } else {
+          queue.push(curr.right);
+        }
       }
     }
   }
 
   const finalHi = {};
   getAllNodes(root).forEach(n => finalHi[n.id] = 'sorted');
-  snap(root, finalHi, `✅ BT Insert complete. ${ins} added. Tree is still complete.`);
+  snap(root, finalHi, `Binary Tree Level-Order Insertion sequence complete. Final tree contains: [${insertList.join(', ')}].`, swaps);
   return steps;
 };
 
@@ -5795,7 +5942,7 @@ export const rbtInsertSteps = (arr) => {
   const steps = [];
   const RED = 'red', BLACK = 'black';
   let idCounter = 0;
-  function newNode(val) { return { id: idCounter++, val, left: null, right: null, color: RED, h: 1 }; }
+  function newNode(val) { return { id: idCounter++, val, left: null, right: null, color: RED, h: 1, parent: null }; }
 
   function getAllNodes(node, result = []) { if (!node) return result; result.push(node); getAllNodes(node.left, result); getAllNodes(node.right, result); return result; }
   function assignPos(node, x = 50, y = 40, spread = 25) {
@@ -5803,73 +5950,96 @@ export const rbtInsertSteps = (arr) => {
     assignPos(node.left, x - spread, y + 56, spread / 2);
     assignPos(node.right, x + spread, y + 56, spread / 2);
   }
-  function snap(node, hi = {}, explanation = '', swaps = 0) {
-    if (!node) { steps.push({ data: [], highlights: {}, explanation, treeState: {}, stats: { comparisons: steps.length, swaps, step: steps.length + 1 } }); return; }
-    assignPos(node);
-    const nodes = getAllNodes(node).map(n => ({
+  function snap(hi = {}, explanation = '', swaps = 0) {
+    if (!root) { steps.push({ data: [], highlights: {}, explanation, treeState: {}, stats: { comparisons: steps.length, swaps, step: steps.length + 1 } }); return; }
+    assignPos(root);
+    const nodes = getAllNodes(root).map(n => ({
       ...n,
       left: n.left ? { id: n.left.id } : null,
       right: n.right ? { id: n.right.id } : null,
-      // Encode color in the node for rendering
-      colorLabel: n.color === RED ? '🔴' : '⚫'
     }));
     steps.push({ data: nodes, highlights: hi, explanation, treeState: { rbt: true }, stats: { comparisons: steps.length, swaps, step: steps.length + 1 } });
   }
 
-  function rotateLeft(x) {
-    const y = x.right; const T2 = y.left;
-    y.left = x; x.right = T2; return y;
-  }
-  function rotateRight(y) {
-    const x = y.left; const T2 = x.right;
-    x.right = y; y.left = T2; return x;
-  }
-
   let root = null;
 
-  function fixInsert(root, z) {
-    while (z !== root && z.color !== BLACK) {
-      const parent = findParent(root, z);
-      if (!parent || parent.color === BLACK) break;
-      const grandparent = findParent(root, parent);
-      if (!grandparent) break;
+  function rotateLeft(x) {
+    const y = x.right;
+    x.right = y.left;
+    if (y.left) y.left.parent = x;
+    y.parent = x.parent;
+    if (!x.parent) {
+      root = y;
+    } else if (x === x.parent.left) {
+      x.parent.left = y;
+    } else {
+      x.parent.right = y;
+    }
+    y.left = x;
+    x.parent = y;
+  }
 
-      const isParentLeft = grandparent.left === parent;
-      const uncle = isParentLeft ? grandparent.right : grandparent.left;
+  function rotateRight(y) {
+    const x = y.left;
+    y.left = x.right;
+    if (x.right) x.right.parent = y;
+    x.parent = y.parent;
+    if (!y.parent) {
+      root = x;
+    } else if (y === y.parent.left) {
+      y.parent.left = x;
+    } else {
+      y.parent.right = x;
+    }
+    x.right = y;
+    y.parent = x;
+  }
 
-      if (uncle && uncle.color === RED) {
-        // Case 1: uncle is red → recolor
-        parent.color = BLACK;
-        uncle.color = BLACK;
-        grandparent.color = RED;
-        z = grandparent;
-      } else {
-        if (isParentLeft) {
-          if (parent.right === z) { rotateLeft(parent); z = parent; }
-          parent.color = BLACK; grandparent.color = RED; root = rotateRight(grandparent) === grandparent ? root : root;
+  function fixInsert(z) {
+    while (z.parent && z.parent.color === RED) {
+      const g = z.parent.parent;
+      if (!g) break;
+      if (z.parent === g.left) {
+        const u = g.right;
+        if (u && u.color === RED) {
+          z.parent.color = BLACK;
+          u.color = BLACK;
+          g.color = RED;
+          z = g;
         } else {
-          if (parent.left === z) { rotateRight(parent); z = parent; }
-          parent.color = BLACK; grandparent.color = RED; root = rotateLeft(grandparent) === grandparent ? root : root;
+          if (z === z.parent.right) {
+            z = z.parent;
+            rotateLeft(z);
+          }
+          z.parent.color = BLACK;
+          g.color = RED;
+          rotateRight(g);
         }
-        break;
+      } else {
+        const u = g.left;
+        if (u && u.color === RED) {
+          z.parent.color = BLACK;
+          u.color = BLACK;
+          g.color = RED;
+          z = g;
+        } else {
+          if (z === z.parent.left) {
+            z = z.parent;
+            rotateRight(z);
+          }
+          z.parent.color = BLACK;
+          g.color = RED;
+          rotateLeft(g);
+        }
       }
     }
     root.color = BLACK;
-    return root;
   }
 
-  function findParent(root, node) {
-    if (!root || root === node) return null;
-    if (root.left === node || root.right === node) return root;
-    const lp = findParent(root.left, node);
-    return lp || findParent(root.right, node);
-  }
-
-  function insertRBT(root, val) {
+  function insertRBT(val) {
     const z = newNode(val);
-    if (!root) { z.color = BLACK; return z; }
+    if (!root) { z.color = BLACK; root = z; return z; }
 
-    // BST insert
     let curr = root;
     let parent = null;
     while (curr) {
@@ -5877,16 +6047,18 @@ export const rbtInsertSteps = (arr) => {
       if (val <= curr.val) curr = curr.left;
       else curr = curr.right;
     }
+    z.parent = parent;
     if (val <= parent.val) parent.left = z;
     else parent.right = z;
 
-    return fixInsert(root, z);
+    fixInsert(z);
+    return z;
   }
 
-  snap(null, {}, `RBT Insert: Starting with empty Red-Black Tree. New nodes are always inserted as RED.`);
+  snap({}, `RBT Insert: Starting with empty Red-Black Tree. New nodes are always inserted as RED.`);
 
   arr.forEach((val, i) => {
-    root = insertRBT(root, val);
+    const z = insertRBT(val);
     const allN = getAllNodes(root);
     const hi = {};
     allN.forEach(n => {
@@ -5894,17 +6066,17 @@ export const rbtInsertSteps = (arr) => {
       else if (n.color === BLACK) hi[n.id] = 'sorted';
       else hi[n.id] = 'compare';
     });
-    snap(root, hi, `Inserted ${val} (RED). Applied color fixes. Root is always BLACK. Red nodes: ${allN.filter(n => n.color === RED).map(n => n.val).join(', ') || 'none'}.`, i > 0 ? 1 : 0);
+    snap(hi, `Inserted ${val} (RED). Applied color fixes. Root is always BLACK. Red nodes: ${allN.filter(n => n.color === RED).map(n => n.val).join(', ') || 'none'}.`, i > 0 ? 1 : 0);
 
     if (i < arr.length - 1) {
-      snap(root, {}, `Tree after inserting ${val}. BLACK = stable, RED = newly placed. Next: insert ${arr[i+1]}.`);
+      snap({}, `Tree after inserting ${val}. BLACK = stable, RED = newly placed. Next: insert ${arr[i+1]}.`);
     }
   });
 
   const allN = getAllNodes(root);
   const finalHi = {};
   allN.forEach(n => finalHi[n.id] = n.color === BLACK ? 'sorted' : 'compare');
-  snap(root, finalHi, `✅ All ${arr.length} values inserted. RBT properties maintained:\n1. Root is BLACK ⚫\n2. No two consecutive RED nodes\n3. Equal black-height on all paths`);
+  snap(finalHi, `✅ All ${arr.length} values inserted. RBT properties maintained:\n1. Root is BLACK ⚫\n2. No two consecutive RED nodes\n3. Equal black-height on all paths`);
 
   return steps;
 };

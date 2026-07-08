@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { useAuth } from './AuthContext';
+import { api } from '../utils/api';
+import { ALGORITHMS } from '../data/algorithmsData';
 
 const VisualizerContext = createContext(null);
 
@@ -11,6 +14,7 @@ export const useVisualizer = () => {
 };
 
 export const VisualizerProvider = ({ children }) => {
+  const { currentUser } = useAuth();
   // Theme state
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -63,6 +67,51 @@ export const VisualizerProvider = ({ children }) => {
     localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed));
   }, [recentlyViewed]);
 
+  // Sync with Firestore when logged in
+  useEffect(() => {
+    let active = true;
+
+    const loadUserData = async () => {
+      if (currentUser) {
+        try {
+          const favsRes = await api.favorites.list();
+          const favIds = favsRes.favorites.map(f => f.algoId);
+          
+          const progressRes = await api.progress.list();
+          const progressIds = Object.keys(progressRes.progress);
+
+          if (active) {
+            setFavorites(favIds);
+            setRecentlyViewed((prev) => {
+              const merged = [...prev];
+              progressIds.forEach(id => {
+                if (!merged.includes(id)) {
+                  merged.push(id);
+                }
+              });
+              return merged.slice(0, 5);
+            });
+          }
+        } catch (err) {
+          console.error('Failed to load user data from Firestore:', err);
+        }
+      } else {
+        const savedFavs = localStorage.getItem('favorites');
+        const savedRecents = localStorage.getItem('recentlyViewed');
+        if (active) {
+          setFavorites(savedFavs ? JSON.parse(savedFavs) : []);
+          setRecentlyViewed(savedRecents ? JSON.parse(savedRecents) : []);
+        }
+      }
+    };
+
+    loadUserData();
+
+    return () => {
+      active = false;
+    };
+  }, [currentUser]);
+
   // Auto-playing timer logic
   const timerRef = useRef(null);
 
@@ -96,7 +145,8 @@ export const VisualizerProvider = ({ children }) => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  const toggleFavorite = (algoId) => {
+  const toggleFavorite = async (algoId) => {
+    const isFav = favorites.includes(algoId);
     setFavorites((prev) => {
       if (prev.includes(algoId)) {
         return prev.filter((id) => id !== algoId);
@@ -104,13 +154,34 @@ export const VisualizerProvider = ({ children }) => {
         return [...prev, algoId];
       }
     });
+
+    if (currentUser) {
+      try {
+        if (isFav) {
+          await api.favorites.remove(algoId);
+        } else {
+          const algo = ALGORITHMS[algoId] || { name: algoId, category: 'general' };
+          await api.favorites.add(algoId, { name: algo.name, category: algo.category });
+        }
+      } catch (err) {
+        console.error('Failed to sync favorite with Firestore:', err);
+      }
+    }
   };
 
-  const addToRecent = (algoId) => {
+  const addToRecent = async (algoId) => {
     setRecentlyViewed((prev) => {
       const filtered = prev.filter((id) => id !== algoId);
-      return [algoId, ...filtered].slice(0, 5); // Store top 5 recents
+      return [algoId, ...filtered].slice(0, 5);
     });
+
+    if (currentUser) {
+      try {
+        await api.progress.save(algoId, { completed: true });
+      } catch (err) {
+        console.error('Failed to sync progress with Firestore:', err);
+      }
+    }
   };
 
   const nextStep = () => {

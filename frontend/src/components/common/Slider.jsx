@@ -35,7 +35,7 @@ const Slider = ({
             [&::-webkit-slider-thumb]:w-5
             [&::-webkit-slider-thumb]:h-5
             [&::-webkit-slider-thumb]:bg-gradient-to-br
-            [&::-webkit-slider-thumb]:from-[#6366F1]
+            [&::-webkit-slider-thumb]:from-[#10B981]
             [&::-webkit-slider-thumb]:to-[#8B5CF6]
             [&::-webkit-slider-thumb]:rounded-full
             [&::-webkit-slider-thumb]:border

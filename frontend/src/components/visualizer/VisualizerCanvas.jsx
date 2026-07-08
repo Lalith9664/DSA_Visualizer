@@ -3,16 +3,30 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useVisualizer } from '../../context/VisualizerContext';
 import { Play } from 'lucide-react';
 
-const VisualizerCanvas = ({ algorithm }) => {
+const VisualizerCanvas = ({ algorithm, loading }) => {
   const { currentStep, steps } = useVisualizer();
 
-  if (!algorithm || steps.length === 0) {
+  if (loading || !algorithm || steps.length === 0) {
     return (
-      <div className="skeuo-screen h-80 flex flex-col items-center justify-center text-center p-6 text-slate-500">
-        <div className="skeuo-screen-overlay" />
-        <Play className="w-12 h-12 text-slate-700 mb-2 animate-pulse" />
-        <p className="font-mono text-sm">CONSOLE READY. AWAITING INITIALIZATION.</p>
-        <p className="text-xs mt-1">Press "Start" or "Random" to load states.</p>
+      <div className="skeuo-screen w-full flex flex-col items-center justify-center min-h-[320px] h-80 relative overflow-hidden bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-800">
+        <div className="skeuo-screen-overlay absolute inset-0 z-0 opacity-30" />
+        <div className="relative z-10 flex flex-col items-center gap-4">
+          <div className="relative w-16 h-16">
+            {/* Pulsing outer glow */}
+            <div className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
+            {/* Spinning gradient ring */}
+            <div className="absolute inset-0 rounded-full border-4 border-slate-800" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-purple-500 border-r-cyan-500 animate-spin" style={{ animationDuration: '0.9s' }} />
+          </div>
+          <div className="flex flex-col items-center gap-1 mt-2">
+            <span className="text-xs font-semibold tracking-widest text-slate-300 font-mono animate-pulse uppercase">
+              Initializing Engine
+            </span>
+            <span className="text-[9px] font-bold text-slate-500 font-mono tracking-widest uppercase mt-0.5">
+              DSA Visualizer Console
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -25,7 +39,7 @@ const VisualizerCanvas = ({ algorithm }) => {
     const status = highlights[key];
     switch (status) {
       case 'compare':
-        return 'bg-[#6366F1] border-white/20 text-white shadow-md scale-105';
+        return 'bg-[#10B981] border-white/20 text-white shadow-md scale-105';
       case 'swap':
         return 'bg-[#EF4444] border-white/20 text-white shadow-md scale-105';
       case 'pivot':
@@ -161,9 +175,19 @@ const VisualizerCanvas = ({ algorithm }) => {
 
   // --- 4. RENDER STACK ---
   const renderStackCanvas = () => {
-    const stackItems = stackState?.stack || [];
+    const stackItems = Array.isArray(stackState) ? stackState : (stackState?.stack || []);
+    const stackItems2 = stackState?.stack2 || null;
+    const displayItems = [...stackItems].reverse();
+    const displayItems2 = stackItems2 ? [...stackItems2].reverse() : null;
+
+    // Detect labels based on algorithm id
+    const algoId = algorithm.id || '';
+    const isConversion = algoId.includes('to') || algoId.includes('conversion');
+    const label1 = isConversion ? "OPERATORS" : "VALUES";
+    const label2 = isConversion ? "OUTPUT" : "OPERATION";
+
     return (
-      <div className="w-full h-72 flex items-end justify-center gap-8 px-6 pb-6">
+      <div className="w-full h-72 flex items-start justify-center gap-8 px-6 pt-8">
         {/* String parsing array */}
         <div className="flex flex-wrap gap-2 max-w-sm self-center">
           {data.map((char, idx) => (
@@ -179,28 +203,75 @@ const VisualizerCanvas = ({ algorithm }) => {
           ))}
         </div>
 
-        {/* Stack tube container */}
-        <div className="w-24 h-56 bg-slate-950 border-x-2 border-b-2 border-slate-700/80 rounded-b-lg flex flex-col justify-end p-2 gap-2 shadow-inner">
-          <AnimatePresence>
-            {stackItems.map((val, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ y: -100, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -100, opacity: 0 }}
-                className={`
-                  w-full h-9 rounded border flex items-center justify-center font-mono text-xs font-bold text-white
-                  ${idx === stackItems.length - 1 ? 'bg-purple-500 border-purple-400 shadow-[0_0_6px_#8b5cf6]' : 'bg-slate-800 border-slate-700'}
-                `}
-              >
-                {val}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          {stackItems.length === 0 && (
-            <span className="text-[10px] font-mono text-slate-700 text-center mb-2">EMPTY</span>
-          )}
+        {/* Stack 1 Container */}
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-[10px] font-bold tracking-wider text-slate-400 font-mono">{label1}</span>
+          <div className="relative w-24 h-48 bg-slate-950 border-x-2 border-b-2 border-slate-700/80 rounded-b-lg flex flex-col justify-start p-2 gap-2 shadow-inner overflow-hidden">
+            {/* TOP indicator above the tube */}
+            <div className="absolute -top-6 left-0 w-full flex justify-center pointer-events-none">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-accent font-mono">▼ TOP</span>
+            </div>
+            <AnimatePresence>
+              {displayItems.map((val, displayIdx) => {
+                const isTop = displayIdx === 0;
+                return (
+                  <motion.div
+                    key={stackItems.length - 1 - displayIdx}
+                    initial={{ y: -40, opacity: 0, scale: 0.85 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: -40, opacity: 0, scale: 0.85 }}
+                    transition={{ duration: 0.2 }}
+                    className={`
+                      w-full h-9 rounded border flex items-center justify-center font-mono text-xs font-bold text-white flex-shrink-0
+                      ${isTop ? 'bg-purple-500 border-purple-400 shadow-[0_0_8px_#8b5cf6]' : 'bg-slate-800 border-slate-700'}
+                    `}
+                  >
+                    {val}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+            {stackItems.length === 0 && (
+              <span className="text-[10px] font-mono text-slate-700 text-center mt-auto mb-2">EMPTY</span>
+            )}
+          </div>
         </div>
+
+        {/* Stack 2 Container */}
+        {displayItems2 && (
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[10px] font-bold tracking-wider text-slate-400 font-mono">{label2}</span>
+            <div className="relative w-24 h-48 bg-slate-950 border-x-2 border-b-2 border-slate-700/80 rounded-b-lg flex flex-col justify-start p-2 gap-2 shadow-inner overflow-hidden">
+              {/* TOP indicator above the tube */}
+              <div className="absolute -top-6 left-0 w-full flex justify-center pointer-events-none">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-accent font-mono">▼ TOP</span>
+              </div>
+              <AnimatePresence>
+                {displayItems2.map((val, displayIdx) => {
+                  const isTop = displayIdx === 0;
+                  return (
+                    <motion.div
+                      key={stackItems2.length - 1 - displayIdx}
+                      initial={{ y: -40, opacity: 0, scale: 0.85 }}
+                      animate={{ y: 0, opacity: 1, scale: 1 }}
+                      exit={{ y: -40, opacity: 0, scale: 0.85 }}
+                      transition={{ duration: 0.2 }}
+                      className={`
+                        w-full h-9 rounded border flex items-center justify-center font-mono text-xs font-bold text-white flex-shrink-0
+                        ${isTop ? 'bg-accent border-accent/80 shadow-[0_0_8px_#10b981]' : 'bg-slate-800 border-slate-700'}
+                      `}
+                    >
+                      {val}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              {stackItems2.length === 0 && (
+                <span className="text-[10px] font-mono text-slate-700 text-center mt-auto mb-2">EMPTY</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -293,21 +364,56 @@ const VisualizerCanvas = ({ algorithm }) => {
         </svg>
 
         {/* Tree Nodes */}
-        {nodes.map((node) => (
-          <div
-            key={node.id}
-            style={{ left: `${node.x}%`, top: `${node.y}px`, transform: 'translate(-50%, -50%)' }}
-            className={`
-              absolute ${nodeSizeClass} rounded-full border-2 flex flex-col items-center justify-center font-mono font-bold transition-all duration-300 z-10
-              ${getHighlightClass(node.id)}
-            `}
-          >
-            <span className="leading-none">{node.val}</span>
-            {node.result !== undefined && node.result !== null && (
-              <span className="text-[7.5px] text-yellow-400 font-semibold leading-none mt-0.5">={node.result}</span>
-            )}
-          </div>
-        ))}
+        {nodes.map((node) => {
+          let nodeColorClass = getHighlightClass(node.id);
+          const isRbt = treeState?.rbt || node.color === 'red' || node.color === 'black';
+          
+          if (isRbt) {
+            const isRed = node.color === 'red';
+            const isHighlight = highlights[node.id] === 'compare';
+            if (isHighlight) {
+              nodeColorClass = isRed 
+                ? 'bg-rose-500 text-white border-white scale-110 shadow-lg ring-4 ring-rose-400/50' 
+                : 'bg-slate-900 text-white border-white scale-110 shadow-lg ring-4 ring-slate-400/50';
+            } else {
+              nodeColorClass = isRed 
+                ? 'bg-rose-600 text-white border-rose-500 shadow-md ring-2 ring-rose-500/30' 
+                : 'bg-slate-950 text-white border-slate-800 shadow-md ring-2 ring-slate-700/30';
+            }
+          }
+
+          const resolvedId = algorithm.counterpartId || algorithm.id;
+          const isBTreeOrAdvanced = 
+            resolvedId === 'b-tree' ||
+            resolvedId === 'b-plus-tree' ||
+            resolvedId === 'kd-tree' ||
+            resolvedId === 'quad-tree' ||
+            resolvedId === 'octree' ||
+            resolvedId === 'interval-tree' ||
+            resolvedId === 'suffix-tree';
+
+          const nodeShapeClass = isBTreeOrAdvanced 
+            ? 'rounded-md px-3.5 py-2.5 h-auto w-auto max-w-[150px] text-center text-[10px] whitespace-nowrap shadow-md'
+            : `${nodeSizeClass} rounded-full`;
+
+          return (
+            <div
+              key={node.id}
+              style={{ left: `${node.x}%`, top: `${node.y}px`, transform: 'translate(-50%, -50%)' }}
+              className={`
+                absolute ${nodeShapeClass} border-2 flex flex-col items-center justify-center font-mono font-bold transition-all duration-300 z-10
+                ${nodeColorClass}
+              `}
+            >
+              <span className="leading-none">{node.val}</span>
+              {node.result !== undefined && node.result !== null && (
+                <span className="text-[7.5px] text-yellow-400 font-semibold leading-none mt-0.5">
+                  {typeof node.result === 'number' ? `=${node.result}` : node.result}
+                </span>
+              )}
+            </div>
+          );
+        })}
 
         {/* Visit Path scoreboard bottom list */}
         {treeState?.path && (
@@ -326,17 +432,71 @@ const VisualizerCanvas = ({ algorithm }) => {
 
   // --- 7. RENDER GRAPHS ---
   const renderGraphCanvas = () => {
-    const { nodes = [], edges = [], dist = [], visited = [] } = data || {};
-    
+    let rawNodes = [];
+    let rawEdges = [];
+    let activeNode = null;
+    let relaxingEdge = null;
+    let visited = {};
+    let dist = {};
+    let nodeLabels = {};
+    let hasDist = false;
+
+    // Detect if we have Format B (from roadmapGenerators)
+    if (graphState && Array.isArray(graphState.nodes)) {
+      rawNodes = graphState.nodes.map(n => n.id);
+      rawEdges = (graphState.edges || []).map(e => ({
+        u: e.source,
+        v: e.target,
+        w: e.label || "",
+        visited: e.visited,
+        active: e.active
+      }));
+      graphState.nodes.forEach(n => {
+        if (n.active) activeNode = n.id;
+        if (n.visited) visited[n.id] = true;
+        if (n.label) nodeLabels[n.id] = n.label;
+      });
+      const activeEdge = graphState.edges?.find(e => e.active);
+      if (activeEdge) {
+        relaxingEdge = { u: activeEdge.source, v: activeEdge.target };
+      }
+    } else {
+      const { nodes = [], edges = [], dist: rawDist = [], visited: rawVisited = [] } = data || {};
+      rawNodes = nodes;
+      rawEdges = edges.map(e => ({
+        u: e.u,
+        v: e.v,
+        w: e.w,
+        visited: false,
+        active: false
+      }));
+      activeNode = graphState?.activeNode;
+      relaxingEdge = graphState?.relaxingEdge;
+      visited = rawVisited;
+      
+      // We only show distance labels if dist is populated
+      if (Array.isArray(rawDist) && rawDist.length > 0) {
+        hasDist = true;
+        rawNodes.forEach(node => {
+          dist[node] = rawDist[node];
+        });
+      } else if (rawDist && typeof rawDist === 'object' && Object.keys(rawDist).length > 0) {
+        hasDist = true;
+        rawNodes.forEach(node => {
+          dist[node] = rawDist[node];
+        });
+      }
+    }
+
     // Dynamic circular layout for graph nodes
     const nodeCoords = {};
-    const n = nodes.length;
+    const n = rawNodes.length;
     const centerX = 50; // percentage
     const centerY = 135; // pixels (vertical center of container)
     const radiusX = 35; // percentage radius
     const radiusY = 85; // pixel radius
 
-    nodes.forEach((node, idx) => {
+    rawNodes.forEach((node, idx) => {
       if (n === 4) {
         // Keep original layout for exactly 4 nodes to match default description
         const fixedCoords = {
@@ -365,14 +525,28 @@ const VisualizerCanvas = ({ algorithm }) => {
           </defs>
           
           {/* Draw connecting weight edges */}
-          {edges.map((edge, idx) => {
+          {rawEdges.map((edge, idx) => {
             const uCoord = nodeCoords[edge.u];
             const vCoord = nodeCoords[edge.v];
             if (!uCoord || !vCoord) return null;
 
-            const isRelaxing = graphState?.relaxingEdge && 
-              ((graphState.relaxingEdge.u === edge.u && graphState.relaxingEdge.v === edge.v) ||
-               (graphState.relaxingEdge.u === edge.v && graphState.relaxingEdge.v === edge.u));
+            const isActiveEdge = edge.active || (relaxingEdge && 
+              ((relaxingEdge.u === edge.u && relaxingEdge.v === edge.v) ||
+               (relaxingEdge.u === edge.v && relaxingEdge.v === edge.u)));
+            const isMstEdge = edge.visited;
+
+            let strokeColor = '#475569';
+            let strokeWidth = '1.5';
+            let className = '';
+
+            if (isActiveEdge) {
+              strokeColor = '#06b6d4';
+              strokeWidth = '3';
+              className = 'animate-pulse';
+            } else if (isMstEdge) {
+              strokeColor = '#10b981'; // Green for MST
+              strokeWidth = '3';
+            }
 
             return (
               <g key={idx}>
@@ -381,32 +555,35 @@ const VisualizerCanvas = ({ algorithm }) => {
                   y1={uCoord.y}
                   x2={`${vCoord.x}%`}
                   y2={vCoord.y}
-                  stroke={isRelaxing ? '#06b6d4' : '#475569'}
-                  strokeWidth={isRelaxing ? '3' : '1.5'}
-                  className={isRelaxing ? 'animate-pulse' : ''}
+                  stroke={strokeColor}
+                  strokeWidth={strokeWidth}
+                  className={className}
                 />
                 {/* Weight Text Label */}
-                <text
-                  x={`${(uCoord.x + vCoord.x) / 2}%`}
-                  y={(uCoord.y + vCoord.y) / 2 - 6}
-                  fill={isRelaxing ? '#06b6d4' : '#94a3b8'}
-                  className="font-mono text-[9px] font-bold text-center"
-                >
-                  w:{edge.w}
-                </text>
+                {edge.w !== undefined && edge.w !== "" && (
+                  <text
+                    x={`${(uCoord.x + vCoord.x) / 2}%`}
+                    y={(uCoord.y + vCoord.y) / 2 - 6}
+                    fill={isActiveEdge ? '#06b6d4' : isMstEdge ? '#10b981' : '#94a3b8'}
+                    className="font-mono text-[9px] font-bold text-center"
+                  >
+                    w:{edge.w}
+                  </text>
+                )}
               </g>
             );
           })}
         </svg>
 
         {/* Nodes */}
-        {nodes.map((node) => {
+        {rawNodes.map((node) => {
           const coord = nodeCoords[node];
           if (!coord) return null;
 
-          const isActive = graphState?.activeNode === node;
+          const isActive = activeNode === node;
           const isVisited = visited[node];
           const nodeDist = dist[node] === Infinity ? '∞' : dist[node];
+          const label = nodeLabels[node] !== undefined ? nodeLabels[node] : node;
 
           let nodeClass = 'bg-slate-800 border-slate-700 text-slate-400';
           if (isActive) nodeClass = 'bg-purple-600 border-purple-400 shadow-[0_0_10px_#8b5cf6] text-white';
@@ -417,12 +594,14 @@ const VisualizerCanvas = ({ algorithm }) => {
               key={node}
               style={{ left: `${coord.x}%`, top: `${coord.y}px`, transform: 'translate(-50%, -50%)' }}
               className={`
-                absolute w-10 h-10 rounded-full border-2 flex flex-col items-center justify-center font-mono font-bold z-10 transition-all duration-300
+                absolute min-w-10 px-2 h-10 rounded-full border-2 flex flex-col items-center justify-center font-mono font-bold z-10 transition-all duration-300
                 ${nodeClass}
               `}
             >
-              <span className="text-xs">{node}</span>
-              <span className="text-[8px] font-normal leading-none text-slate-300 mt-0.5">d:{nodeDist}</span>
+              <span className="text-xs">{label}</span>
+              {hasDist && (
+                <span className={`text-[9px] font-bold leading-none mt-0.5 ${isActive || isVisited ? 'text-white/90' : 'text-slate-400'}`}>d:{nodeDist}</span>
+              )}
             </div>
           );
         })}
@@ -1689,22 +1868,221 @@ const VisualizerCanvas = ({ algorithm }) => {
     );
   };
 
+  // --- SPIRAL MATRIX CANVAS ---
+  const renderSpiralMatrixCanvas = () => {
+    const { matrix, n, activeCell, order = [], direction } = currentSnap.matrixState || {};
+    if (!matrix || !n) return <div className="w-full h-72 flex items-center justify-center text-slate-500 font-mono text-sm">Configure matrix size (e.g., 4)</div>;
+    const cellColors = {};
+    order.forEach(([r, c], idx) => { cellColors[`${r},${c}`] = idx === order.length - 1 ? 'active' : 'sorted'; });
+    const dirArrow = { right: '→', down: '↓', left: '←', up: '↑', done: '✓' }[direction] || '';
+    return (
+      <div className="w-full h-72 flex flex-col items-center justify-center gap-2 p-4">
+        <div className="text-xs font-mono font-bold text-accent mb-1">Direction: {dirArrow} {direction?.toUpperCase()}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${n}, 1fr)`, gap: 4, maxWidth: 280 }}>
+          {matrix.map((row, r) => row.map((val, c) => {
+            const key = `${r},${c}`;
+            const state = cellColors[key];
+            return (
+              <div key={key} className={`w-full aspect-square flex items-center justify-center font-mono text-xs font-bold rounded border transition-all duration-200 ${
+                state === 'active' ? 'bg-accent text-white border-accent/50 scale-110 shadow-lg' :
+                state === 'sorted' ? 'bg-primary/30 border-primary/30 text-primary' :
+                'bg-slate-900 border-slate-700 text-slate-500'
+              }`}>{val}</div>
+            );
+          }))}
+        </div>
+        <div className="text-xs text-slate-500 font-mono mt-1">Visited {order.length}/{n * n} cells</div>
+      </div>
+    );
+  };
+
+  // --- MATRIX MULTIPLICATION CANVAS ---
+  const renderMatrixMultCanvas = () => {
+    const { A, B, C, activeI, activeJ, activeK, phase, partial } = currentSnap.matrixState || {};
+    if (!A || !B || !C) return <div className="w-full h-72 flex items-center justify-center text-slate-500 font-mono text-sm">Enter matrices separated by ---</div>;
+    const renderMat = (mat, name, activeRow, activeCol) => (
+      <div className="flex flex-col gap-1">
+        <div className="text-[10px] font-bold text-accent font-mono text-center">{name}</div>
+        {mat.map((row, r) => (
+          <div key={r} className="flex gap-1">
+            {row.map((val, c) => (
+              <div key={c} className={`w-8 h-8 flex items-center justify-center text-xs font-mono font-bold rounded border transition-all ${
+                r === activeRow && c === activeCol ? 'bg-accent text-white border-accent scale-110' :
+                r === activeRow || c === activeCol ? 'bg-accent/20 border-accent/30 text-accent' :
+                'bg-slate-900 border-slate-700 text-slate-400'
+              }`}>{val}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+    return (
+      <div className="w-full h-72 flex items-center justify-center gap-4 px-4">
+        {renderMat(A, 'A', activeI, activeK)}
+        <div className="text-2xl text-slate-500 font-mono">×</div>
+        {renderMat(B, 'B', activeK, activeJ)}
+        <div className="text-2xl text-slate-500 font-mono">=</div>
+        {renderMat(C, 'C', activeI, activeJ)}
+        {phase === 'compute' && partial !== undefined && (
+          <div className="absolute bottom-4 text-xs font-mono text-yellow-400">partial: {partial}</div>
+        )}
+      </div>
+    );
+  };
+
+  // --- STRING CHAR CANVAS (Z-algo, Manacher, Compression) ---
+  const renderStringAlgoCanvas = () => {
+    const chars = Array.isArray(data) ? data : [];
+    return (
+      <div className="w-full h-72 flex flex-wrap items-center justify-center gap-2 px-4 py-6 overflow-auto">
+        {chars.map((ch, idx) => (
+          <div key={idx} className={`flex flex-col items-center gap-1`}>
+            <motion.div
+              key={idx}
+              layout
+              className={`w-9 h-9 rounded-lg border flex items-center justify-center font-mono text-sm font-bold transition-all duration-200 ${getHighlightClass(idx)}`}
+            >
+              {ch}
+            </motion.div>
+            <span className="text-[9px] text-slate-600 font-mono">{idx}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // --- LRU CACHE CANVAS ---
+  const renderLruCacheCanvas = () => {
+    const { map = {}, order = [] } = currentSnap.hashState || {};
+    return (
+      <div className="w-full h-72 flex flex-col items-center justify-center gap-4 px-4">
+        <div className="text-xs font-bold text-accent uppercase tracking-widest">LRU Cache State</div>
+        <div className="flex items-center gap-2 flex-wrap justify-center">
+          <span className="text-xs text-slate-500 font-mono">LRU</span>
+          {order.map((key, i) => (
+            <div key={key} className={`flex flex-col items-center gap-1`}>
+              <div className={`px-3 py-2 rounded-lg border font-mono text-xs font-bold transition-all ${i === order.length - 1 ? 'bg-accent text-white border-accent shadow-lg' : i === 0 ? 'bg-red-500/20 border-red-500/50 text-red-400' : 'bg-slate-800 border-slate-600 text-slate-300'}`}>
+                {key}:{map[key]}
+              </div>
+              <span className="text-[9px] text-slate-600">{i === 0 ? 'LRU' : i === order.length - 1 ? 'MRU' : ''}</span>
+            </div>
+          ))}
+          <span className="text-xs text-slate-500 font-mono">MRU</span>
+        </div>
+        {order.length === 0 && <div className="text-slate-600 font-mono text-sm">Cache is empty</div>}
+        <div className="text-xs text-slate-500 font-mono">Entries: {order.length}</div>
+      </div>
+    );
+  };
+
+  // --- MATH NCR CANVAS ---
+  const renderMathNcrCanvas = () => {
+    return renderArrayCanvas();
+  };
+
+  // --- EDIT DISTANCE / DP TABLE CANVAS ---
+  const renderDpTableCanvas = () => {
+    let table = null;
+    let s1 = "";
+    let s2 = "";
+    let activeI = -1;
+    let activeJ = -1;
+
+    if (currentSnap.dpState && currentSnap.dpState.table) {
+      table = currentSnap.dpState.table;
+      s1 = currentSnap.dpState.s1 || "";
+      s2 = currentSnap.dpState.s2 || "";
+      activeI = currentSnap.dpState.activeI;
+      activeJ = currentSnap.dpState.activeJ;
+    } else if (data && data.dp) {
+      table = data.dp;
+      s1 = data.s1 || "";
+      s2 = data.s2 || "";
+      activeI = data.i;
+      activeJ = data.j;
+    }
+
+    if (!table) return renderDpCanvas();
+    const m = table.length, n2 = table[0]?.length || 0;
+    const maxDim = Math.max(m, n2);
+    const cellSize = maxDim > 10 ? 'w-6 h-6 text-[8px]' : 'w-8 h-8 text-xs';
+    return (
+      <div className="w-full h-72 flex flex-col items-center justify-center overflow-auto p-2">
+        <div className="text-[10px] font-mono text-slate-400 mb-1">{s1 && s2 ? `"${s1}" → "${s2}"` : 'DP Table'}</div>
+        <div className="overflow-auto max-h-60">
+          <table className="border-collapse">
+            <thead>
+              <tr>
+                <th className="w-6 h-6"></th>
+                <th className={`${cellSize} font-mono text-slate-500 font-bold`}>ε</th>
+                {(s2 || '').split('').map((c, j) => (
+                  <th key={j} className={`${cellSize} font-mono text-accent font-bold ${j + 1 === activeJ ? 'text-white' : ''}`}>{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {table.map((row, i) => (
+                <tr key={i}>
+                  <td className={`${cellSize} font-mono text-accent font-bold ${i === activeI ? 'text-white' : ''}`}>{i === 0 ? 'ε' : (s1 || '')[i - 1]}</td>
+                  {row.map((val, j) => (
+                    <td key={j} className={`${cellSize} flex items-center justify-center border border-slate-800 font-mono font-bold transition-all ${
+                      i === activeI && j === activeJ ? 'bg-accent text-white' :
+                      i === activeI || j === activeJ ? 'bg-accent/20 text-accent' :
+                      'bg-slate-900 text-slate-400'
+                    }`}>{val}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   const getCanvas = () => {
-    if (algorithm.id === 'frequency-count') return renderHashCanvas();
-    // --- New specific algorithm overrides ---
-    if (algorithm.id === 'level-order-traversal') return renderLevelOrderCanvas();
-    if (algorithm.id === 'bellman-ford') return renderBellmanFordCanvas();
-    if (algorithm.id === 'floyd-warshall') return renderFloydWarshallCanvas();
-    if (algorithm.id === 'pascal-triangle') return renderPascalTriangleCanvas();
-    if (algorithm.id === 'count-set-bits') return renderBitValueCanvas();
-    if (algorithm.id === 'palindrome-check') return renderStringCharCanvas();
-    if (algorithm.id === 'reverse-string') return renderStringCharCanvas();
-    if (algorithm.id === 'generate-parentheses') return renderDpCanvas();
-    if (algorithm.id === 'lcs-dp') return renderDpCanvas();
+    const resolvedId = algorithm.counterpartId || algorithm.id;
+    if (resolvedId === 'frequency-count') return renderHashCanvas();
+    // --- Specific algorithm overrides ---
+    if (resolvedId === 'level-order-traversal') return renderLevelOrderCanvas();
+    if (resolvedId === 'bellman-ford') return renderBellmanFordCanvas();
+    if (resolvedId === 'floyd-warshall') return renderFloydWarshallCanvas();
+    if (resolvedId === 'pascal-triangle') return renderPascalTriangleCanvas();
+    if (resolvedId === 'count-set-bits') return renderBitValueCanvas();
+    if (resolvedId === 'palindrome-check') return renderStringCharCanvas();
+    if (resolvedId === 'reverse-string') return renderStringCharCanvas();
+    if (resolvedId === 'generate-parentheses') return renderDpCanvas();
+    if (resolvedId === 'lcs-dp') return renderDpTableCanvas();
+    // New dedicated algorithm routing
+    if (resolvedId === 'spiral-matrix' || algorithm.inputType === 'spiral-matrix') return renderSpiralMatrixCanvas();
+    if (resolvedId === 'matrix-multiplication' || algorithm.inputType === 'matrix-mult') return renderMatrixMultCanvas();
+    if (algorithm.inputType === 'z-algorithm') return renderStringAlgoCanvas();
+    if (algorithm.inputType === 'manacher') return renderStringAlgoCanvas();
+    if (algorithm.inputType === 'string-compress') return renderStringAlgoCanvas();
+    if (algorithm.inputType === 'lru-cache') return renderLruCacheCanvas();
+    if (algorithm.inputType === 'math-ncr') return renderArrayCanvas();
+    if (algorithm.inputType === 'edit-distance') return renderDpTableCanvas();
+    if (resolvedId === 'edit-distance') return renderDpTableCanvas();
+    if (resolvedId === 'longest-palindromic-subsequence') return renderDpTableCanvas();
+    if (resolvedId === 'zigzag-traversal' || resolvedId === 'tree-top-view' || resolvedId === 'tree-bottom-view' || resolvedId === 'tree-left-view' || resolvedId === 'tree-right-view' || resolvedId === 'tree-diameter' || resolvedId === 'validate-bst' || resolvedId === 'kth-smallest' || resolvedId === 'fibonacci-recursion') return renderTreeCanvas();
+    if (
+      resolvedId === 'b-tree' ||
+      resolvedId === 'b-plus-tree' ||
+      resolvedId === 'splay-tree' ||
+      resolvedId === 'treap' ||
+      resolvedId === 'kd-tree' ||
+      resolvedId === 'quad-tree' ||
+      resolvedId === 'octree' ||
+      resolvedId === 'interval-tree' ||
+      resolvedId === 'suffix-tree' ||
+      resolvedId === 'cartesian-tree'
+    ) {
+      return renderTreeCanvas();
+    }
 
     switch (algorithm.inputType) {
       case 'array':
-        return algorithm.id === 'segment-tree' ? renderSegmentTreeCanvas() : renderArrayCanvas();
+        return resolvedId === 'segment-tree' ? renderSegmentTreeCanvas() : renderArrayCanvas();
       case 'grid':
         return renderGridCanvas();
       case 'word-search-grid':
@@ -1734,21 +2112,22 @@ const VisualizerCanvas = ({ algorithm }) => {
       case 'tree':
         return renderTreeCanvas();
       case 'graph':
-        return algorithm.id === 'union-find-cycle' ? renderDsuCanvas() : renderGraphCanvas();
+        return resolvedId === 'union-find-cycle' ? renderDsuCanvas() : renderGraphCanvas();
       case 'heap':
         return renderHeapCanvas();
       case 'recursion':
         return currentSnap.queensState ? renderChessboardCanvas() : renderHanoiCanvas();
       case 'dp':
-        return renderDpCanvas();
+        return currentSnap.dpState?.table ? renderDpTableCanvas() : renderDpCanvas();
       case 'hash':
         return renderHashCanvas();
       case 'strings':
-        return algorithm.id === 'trie-search' ? renderTrieCanvas() : renderHashCanvas();
+        return resolvedId === 'trie-search' ? renderTrieCanvas() : renderHashCanvas();
       default:
         return renderArrayCanvas();
     }
   };
+
 
   return (
     <div className="skeuo-screen w-full select-none">

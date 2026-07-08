@@ -16,7 +16,7 @@ const CategoryPage = () => {
         <ShieldAlert className="w-12 h-12 text-danger animate-bounce" />
         <h2 className="text-xl font-bold">Category Console Not Found</h2>
         <Button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/dashboard")}
           className="clay-btn clay-btn-primary"
         >
           Return to Control Center
@@ -62,7 +62,7 @@ const CategoryPage = () => {
     <div className="flex flex-col gap-8 p-6 md:p-8 rounded-[36px] bg-gradient-to-br from-white to-slate-100 dark:from-[#161B26] dark:to-[#0B0F19] shadow-xl border border-white/20 transition-all duration-300">
       {/* Back button & Category Header */}
       <div className="flex items-center gap-4">
-        <Link to="/">
+        <Link to="/dashboard">
           <Button
             variant="default"
             className="w-10 h-10 !p-0 clay-btn clay-btn-default flex items-center justify-center"

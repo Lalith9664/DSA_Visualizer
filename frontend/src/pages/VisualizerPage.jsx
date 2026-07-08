@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useVisualizer } from "../context/VisualizerContext";
-import { ALGORITHMS, CATEGORIES } from "../data/algorithmsData";
+import { ALGORITHMS, CATEGORIES, COUNTERPARTS } from "../data/algorithmsData";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import VisualizerCanvas from "../components/visualizer/VisualizerCanvas";
@@ -10,6 +10,77 @@ import StatsPanel from "../components/visualizer/StatsPanel";
 import CodePanel from "../components/visualizer/CodePanel";
 import ExplanationPanel from "../components/visualizer/ExplanationPanel";
 import ComplexityPanel from "../components/visualizer/ComplexityPanel";
+
+import {
+  // Arrays (basic operations)
+  dutchNationalFlagSteps,
+  mooresVotingSteps,
+  suffixSumSteps,
+  differenceArraySteps,
+  primsSteps,
+  arrayTraversalSteps,
+  arrayInsertionSteps,
+  arrayDeletionSteps,
+  spiralMatrixSteps,
+  matrixMultiplicationSteps,
+  // Strings
+  zAlgorithmSteps,
+  manachersSteps,
+  stringCompressionSteps,
+  // Stack
+  infixToPrefixSteps,
+  prefixEvaluationSteps,
+  infixToPostfixSteps,
+  postfixEvaluationSteps,
+  nextSmallerElementSteps,
+  previousGreaterElementSteps,
+  largestRectangleHistogramSteps,
+  stockSpanSteps,
+  // Trees
+  treeDiameterSteps,
+  treeTopViewSteps,
+  treeBottomViewSteps,
+  treeLeftViewSteps,
+  treeRightViewSteps,
+  zigzagTraversalSteps,
+  validateBstSteps,
+  kthSmallestSteps,
+  // Graphs
+  kruskalsSteps,
+  bipartiteCheckSteps,
+  connectedComponentsSteps,
+  // DP
+  longestIncreasingSubsequenceSteps,
+  editDistanceSteps,
+  houseRobberSteps,
+  longestPalindromicSubsequenceSteps,
+  // Greedy / Searching
+  jobSchedulingSteps,
+  jumpGameSteps,
+  exponentialSearchSteps,
+  interpolationSearchSteps,
+  shellSortSteps,
+  bucketSortSteps,
+  // Bit / Math / Advanced
+  grayCodeSteps,
+  lcmSteps,
+  nCrSteps,
+  lruCacheSteps,
+  minimumPlatformsSteps,
+  candyDistributionSteps,
+  fenwickTreeSteps,
+  bTreeSteps,
+  bPlusTreeSteps,
+  splayTreeSteps,
+  treapSteps,
+  kdTreeSteps,
+  quadTreeSteps,
+  octreeSteps,
+  intervalTreeSteps,
+  suffixTreeSteps,
+  cartesianTreeSteps,
+} from "../algorithms/roadmapGenerators";
+
 
 // Step Frame Generators
 import {
@@ -222,6 +293,14 @@ const SECOND_INPUT_CONFIG = {
     defaultVal: "10",
     randomVal: () => (Math.floor(Math.random() * 8) + 3).toString(),
   },
+  "rat-in-a-maze": {
+    label: "Dir Order (e.g. D R U L)",
+    defaultVal: "D R U L",
+    randomVal: () => {
+      const orders = ["D R U L", "R D U L", "D R L U", "R D L U", "D L R U", "R U D L"];
+      return orders[Math.floor(Math.random() * orders.length)];
+    },
+  },
   "bst-insert": {
     label: "Insert Value",
     defaultVal: "45",
@@ -308,6 +387,7 @@ const VisualizerPage = () => {
 
   const [activeTab, setActiveTab] = useState("overview"); // 'overview', 'details', 'applications'
   const [targetInput, setTargetInput] = useState("");
+  const [isNavigating, setIsNavigating] = useState(true);
 
   // Find matched category dynamically
   const matchedCategory = CATEGORIES.find((cat) =>
@@ -375,9 +455,15 @@ const VisualizerPage = () => {
 
   // Parse and generate steps based on input text and target value
   const generateSteps = (inputText, targetValText) => {
-    const rawInput = inputText || customInput || algo.defaultInput;
-    const rawTarget = targetValText !== undefined ? targetValText : targetInput;
-    let computedSteps = [];
+    const outerAlgo = algo;
+    const counterpartId = outerAlgo.counterpartId || outerAlgo.id;
+    const counterpartInputType = outerAlgo.isRoadmapAlias && ALGORITHMS[outerAlgo.counterpartId] ? ALGORITHMS[outerAlgo.counterpartId].inputType : outerAlgo.inputType;
+    const resolvedAlgo = { ...outerAlgo, id: counterpartId, inputType: counterpartInputType };
+
+    const computedSteps = ((algo) => {
+      const rawInput = inputText || customInput || algo.defaultInput;
+      const rawTarget = targetValText !== undefined ? targetValText : targetInput;
+      let computedSteps = [];
 
     // Parse target value cleanly
     let target = 5;
@@ -422,24 +508,50 @@ const VisualizerPage = () => {
             computedSteps = quickSortSteps(arr);
             break;
           case "kadane":
+          case "kadanes-algorithm":
             computedSteps = kadaneSteps(arr);
             break;
+          case "dutch-national-flag-algorithm":
+          case "dutch-national-flag":
+            computedSteps = dutchNationalFlagSteps(arr);
+            break;
+          case "moores-voting-algorithm":
+          case "moores-voting":
+          case "boyer-moore-majority-vote":
+          case "moore-s-voting-algorithm":
+            computedSteps = mooresVotingSteps(arr);
+            break;
+          case "suffix-sum":
+          case "suffix-sum-array":
+          case "suffix-sum-concept":
+            computedSteps = suffixSumSteps(arr);
+            break;
+          case "difference-array":
+          case "difference-array-prefix":
+            computedSteps = differenceArraySteps(arr);
+            break;
           case "prefix-sum":
+          case "prefix-sum-concept":
             computedSteps = prefixSumSteps(arr);
             break;
           case "sliding-window":
+          case "sliding-window-technique":
             computedSteps = slidingWindowSteps(arr, target || 3);
             break;
           case "two-pointer":
+          case "two-pointer-technique":
             computedSteps = twoPointerSteps(arr, target);
             break;
           case "rotate-array":
+          case "rotation":
             computedSteps = rotateArraySteps(arr, target || 2);
             break;
           case "merge-arrays":
+          case "merging-arrays":
             computedSteps = mergeArraysSteps(rawInput);
             break;
           case "frequency-count":
+          case "frequency-array":
             computedSteps = frequencyCountSteps(arr);
             break;
           case "single-number":
@@ -452,9 +564,11 @@ const VisualizerPage = () => {
             computedSteps = equilibriumIndexSteps(arr);
             break;
           case "segment-tree":
+          case "segment-tree-concept":
             computedSteps = segmentTreeSteps(arr);
             break;
           case "reverse-array":
+          case "reversing":
             computedSteps = reverseArraySteps(arr);
             break;
           case "counting-sort":
@@ -472,6 +586,76 @@ const VisualizerPage = () => {
           case "two-sum-two-pointer":
             computedSteps = twoSumTwoPointerSteps(arr, target);
             break;
+          // NEW: Array Roadmap Topics
+          case "array-traversal":
+          case "traversal":
+            computedSteps = arrayTraversalSteps(arr);
+            break;
+          case "array-insertion":
+          case "insertion":
+            computedSteps = arrayInsertionSteps(arr, target || arr.length);
+            break;
+          case "array-deletion":
+          case "deletion":
+            computedSteps = arrayDeletionSteps(arr, target || 0);
+            break;
+          case "heap-sort":
+            computedSteps = heapSortSteps(arr);
+            break;
+          case "shell-sort":
+            computedSteps = shellSortSteps(arr);
+            break;
+          case "bucket-sort":
+            computedSteps = bucketSortSteps(arr);
+            break;
+          case "house-robber":
+          case "house-robber-dp":
+            computedSteps = houseRobberSteps(arr);
+            break;
+          case "lis":
+          case "longest-increasing-subsequence":
+            computedSteps = longestIncreasingSubsequenceSteps(arr);
+            break;
+          case "jump-game":
+          case "jump-game-ii":
+            computedSteps = jumpGameSteps(arr);
+            break;
+          case "candy-distribution":
+          case "candy":
+            computedSteps = candyDistributionSteps(arr);
+            break;
+          case "next-smaller-element":
+            computedSteps = nextSmallerElementSteps(arr);
+            break;
+          case "previous-greater-element":
+            computedSteps = previousGreaterElementSteps(arr);
+            break;
+          case "largest-rectangle-histogram":
+          case "largest-rectangle-in-histogram":
+            computedSteps = largestRectangleHistogramSteps(arr);
+            break;
+          case "stock-span":
+          case "stock-span-problem":
+            computedSteps = stockSpanSteps(arr);
+            break;
+          case "fenwick-tree":
+            computedSteps = fenwickTreeSteps(arr);
+            break;
+          case "b-tree":
+            computedSteps = bTreeSteps(arr);
+            break;
+          case "b-plus-tree":
+            computedSteps = bPlusTreeSteps(arr);
+            break;
+          case "splay-tree":
+            computedSteps = splayTreeSteps(arr);
+            break;
+          case "treap":
+            computedSteps = treapSteps(arr);
+            break;
+          case "cartesian-tree":
+            computedSteps = cartesianTreeSteps(arr);
+            break;
           default:
             computedSteps = bubbleSortSteps(arr);
         }
@@ -486,6 +670,10 @@ const VisualizerPage = () => {
           computedSteps = binarySearchSteps(arr, target);
         } else if (algo.id === "ternary-search") {
           computedSteps = ternarySearchSteps(arr, target);
+        } else if (algo.id === "exponential-search") {
+          computedSteps = exponentialSearchSteps(arr, target);
+        } else if (algo.id === "interpolation-search") {
+          computedSteps = interpolationSearchSteps(arr, target);
         } else {
           computedSteps = linearSearchSteps(arr, target);
         }
@@ -518,6 +706,14 @@ const VisualizerPage = () => {
       } else if (algo.inputType === "stack") {
         if (algo.id === "stack-operations") {
           computedSteps = stackOperationsSteps(rawInput);
+        } else if (algo.id === "infix-to-postfix" || algo.id === "infix-to-postfix-concept") {
+          computedSteps = infixToPostfixSteps(rawInput);
+        } else if (algo.id === "infix-to-prefix" || algo.id === "infix-to-prefix-concept") {
+          computedSteps = infixToPrefixSteps(rawInput);
+        } else if (algo.id === "postfix-evaluation" || algo.id === "postfix-evaluation-concept") {
+          computedSteps = postfixEvaluationSteps(rawInput);
+        } else if (algo.id === "prefix-evaluation" || algo.id === "prefix-evaluation-concept") {
+          computedSteps = prefixEvaluationSteps(rawInput);
         } else if (algo.id === "next-greater-element") {
           const arr = parsedInput
             .split(/\s+/)
@@ -574,6 +770,23 @@ const VisualizerPage = () => {
           computedSteps = btDeleteSteps(arr, treeTarget);
         } else if (algo.id === "rbt-insert") {
           computedSteps = rbtInsertSteps(arr);
+        } else if (algo.id === "tree-diameter" || algo.id === "diameter-of-binary-tree") {
+          computedSteps = treeDiameterSteps(arr);
+        } else if (algo.id === "tree-top-view" || algo.id === "top-view") {
+          computedSteps = treeTopViewSteps(arr);
+        } else if (algo.id === "tree-bottom-view" || algo.id === "bottom-view") {
+          computedSteps = treeBottomViewSteps(arr);
+        } else if (algo.id === "tree-left-view" || algo.id === "left-view") {
+          computedSteps = treeLeftViewSteps(arr);
+        } else if (algo.id === "tree-right-view" || algo.id === "right-view") {
+          computedSteps = treeRightViewSteps(arr);
+        } else if (algo.id === "zigzag-traversal" || algo.id === "tree-zigzag" || algo.id === "zigzag-level-order") {
+          computedSteps = zigzagTraversalSteps(arr);
+        } else if (algo.id === "validate-bst" || algo.id === "validate-bst-concept") {
+          computedSteps = validateBstSteps(arr);
+        } else if (algo.id === "kth-smallest" || algo.id === "kth-smallest-in-bst") {
+          const k = treeTarget || 3;
+          computedSteps = kthSmallestSteps(arr, k);
         } else {
           computedSteps = bstTraversalSteps(arr, "inorder");
         }
@@ -601,6 +814,14 @@ const VisualizerPage = () => {
           const lines = rawInput.trim().split("\n");
           const matrix = lines.map(l => l.split(/\s+/).map(v => v === 'INF' ? 9999 : Number(v)));
           computedSteps = floydWarshallSteps(matrix);
+        } else if (algo.id === "prims-algorithm" || algo.id === "prim-mst") {
+          computedSteps = primsSteps(rawInput);
+        } else if (algo.id === "kruskals-algorithm" || algo.id === "kruskal-mst" || algo.id === "kruskals") {
+          computedSteps = kruskalsSteps(rawInput);
+        } else if (algo.id === "bipartite-check" || algo.id === "bipartite-graph") {
+          computedSteps = bipartiteCheckSteps(rawInput);
+        } else if (algo.id === "connected-components" || algo.id === "find-connected-components") {
+          computedSteps = connectedComponentsSteps(rawInput);
         } else {
           computedSteps = dijkstraSteps(rawInput);
         }
@@ -643,6 +864,13 @@ const VisualizerPage = () => {
           const s1 = parsedInput.trim() || "ABCBDAB";
           const s2 = rawTarget ? rawTarget.trim() : (rawInput.split("\n")[1] || "BDCAB").trim();
           computedSteps = lcsDpSteps(s1, s2);
+        } else if (algo.id === "longest-increasing-subsequence" || algo.id === "lis-dp") {
+          const arr = parsedInput.split(/\s+/).map(Number).filter(x => !isNaN(x));
+          computedSteps = longestIncreasingSubsequenceSteps(arr.length ? arr : [10, 9, 2, 5, 3, 7, 101, 18]);
+        } else if (algo.id === "edit-distance") {
+          computedSteps = editDistanceSteps(rawInput);
+        } else if (algo.id === "longest-palindromic-subsequence" || algo.id === "lps-dp") {
+          computedSteps = longestPalindromicSubsequenceSteps(parsedInput.trim() || "bbbab");
         } else {
           const stairs = parseInt(rawInput) || 5;
           computedSteps = climbingStairsSteps(stairs);
@@ -661,18 +889,26 @@ const VisualizerPage = () => {
         }
       } else if (algo.inputType === "grid") {
         if (algo.id === "rat-in-a-maze") {
-          computedSteps = ratInAMazeSteps(rawInput);
+          computedSteps = ratInAMazeSteps(rawInput, rawTarget);
         } else {
           computedSteps = sudokuSolverSteps(rawInput);
         }
       } else if (algo.inputType === "greedy-interval") {
-        computedSteps = activitySelectionSteps(rawInput);
+        if (algo.id === "job-scheduling" || algo.id === "job-sequencing") {
+          computedSteps = jobSchedulingSteps(rawInput);
+        } else if (algo.id === "minimum-platforms") {
+          computedSteps = minimumPlatformsSteps(rawInput);
+        } else {
+          computedSteps = activitySelectionSteps(rawInput);
+        }
       } else if (algo.inputType === "greedy-ratio") {
         const combined = rawTarget ? rawInput + "\n" + rawTarget : rawInput;
         computedSteps = fractionalKnapsackSteps(combined);
       } else if (algo.inputType === "bit-value") {
         if (algo.id === "count-set-bits") {
           computedSteps = countSetBitsSteps(parseInt(rawInput) || 13);
+        } else if (algo.id === "gray-code" || algo.id === "gray-code-concept") {
+          computedSteps = grayCodeSteps(parseInt(rawInput) || 3);
         } else {
           computedSteps = powerOfTwoSteps(rawInput);
         }
@@ -682,6 +918,8 @@ const VisualizerPage = () => {
           const base = parseInt(parts[0]) || 2;
           const exp = parseInt(parts[1] || rawTarget) || 10;
           computedSteps = fastExponentiationSteps(base, exp);
+        } else if (algo.id === "lcm" || algo.id === "lcm-algorithm") {
+          computedSteps = lcmSteps(rawInput);
         } else {
           computedSteps = gcdSteps(rawInput);
         }
@@ -693,6 +931,12 @@ const VisualizerPage = () => {
         }
       } else if (algo.inputType === "strings") {
         computedSteps = trieSteps(rawInput);
+      } else if (algo.inputType === "z-algorithm") {
+        computedSteps = zAlgorithmSteps(rawInput);
+      } else if (algo.inputType === "manacher") {
+        computedSteps = manachersSteps(parsedInput || rawInput);
+      } else if (algo.inputType === "string-compress") {
+        computedSteps = stringCompressionSteps(parsedInput || rawInput);
       } else if (algo.inputType === "strings-list") {
         if (algo.id === "palindrome-check") {
           computedSteps = palindromeCheckSteps(rawInput.trim().split(/\s+/)[0] || "racecar");
@@ -720,6 +964,25 @@ const VisualizerPage = () => {
           const defaultGrid = [["A","B","C","E"],["S","F","C","S"],["A","D","E","E"]];
           computedSteps = wordSearchSteps(defaultGrid, word || "ABCCED");
         }
+      } else if (algo.inputType === "lru-cache") {
+        computedSteps = lruCacheSteps(rawInput);
+      } else if (algo.inputType === "spiral-matrix") {
+        const n = parseInt(parsedInput) || 4;
+        computedSteps = spiralMatrixSteps(n);
+      } else if (algo.inputType === "matrix-mult") {
+        computedSteps = matrixMultiplicationSteps(rawInput);
+      } else if (algo.inputType === "math-ncr") {
+        computedSteps = nCrSteps(rawInput);
+      } else if (algo.inputType === "kd-tree") {
+        computedSteps = kdTreeSteps(rawInput);
+      } else if (algo.inputType === "quad-tree") {
+        computedSteps = quadTreeSteps(rawInput);
+      } else if (algo.inputType === "octree") {
+        computedSteps = octreeSteps(rawInput);
+      } else if (algo.inputType === "interval-tree") {
+        computedSteps = intervalTreeSteps(rawInput);
+      } else if (algo.inputType === "suffix-tree") {
+        computedSteps = suffixTreeSteps(rawInput);
       } else {
         const arr = parsedInput
           .split(/\s+/)
@@ -738,12 +1001,15 @@ const VisualizerPage = () => {
         },
       ];
     }
+      return computedSteps;
+    })(resolvedAlgo);
 
     setSteps(computedSteps);
     resetVisualizer();
   };
 
   useEffect(() => {
+    setIsNavigating(true);
     setCurrentAlgoId(algoId);
     addToRecent(algoId);
 
@@ -751,19 +1017,28 @@ const VisualizerPage = () => {
     let initialTarget = "";
 
     if (secondInputConfig) {
-      // For algorithms with multiline default inputs, split into main input and second param
-      const lines = initialInput.split("\n");
-      initialInput = lines[0];
-      if (lines[1]) {
-        initialTarget = lines[1].replace(/Target\s*=\s*/i, "").trim();
-      } else {
+      if (algo.inputType === "grid" || algo.inputType === "graph") {
         initialTarget = secondInputConfig.defaultVal;
+      } else {
+        // For algorithms with multiline default inputs, split into main input and second param
+        const lines = initialInput.split("\n");
+        initialInput = lines[0];
+        if (lines[1]) {
+          initialTarget = lines[1].replace(/Target\s*=\s*/i, "").trim();
+        } else {
+          initialTarget = secondInputConfig.defaultVal;
+        }
       }
     }
 
     setCustomInput(initialInput);
     setTargetInput(initialTarget);
     generateSteps(initialInput, initialTarget);
+
+    const timer = setTimeout(() => {
+      setIsNavigating(false);
+    }, 250);
+    return () => clearTimeout(timer);
   }, [algoId]);
 
   const handleApplyCustomInput = () => {
@@ -996,9 +1271,16 @@ const VisualizerPage = () => {
             <h2 className="text-2xl font-black text-text-primary tracking-tight">
               {algo.name} Console
             </h2>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-primary font-mono bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
-              Category: {algo.category} // Status: Online
-            </span>
+            <div className="flex gap-2 items-center flex-wrap mt-0.5">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-primary font-mono bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
+                Category: {algo.category} // Status: Online
+              </span>
+              {algo.isRoadmapAlias && (
+                <span className="text-[10px] uppercase font-bold tracking-widest text-accent font-mono bg-accent/10 px-2.5 py-1 rounded-full border border-accent/20">
+                  Simulated using {ALGORITHMS[algo.counterpartId]?.name} engine
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1018,7 +1300,7 @@ const VisualizerPage = () => {
         {/* Left/Middle Workspace Column: Canvas & Control cockpit */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* Main Visualizer screen */}
-          <VisualizerCanvas algorithm={algo} />
+          <VisualizerCanvas algorithm={algo} loading={isNavigating} />
 
           {/* Control Cockpit panel */}
           <ControlPanel
@@ -1039,17 +1321,19 @@ const VisualizerPage = () => {
                 Type variables separated by spaces
               </span>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-start">
               <div className="flex-1">
-                {algo.inputType === "graph" || algo.id === "knapsack-dp" ? (
+                {algo.inputType === "graph" || algo.inputType === "grid" || algo.id === "knapsack-dp" ? (
                   <textarea
-                    rows={1}
+                    rows={5}
                     value={customInput}
                     onChange={(e) => setCustomInput(e.target.value)}
                     placeholder={
                       algo.id === "knapsack-dp"
                         ? "Line 1: weights (e.g., 2 3 4 5)\nLine 2: values (e.g., 3 4 5 6)"
-                        : "Enter graph edges: u v w (newline separated)..."
+                        : algo.inputType === "grid"
+                        ? "Enter grid board layout (space-separated cells, newline-separated rows), e.g.:\n0 1 0 0\n0 0 0 1\n1 0 0 0\n0 1 0 0"
+                        : "Enter graph edges: u v w (newline separated, e.g.):\n0 1 4\n1 2 8\n2 3 3"
                     }
                     className="clay-input w-full font-mono text-xs px-3 py-2"
                   />
@@ -1066,7 +1350,10 @@ const VisualizerPage = () => {
                 )}
               </div>
               {secondInputConfig && (
-                <div className="w-28 md:w-36 flex-shrink-0">
+                <div className="w-28 md:w-36 flex-shrink-0 flex flex-col gap-1">
+                  <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                    {secondInputConfig.label.split("(")[0].trim()}
+                  </span>
                   <Input
                     value={targetInput}
                     onChange={(e) => setTargetInput(e.target.value)}

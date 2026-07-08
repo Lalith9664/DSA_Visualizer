@@ -187,10 +187,10 @@ const BottomNav = () => {
         {/* Tab 1: Home */}
         <button
           onClick={() => {
-            navigate('/');
+            navigate('/dashboard');
             setActiveTab(null);
           }}
-          className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all w-12 ${location.pathname === '/' && !activeTab ? 'text-primary scale-105' : 'text-text-secondary'}`}
+          className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all w-12 ${location.pathname === '/dashboard' && !activeTab ? 'text-primary scale-105' : 'text-text-secondary'}`}
         >
           <Home className="w-5 h-5" />
           <span className="text-[8px] font-bold font-mono uppercase">Home</span>
