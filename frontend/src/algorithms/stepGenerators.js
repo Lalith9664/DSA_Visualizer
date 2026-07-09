@@ -3036,7 +3036,8 @@ export const knapsackDpSteps = (inputStr) => {
     dpState: { matrix: JSON.parse(JSON.stringify(dp)), weights, values, capacity, i: 0, w: 0 },
     highlights: {},
     explanation: "Initialize DP table for 0/1 Knapsack with zeros. Rows = items (0 to n), Columns = capacities (0 to W).",
-    stats: { comparisons: 0, swaps: 0, step: 0 }
+    stats: { comparisons: 0, swaps: 0, step: 0 },
+    activeLine: 2
   });
 
   for (let i = 1; i <= n; i++) {
@@ -3057,7 +3058,8 @@ export const knapsackDpSteps = (inputStr) => {
         dpState: { matrix: JSON.parse(JSON.stringify(dp)), weights, values, capacity, i, w },
         highlights,
         explanation: `Computing dp[${i}][${w}] for item ${i} (wt:${itemWt}, val:${itemVal}) at capacity ${w}.`,
-        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        activeLine: 5
       });
 
       if (itemWt <= w) {
@@ -3071,7 +3073,8 @@ export const knapsackDpSteps = (inputStr) => {
         dpState: { matrix: JSON.parse(JSON.stringify(dp)), weights, values, capacity, i, w },
         highlights: { [`${i}-${w}`]: 'sorted' },
         explanation: `Result: dp[${i}][${w}] = ${dp[i][w]}.`,
-        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        activeLine: itemWt <= w ? 6 : 8
       });
     }
   }
@@ -3081,7 +3084,8 @@ export const knapsackDpSteps = (inputStr) => {
     dpState: { matrix: JSON.parse(JSON.stringify(dp)), weights, values, capacity, i: n, w: capacity },
     highlights: { [`${n}-${capacity}`]: 'sorted' },
     explanation: `Knapsack DP complete! Maximum value achievable is ${dp[n][capacity]}.`,
-    stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+    activeLine: 9
   });
 
   return steps;
@@ -4733,7 +4737,7 @@ export const lcsDpSteps = (s1, s2) => {
       dp[i][j] = match ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
       steps.push({
         data: { s1, s2, dp: dp.map(r=>[...r]), i, j },
-        highlights: { row: i, col: j, match },
+        highlights: { row: i, col: j, match, type: 'lcs' },
         explanation: match
           ? `s1[${i-1}]='${s1[i-1]}' == s2[${j-1}]='${s2[j-1]}': Match! dp[${i}][${j}] = dp[${i-1}][${j-1}]+1 = ${dp[i][j]}.`
           : `s1[${i-1}]='${s1[i-1]}' ≠ s2[${j-1}]='${s2[j-1]}': No match. dp[${i}][${j}] = max(${dp[i-1][j]},${dp[i][j-1]}) = ${dp[i][j]}.`,
@@ -4747,6 +4751,334 @@ export const lcsDpSteps = (s1, s2) => {
     explanation: `LCS length = dp[${m}][${n}] = ${dp[m][n]}. The longest common subsequence has ${dp[m][n]} characters.`,
     stats: { comparisons: m*n, swaps: 0, step: steps.length }
   });
+  return steps;
+};
+
+// --- LONGEST COMMON SUBSTRING ---
+export const longestCommonSubstringSteps = (s1, s2) => {
+  const steps = [];
+  const m = s1.length, n = s2.length;
+  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));
+  let maxLen = 0;
+  let maxI = -1, maxJ = -1;
+
+  steps.push({
+    data: { s1, s2, dp: dp.map(r=>[...r]), i: -1, j: -1 },
+    highlights: {},
+    explanation: `Longest Common Substring: Find longest common contiguous substring of "${s1}" and "${s2}". Build (${m+1})x(${n+1}) DP table.`,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const match = s1[i-1] === s2[j-1];
+      if (match) {
+        dp[i][j] = dp[i-1][j-1] + 1;
+        if (dp[i][j] > maxLen) {
+          maxLen = dp[i][j];
+          maxI = i;
+          maxJ = j;
+        }
+      } else {
+        dp[i][j] = 0;
+      }
+
+      steps.push({
+        data: { s1, s2, dp: dp.map(r=>[...r]), i, j },
+        highlights: { row: i, col: j, match, type: 'substring' },
+        explanation: match
+          ? `s1[${i-1}]='${s1[i-1]}' == s2[${j-1}]='${s2[j-1]}': Match! Extends previous common substring. dp[${i}][${j}] = dp[${i-1}][${j-1}]+1 = ${dp[i][j]}.`
+          : `s1[${i-1}]='${s1[i-1]}' ≠ s2[${j-1}]='${s2[j-1]}': Mismatch. Substring must be contiguous, so we reset to 0.`,
+        stats: { comparisons: (i-1)*n+j, swaps: 0, step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: { s1, s2, dp: dp.map(r=>[...r]), i: maxI, j: maxJ },
+    highlights: { done: true, result: maxLen },
+    explanation: `Longest Common Substring length = ${maxLen}. The longest common substring is "${maxI !== -1 ? s1.substring(maxI - maxLen, maxI) : ''}".`,
+    stats: { comparisons: m*n, swaps: 0, step: steps.length }
+  });
+  return steps;
+};
+
+// --- BURST BALLOONS ---
+export const burstBalloonsSteps = (arr) => {
+  const steps = [];
+  const nums = [1, ...arr, 1];
+  const n = arr.length;
+  const dp = Array.from({length: n+2}, () => new Array(n+2).fill(0));
+
+  const s1 = arr.map(String).join('');
+  const s2 = arr.map(String).join('');
+
+  steps.push({
+    data: { s1, s2, dp: dp.slice(1, n+1).map(r => r.slice(1, n+1)), i: -1, j: -1 },
+    highlights: {},
+    explanation: `Burst Balloons: Find max coins by bursting balloons [${arr.join(', ')}]. We pad with 1s: [${nums.join(', ')}]. dp[i][j] is max coins for subarray i..j.`,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let len = 1; len <= n; len++) {
+    for (let i = 1; i <= n - len + 1; i++) {
+      let j = i + len - 1;
+      let maxCoins = 0;
+      let bestK = -1;
+
+      for (let k = i; k <= j; k++) {
+        const coins = dp[i][k-1] + nums[i-1] * nums[k] * nums[j+1] + dp[k+1][j];
+        if (coins > maxCoins) {
+          maxCoins = coins;
+          bestK = k;
+        }
+      }
+      dp[i][j] = maxCoins;
+
+      steps.push({
+        data: {
+          s1,
+          s2,
+          dp: dp.slice(1, n+1).map(r => r.slice(1, n+1)),
+          i: i,
+          j: j
+        },
+        highlights: { row: i, col: j, pivot: bestK },
+        explanation: `Subarray [${arr.slice(i-1, j).join(', ')}]: Burst balloon ${arr[bestK-1]} last. Coins = dp[${i}][${bestK-1}] (${dp[i][bestK-1]}) + ${nums[i-1]}*${nums[bestK]}*${nums[j+1]} + dp[${bestK+1}][${j}] (${dp[bestK+1][j]}) = ${maxCoins}.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: {
+      s1,
+      s2,
+      dp: dp.slice(1, n+1).map(r => r.slice(1, n+1)),
+      i: 1,
+      j: n
+    },
+    highlights: { done: true, result: dp[1][n] },
+    explanation: `Max coins obtained = dp[1][${n}] = ${dp[1][n]}.`,
+    stats: { comparisons: n*n, swaps: 0, step: steps.length }
+  });
+
+  return steps;
+};
+
+// --- MATRIX CHAIN MULTIPLICATION ---
+export const matrixChainSteps = (arr) => {
+  const steps = [];
+  const n = arr.length - 1;
+  const dp = Array.from({length: n+1}, () => new Array(n+1).fill(0));
+
+  const s1 = Array.from({length: n}, (_, i) => String.fromCharCode(65 + i)).join('');
+  const s2 = Array.from({length: n}, (_, i) => String.fromCharCode(65 + i)).join('');
+
+  steps.push({
+    data: { s1, s2, dp: dp.slice(1).map(r => r.slice(1)), i: -1, j: -1 },
+    highlights: {},
+    explanation: `Matrix Chain Multiplication: Find min multiplications to multiply matrices of dimensions [${arr.join(', ')}]. dp[i][j] is min cost to multiply matrices A_i..A_j.`,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let len = 2; len <= n; len++) {
+    for (let i = 1; i <= n - len + 1; i++) {
+      let j = i + len - 1;
+      dp[i][j] = Infinity;
+      let bestK = -1;
+
+      for (let k = i; k < j; k++) {
+        const cost = dp[i][k] + dp[k+1][j] + arr[i-1] * arr[k] * arr[j];
+        if (cost < dp[i][j]) {
+          dp[i][j] = cost;
+          bestK = k;
+        }
+      }
+
+      steps.push({
+        data: {
+          s1,
+          s2,
+          dp: dp.slice(1).map(r => r.slice(1)),
+          i,
+          j
+        },
+        highlights: { row: i, col: j, pivot: bestK },
+        explanation: `Multiply matrices A_${i}..A_${j} (split at A_${bestK}): dp[${i}][${j}] = min cost is ${dp[i][j]}.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: {
+      s1,
+      s2,
+      dp: dp.slice(1).map(r => r.slice(1)),
+      i: 1,
+      j: n
+    },
+    highlights: { done: true, result: dp[1][n] },
+    explanation: `Min multiplications needed = dp[1][${n}] = ${dp[1][n]}.`,
+    stats: { comparisons: n*n, swaps: 0, step: steps.length }
+  });
+
+  return steps;
+};
+
+// --- WILDCARD MATCHING ---
+export const wildcardMatchingSteps = (s1, s2) => {
+  const steps = [];
+  const m = s1.length, n = s2.length;
+  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));
+
+  dp[0][0] = 1;
+  for (let j = 1; j <= n; j++) {
+    if (s2[j-1] === '*') {
+      dp[0][j] = dp[0][j-1];
+    }
+  }
+
+  steps.push({
+    data: { s1, s2, dp: dp.map(r=>[...r]), i: 0, j: 0 },
+    highlights: {},
+    explanation: `Wildcard Matching: Match string "${s1}" against pattern "${s2}". dp[i][j] stores match status (1=true, 0=false).`,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (s2[j-1] === '*') {
+        dp[i][j] = (dp[i-1][j] || dp[i][j-1]) ? 1 : 0;
+      } else if (s2[j-1] === '?' || s1[i-1] === s2[j-1]) {
+        dp[i][j] = dp[i-1][j-1];
+      } else {
+        dp[i][j] = 0;
+      }
+
+      steps.push({
+        data: { s1, s2, dp: dp.map(r=>[...r]), i, j },
+        highlights: { row: i, col: j },
+        explanation: s2[j-1] === '*'
+          ? `Pattern char is '*': dp[${i}][${j}] = dp[${i-1}][${j}] (match current) || dp[${i}][${j-1}] (match empty) = ${dp[i][j]}.`
+          : `Pattern char is '${s2[j-1]}': dp[${i}][${j}] = ${s1[i-1] === s2[j-1] || s2[j-1] === '?' ? `dp[${i-1}][${j-1}] = ${dp[i][j]}` : `0 (mismatch)`}.`,
+        stats: { comparisons: (i-1)*n+j, swaps: 0, step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: { s1, s2, dp: dp.map(r=>[...r]), i: m, j: n },
+    highlights: { done: true, result: dp[m][n] },
+    explanation: `Result = ${dp[m][n] === 1 ? 'Match Successful!' : 'No Match Found.'}`,
+    stats: { comparisons: m*n, swaps: 0, step: steps.length }
+  });
+
+  return steps;
+};
+
+// --- EGG DROPPING ---
+export const eggDroppingSteps = (eggs, floors) => {
+  const steps = [];
+  const dp = Array.from({length: eggs+1}, () => new Array(floors+1).fill(0));
+
+  for (let j = 1; j <= floors; j++) {
+    dp[1][j] = j;
+  }
+  for (let i = 1; i <= eggs; i++) {
+    dp[i][1] = 1;
+  }
+
+  const s1 = Array.from({length: eggs}, (_, i) => (i + 1).toString()).join('');
+  const s2 = Array.from({length: floors}, (_, i) => (i + 1).toString()).join('');
+
+  steps.push({
+    data: { s1, s2, dp: dp.map(r=>[...r]), i: -1, j: -1 },
+    highlights: {},
+    explanation: `Egg Dropping: Find min trials for ${eggs} eggs and ${floors} floors. dp[e][f] is min trials in worst case.`,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let i = 2; i <= eggs; i++) {
+    for (let j = 2; j <= floors; j++) {
+      let minTrials = Infinity;
+      for (let k = 1; k <= j; k++) {
+        const trials = 1 + Math.max(dp[i-1][k-1], dp[i][j-k]);
+        minTrials = Math.min(minTrials, trials);
+      }
+      dp[i][j] = minTrials;
+
+      steps.push({
+        data: { s1, s2, dp: dp.map(r=>[...r]), i, j },
+        highlights: { row: i, col: j },
+        explanation: `dp[${i} eggs][${j} floors]: Try dropping from every floor k (1..${j}). dp[${i}][${j}] = 1 + min_k max(break=dp[${i-1}][k-1], safe=dp[${i}][${j-k}]) = ${minTrials}.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: { s1, s2, dp: dp.map(r=>[...r]), i: eggs, j: floors },
+    highlights: { done: true, result: dp[eggs][floors] },
+    explanation: `Minimum trials required in worst case = dp[${eggs}][${floors}] = ${dp[eggs][floors]}.`,
+    stats: { comparisons: eggs*floors, swaps: 0, step: steps.length }
+  });
+
+  return steps;
+};
+
+// --- PALINDROME PARTITIONING ---
+export const palindromePartitioningSteps = (s) => {
+  const steps = [];
+  const n = s.length;
+  const dp = Array.from({length: n+1}, () => new Array(n+1).fill(0));
+
+  const isPal = Array.from({length: n+1}, () => new Array(n+1).fill(true));
+  for (let len = 2; len <= n; len++) {
+    for (let i = 1; i <= n - len + 1; i++) {
+      let j = i + len - 1;
+      isPal[i][j] = (s[i-1] === s[j-1]) && isPal[i+1][j-1];
+    }
+  }
+
+  steps.push({
+    data: { s1: s, s2: s, dp: dp.map(r=>[...r]), i: -1, j: -1 },
+    highlights: {},
+    explanation: `Palindrome Partitioning: Find min cuts to partition "${s}" into palindromes. dp[i][j] is min cuts for s[i-1..j-1].`,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let len = 1; len <= n; len++) {
+    for (let i = 1; i <= n - len + 1; i++) {
+      let j = i + len - 1;
+      if (isPal[i][j]) {
+        dp[i][j] = 0;
+      } else {
+        dp[i][j] = Infinity;
+        for (let k = i; k < j; k++) {
+          dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[k+1][j] + 1);
+        }
+      }
+
+      steps.push({
+        data: { s1: s, s2: s, dp: dp.map(r=>[...r]), i, j },
+        highlights: { row: i, col: j },
+        explanation: isPal[i][j]
+          ? `Substring "${s.substring(i-1, j)}" is a palindrome: dp[${i}][${j}] = 0 cuts.`
+          : `Substring "${s.substring(i-1, j)}": Min cuts dp[${i}][${j}] = min_k (dp[${i}][k] + dp[k+1][${j}] + 1) = ${dp[i][j]} cuts.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: { s1: s, s2: s, dp: dp.map(r=>[...r]), i: 1, j: n },
+    highlights: { done: true, result: dp[1][n] },
+    explanation: `Minimum cuts needed for "${s}" = dp[1][${n}] = ${dp[1][n]} cuts.`,
+    stats: { comparisons: n*n, swaps: 0, step: steps.length }
+  });
+
   return steps;
 };
 

@@ -21,7 +21,7 @@ const MainLayout = ({ children }) => {
         {/* Content Box */}
         <main
           className={`
-            flex-1 p-6 md:p-8 pb-24 lg:pb-8 flex flex-col gap-6 overflow-x-hidden min-h-[calc(100vh-4rem)] transition-all duration-300
+            flex-1 p-6 md:p-8 pb-24 lg:pb-8 flex flex-col gap-6 overflow-x-clip min-h-[calc(100vh-4rem)] transition-all duration-300
             ${sidebarOpen ? "lg:pl-80" : "pl-6 md:pl-8"}
           `}
         >

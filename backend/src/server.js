@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import session from 'express-session';
 import dotenv from 'dotenv';
 
 // Load environment variables before any other imports
@@ -28,6 +29,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // -------------------------------------------------------------------
+// Session (1.5-hour cookie)
+// -------------------------------------------------------------------
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'dsa-visualizer-dev-secret-change-in-prod',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,                  // Not accessible via JS
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+    sameSite: 'lax',
+    maxAge: 1.5 * 60 * 60 * 1000,    // 1.5 hours in milliseconds
+  },
+  name: 'dsa.sid',
+}));
+
+// -------------------------------------------------------------------
 // Health Check
 // -------------------------------------------------------------------
 
@@ -45,7 +63,6 @@ app.get('/health', (_req, res) => {
 // -------------------------------------------------------------------
 
 app.use('/api/users', userRoutes);
-app.use('/api/progress', progressRoutes);
 app.use('/api/favorites', favoritesRoutes);
 
 // 404 handler for unknown routes

@@ -401,3 +401,17 @@ body {
   animation: shape-float 8s infinite ease-in-out;
   animation-delay: 3s;
 }
+
+/* Custom Sticky Workspace Column Style */
+.sticky-workspace-column {
+  position: static;
+}
+
+@media (min-width: 1024px) {
+  .sticky-workspace-column {
+    position: sticky !important;
+    top: 200px !important;
+    align-self: start !important;
+  }
+}
+

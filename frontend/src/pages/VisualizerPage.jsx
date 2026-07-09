@@ -155,6 +155,12 @@ import {
   wordSearchSteps,
   generateParenthesesSteps,
   lcsDpSteps,
+  longestCommonSubstringSteps,
+  burstBalloonsSteps,
+  matrixChainSteps,
+  wildcardMatchingSteps,
+  eggDroppingSteps,
+  palindromePartitioningSteps,
   countingSortSteps,
   radixSortSteps,
   countSetBitsSteps,
@@ -347,6 +353,27 @@ const SECOND_INPUT_CONFIG = {
       const words = ["BDCAB", "AGGTAB", "GXTXAYB", "MZJAWXU", "XMJYAUZ"];
       return words[Math.floor(Math.random() * words.length)];
     },
+  },
+  "longest-common-substring": {
+    label: "Second String",
+    defaultVal: "BDCAB",
+    randomVal: () => {
+      const words = ["BDCAB", "AGGTAB", "GXTXAYB", "MZJAWXU", "XMJYAUZ"];
+      return words[Math.floor(Math.random() * words.length)];
+    },
+  },
+  "dp-wildcard-matching": {
+    label: "Pattern",
+    defaultVal: "ba*a?",
+    randomVal: () => {
+      const patterns = ["ba*a?", "a*b", "a?b*", "*ab*"];
+      return patterns[Math.floor(Math.random() * patterns.length)];
+    },
+  },
+  "dp-egg-dropping": {
+    label: "Floors",
+    defaultVal: "6",
+    randomVal: () => (Math.floor(Math.random() * 5) + 4).toString(),
   },
   "word-search": {
     label: "Word to Find",
@@ -864,6 +891,26 @@ const VisualizerPage = () => {
           const s1 = parsedInput.trim() || "ABCBDAB";
           const s2 = rawTarget ? rawTarget.trim() : (rawInput.split("\n")[1] || "BDCAB").trim();
           computedSteps = lcsDpSteps(s1, s2);
+        } else if (algo.id === "longest-common-substring") {
+          const s1 = parsedInput.trim() || "ABCBDAB";
+          const s2 = rawTarget ? rawTarget.trim() : (rawInput.split("\n")[1] || "BDCAB").trim();
+          computedSteps = longestCommonSubstringSteps(s1, s2);
+        } else if (algo.id === "dp-burst-balloons") {
+          const arr = parsedInput.split(/\s+/).map(Number).filter(x => !isNaN(x));
+          computedSteps = burstBalloonsSteps(arr.length ? arr : [5, 3, 8, 9, 1]);
+        } else if (algo.id === "dp-matrix-chain-multiplication") {
+          const arr = parsedInput.split(/\s+/).map(Number).filter(x => !isNaN(x));
+          computedSteps = matrixChainSteps(arr.length ? arr : [10, 20, 30, 40, 30]);
+        } else if (algo.id === "dp-wildcard-matching") {
+          const s1 = parsedInput.trim() || "baaabab";
+          const s2 = rawTarget ? rawTarget.trim() : (rawInput.split("\n")[1] || "ba*a?").trim();
+          computedSteps = wildcardMatchingSteps(s1, s2);
+        } else if (algo.id === "dp-egg-dropping") {
+          const eggs = parseInt(parsedInput) || 2;
+          const floors = parseInt(rawTarget) || 6;
+          computedSteps = eggDroppingSteps(eggs, floors);
+        } else if (algo.id === "dp-palindrome-partitioning") {
+          computedSteps = palindromePartitioningSteps(parsedInput.trim() || "aab");
         } else if (algo.id === "longest-increasing-subsequence" || algo.id === "lis-dp") {
           const arr = parsedInput.split(/\s+/).map(Number).filter(x => !isNaN(x));
           computedSteps = longestIncreasingSubsequenceSteps(arr.length ? arr : [10, 9, 2, 5, 3, 7, 101, 18]);
@@ -1129,7 +1176,7 @@ const VisualizerPage = () => {
         const coinSets = [[1, 2, 5], [1, 3, 4], [1, 5, 10], [2, 3, 7]];
         randStr = coinSets[Math.floor(Math.random() * coinSets.length)].join(" ");
         if (secondInputConfig) randTarget = secondInputConfig.randomVal([]);
-      } else if (algo.id === "lcs-dp") {
+      } else if (algo.id === "lcs-dp" || algo.id === "longest-common-substring") {
         const pairs = [
           ["ABCBDAB", "BDCAB"],
           ["AGGTAB", "GXTXAYB"],
@@ -1138,6 +1185,35 @@ const VisualizerPage = () => {
         const pair = pairs[Math.floor(Math.random() * pairs.length)];
         randStr = pair[0];
         randTarget = pair[1];
+      } else if (algo.id === "dp-burst-balloons") {
+        const sets = [
+          [3, 1, 5, 8],
+          [5, 3, 8, 9, 1],
+          [2, 4, 3, 5]
+        ];
+        randStr = sets[Math.floor(Math.random() * sets.length)].join(" ");
+      } else if (algo.id === "dp-matrix-chain-multiplication") {
+        const sets = [
+          [10, 20, 30, 40, 30],
+          [40, 20, 30, 10, 30],
+          [10, 20, 30, 40]
+        ];
+        randStr = sets[Math.floor(Math.random() * sets.length)].join(" ");
+      } else if (algo.id === "dp-wildcard-matching") {
+        const pairs = [
+          ["baaabab", "ba*a?"],
+          ["aa", "a*"],
+          ["cb", "?a"]
+        ];
+        const pair = pairs[Math.floor(Math.random() * pairs.length)];
+        randStr = pair[0];
+        randTarget = pair[1];
+      } else if (algo.id === "dp-egg-dropping") {
+        randStr = (Math.floor(Math.random() * 2) + 2).toString();
+        if (secondInputConfig) randTarget = secondInputConfig.randomVal([]);
+      } else if (algo.id === "dp-palindrome-partitioning") {
+        const words = ["aab", "abacaba", "racecar", "nitin", "geek"];
+        randStr = words[Math.floor(Math.random() * words.length)];
       } else {
         randStr = (Math.floor(Math.random() * 3) + 4).toString();
         if (secondInputConfig) randTarget = secondInputConfig.randomVal([]);
@@ -1254,9 +1330,9 @@ const VisualizerPage = () => {
   const canNext = currentStep < totalSteps - 1;
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 rounded-[36px] bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-xl border border-white/20 transition-all duration-300">
-      {/* 1. UPPER META BOARD */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">
+    <div className="flex flex-col gap-4">
+      {/* 1. UPPER META BOARD — standalone sticky header */}
+      <div className="p-4 md:px-8 md:py-5 rounded-[24px] bg-white/80 dark:bg-[#161B26]/80 backdrop-blur-xl shadow-lg border border-white/20 dark:border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-all duration-300">
         <div className="flex items-center gap-3 text-left">
           <Link to={`/category/${algo.category}`}>
             <Button
@@ -1295,10 +1371,11 @@ const VisualizerPage = () => {
         </Button>
       </div>
 
-      {/* 2. DUAL COLUMN WORKSPACE */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left/Middle Workspace Column: Canvas & Control cockpit */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
+      {/* 2. DUAL COLUMN WORKSPACE — split pane layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 lg:h-[calc(100vh-180px)]">
+
+        {/* LEFT BLOCK: Visualizer + Controls — stays fixed in place */}
+        <div className="lg:col-span-2 lg:overflow-y-auto flex flex-col gap-4 p-5 md:p-6 rounded-[28px] bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-xl border border-white/20 dark:border-white/5 transition-all duration-300">
           {/* Main Visualizer screen */}
           <VisualizerCanvas algorithm={algo} loading={isNavigating} />
 
@@ -1312,7 +1389,7 @@ const VisualizerPage = () => {
           />
 
           {/* Input Panel Card */}
-          <div className="clay-card bg-white dark:bg-[#161b26] p-6 flex flex-col gap-3 text-left">
+          <div className="clay-card bg-white dark:bg-[#161b26] p-5 flex flex-col gap-3 text-left">
             <div className="flex items-center justify-between pb-1">
               <span className="text-xs font-bold text-text-secondary opacity-75 uppercase tracking-wider">
                 CUSTOM INPUT PANEL
@@ -1376,16 +1453,16 @@ const VisualizerPage = () => {
           <ExplanationPanel />
         </div>
 
-        {/* Right Sidebar Column: Metadata descriptions & code snippets */}
-        <div className="flex flex-col gap-6">
+        {/* RIGHT BLOCK: Reference info — scrolls independently */}
+        <div className="flex flex-col gap-4 lg:overflow-y-auto lg:pr-1">
+          {/* Python code panel — first */}
+          <CodePanel algorithm={algo} />
+
           {/* Static Complexities Card */}
           <ComplexityPanel algorithm={algo} />
 
           {/* Telemetry Real-time scoreboard */}
           <StatsPanel />
-
-          {/* Code panel tab implementation */}
-          <CodePanel algorithm={algo} />
 
           {/* Details Overview Metadata tabs card */}
           <div className="clay-card bg-white dark:bg-[#161b26] p-6 flex flex-col gap-4 text-left">

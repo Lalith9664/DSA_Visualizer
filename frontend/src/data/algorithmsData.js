@@ -143,12 +143,18 @@ export const CATEGORIES = [
     "name": "Dynamic Programming",
     "description": "Solves overlapping subproblems using memoization or tabulation.",
     "icon": "DpIcon",
-    "algorithmsCount": 4,
+    "algorithmsCount": 10,
     "algorithms": [
       "climbing-stairs",
       "coin-change-dp",
       "knapsack-dp",
-      "lcs-dp"
+      "lcs-dp",
+      "longest-common-substring",
+      "dp-burst-balloons",
+      "dp-matrix-chain-multiplication",
+      "dp-wildcard-matching",
+      "dp-egg-dropping",
+      "dp-palindrome-partitioning"
     ]
   },
   {
@@ -4481,6 +4487,200 @@ class MinHeap:
         "cpp": "int lcs(string s1, string s2) {\n    int m=s1.size(),n=s2.size();\n    vector<vector<int>> dp(m+1,vector<int>(n+1,0));\n    for(int i=1;i<=m;i++)\n        for(int j=1;j<=n;j++)\n            dp[i][j]=s1[i-1]==s2[j-1]?dp[i-1][j-1]+1:max(dp[i-1][j],dp[i][j-1]);\n    return dp[m][n];\n}"
     }
 },
+  "longest-common-substring": {
+    "id": "longest-common-substring",
+    "name": "Longest Common Substring",
+    "category": "dynamic-programming",
+    "difficulty": "Medium",
+    "description": "Finds the length of the longest common contiguous substring between two strings using a 2D DP table.",
+    "timeComplexity": {
+        "best": "O(mn)",
+        "average": "O(mn)",
+        "worst": "O(mn)"
+    },
+    "spaceComplexity": "O(mn)",
+    "applications": [
+        "Plagiarism detection",
+        "Bioinformatics DNA sequence matching"
+    ],
+    "advantages": [
+        "Optimal contiguous matching"
+    ],
+    "disadvantages": [
+        "O(mn) space complexity"
+    ],
+    "realWorldUses": [
+        "Text comparison utilities"
+    ],
+    "defaultInput": "ABCBDAB",
+    "inputType": "dp",
+    "pseudocode": "lcs(s1, s2):\n  if s1[i-1]==s2[j-1]: dp[i][j] = dp[i-1][j-1] + 1\n  else: dp[i][j] = 0",
+    "code": {
+        "javascript": "function longestCommonSubstring(s1, s2) {\n  const m = s1.length, n = s2.length;\n  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));\n  let maxLen = 0;\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (s1[i-1] === s2[j-1]) {\n        dp[i][j] = dp[i-1][j-1] + 1;\n        maxLen = Math.max(maxLen, dp[i][j]);\n      } else {\n        dp[i][j] = 0;\n      }\n    }\n  }\n  return maxLen;\n}",
+        "python": "def longestCommonSubstring(s1, s2):\n    m, n = len(s1), len(s2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    maxLen = 0\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if s1[i-1] == s2[j-1]:\n                dp[i][j] = dp[i-1][j-1] + 1\n                maxLen = max(maxLen, dp[i][j])\n            else:\n                dp[i][j] = 0\n    return maxLen"
+    }
+  },
+  "dp-burst-balloons": {
+    "id": "dp-burst-balloons",
+    "name": "Burst Balloons",
+    "category": "dynamic-programming",
+    "difficulty": "Hard",
+    "description": "Maximize the coins obtained by bursting balloons. Bursting balloon i gives nums[i-1] * nums[i] * nums[i+1] coins.",
+    "timeComplexity": {
+        "best": "O(n³)",
+        "average": "O(n³)",
+        "worst": "O(n³)"
+    },
+    "spaceComplexity": "O(n²)",
+    "applications": [
+        "Game theory optimization",
+        "Interval dynamic programming"
+    ],
+    "advantages": [
+        "Finds global maximum coins"
+    ],
+    "disadvantages": [
+        "O(n³) time complexity is slow for large n"
+    ],
+    "realWorldUses": [
+        "Operations research scheduling"
+    ],
+    "defaultInput": "5 3 8 9 1",
+    "inputType": "dp",
+    "pseudocode": "burst(nums):\n  dp[i][j] = max_{k=i..j} (dp[i][k-1] + val[i-1]*val[k]*val[j+1] + dp[k+1][j])",
+    "code": {
+        "javascript": "function maxCoins(nums) {\n  const arr = [1, ...nums, 1];\n  const n = nums.length;\n  const dp = Array.from({length: n+2}, () => new Array(n+2).fill(0));\n  for (let len = 1; len <= n; len++) {\n    for (let i = 1; i <= n - len + 1; i++) {\n      let j = i + len - 1;\n      for (let k = i; k <= j; k++) {\n        dp[i][j] = Math.max(dp[i][j], dp[i][k-1] + arr[i-1] * arr[k] * arr[j+1] + dp[k+1][j]);\n      }\n    }\n  }\n  return dp[1][n];\n}",
+        "python": "def maxCoins(nums):\n    arr = [1] + nums + [1]\n    n = len(nums)\n    dp = [[0] * (n + 2) for _ in range(n + 2)]\n    for length in range(1, n + 1):\n        for i in range(1, n - length + 2):\n            j = i + length - 1\n            for k in range(i, j + 1):\n                dp[i][j] = max(dp[i][j], dp[i][k-1] + arr[i-1] * arr[k] * arr[j+1] + dp[k+1][j])\n    return dp[1][n]"
+    }
+  },
+  "dp-matrix-chain-multiplication": {
+    "id": "dp-matrix-chain-multiplication",
+    "name": "Matrix Chain Multiplication",
+    "category": "dynamic-programming",
+    "difficulty": "Hard",
+    "description": "Finds the most efficient way to multiply a chain of matrices by calculating min scalar multiplication costs.",
+    "timeComplexity": {
+        "best": "O(n³)",
+        "average": "O(n³)",
+        "worst": "O(n³)"
+    },
+    "spaceComplexity": "O(n²)",
+    "applications": [
+        "Query optimization in databases",
+        "Compiler optimization workflows"
+    ],
+    "advantages": [
+        "Optimal parenthization layout search"
+    ],
+    "disadvantages": [
+        "Requires dimensional array input format"
+    ],
+    "realWorldUses": [
+        "Relational query optimizer planners"
+    ],
+    "defaultInput": "10 20 30 40 30",
+    "inputType": "dp",
+    "pseudocode": "mcm(p):\n  dp[i][j] = min_{k} (dp[i][k] + dp[k+1][j] + p[i-1]*p[k]*p[j])",
+    "code": {
+        "javascript": "function mcm(p) {\n  const n = p.length - 1;\n  const dp = Array.from({length: n+1}, () => new Array(n+1).fill(0));\n  for (let len = 2; len <= n; len++) {\n    for (let i = 1; i <= n - len + 1; i++) {\n      let j = i + len - 1;\n      dp[i][j] = Infinity;\n      for (let k = i; k < j; k++) {\n        dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[k+1][j] + p[i-1] * p[k] * p[j]);\n      }\n    }\n  }\n  return dp[1][n];\n}"
+    }
+  },
+  "dp-wildcard-matching": {
+    "id": "dp-wildcard-matching",
+    "name": "Wildcard Matching",
+    "category": "dynamic-programming",
+    "difficulty": "Hard",
+    "description": "Determines if a string matches a wildcard pattern containing '?' (any single character) or '*' (any sequence).",
+    "timeComplexity": {
+        "best": "O(m·n)",
+        "average": "O(m·n)",
+        "worst": "O(m·n)"
+    },
+    "spaceComplexity": "O(m·n)",
+    "applications": [
+        "Filename shell matching",
+        "Regex engines"
+    ],
+    "advantages": [
+        "High flexibility match pattern validation"
+    ],
+    "disadvantages": [
+        "Linear space requirement per string length"
+    ],
+    "realWorldUses": [
+        "Glob utility search tools (e.g. Glob/bash)"
+    ],
+    "defaultInput": "baaabab\nba*a?",
+    "inputType": "dp",
+    "pseudocode": "match(s, p):\n  if p[j-1]=='*': dp[i][j] = dp[i-1][j] || dp[i][j-1]\n  else if matchChar: dp[i][j] = dp[i-1][j-1]",
+    "code": {
+        "javascript": "function wildcardMatch(s, p) {\n  const m = s.length, n = p.length;\n  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(false));\n  dp[0][0] = true;\n  for (let j = 1; j <= n; j++) {\n    if (p[j-1] === '*') dp[0][j] = dp[0][j-1];\n  }\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (p[j-1] === '*') dp[i][j] = dp[i-1][j] || dp[i][j-1];\n      else if (p[j-1] === '?' || s[i-1] === p[j-1]) dp[i][j] = dp[i-1][j-1];\n    }\n  }\n  return dp[m][n];\n}"
+    }
+  },
+  "dp-egg-dropping": {
+    "id": "dp-egg-dropping",
+    "name": "Egg Dropping",
+    "category": "dynamic-programming",
+    "difficulty": "Hard",
+    "description": "Finds the minimum number of attempts needed to find the critical threshold floor using a given number of eggs.",
+    "timeComplexity": {
+        "best": "O(e·f²)",
+        "average": "O(e·f²)",
+        "worst": "O(e·f²)"
+    },
+    "spaceComplexity": "O(e·f)",
+    "applications": [
+        "Material stress testing",
+        "Threshold analysis optimization"
+    ],
+    "advantages": [
+        "Optimal trial searching strategies"
+    ],
+    "disadvantages": [
+        "O(ef²) compute complexity scales poorly"
+    ],
+    "realWorldUses": [
+        "Stress validation simulation profiles"
+    ],
+    "defaultInput": "2\n6",
+    "inputType": "dp",
+    "pseudocode": "trials(e, f):\n  dp[e][f] = 1 + min_{k} max(dp[e-1][k-1], dp[e][f-k])",
+    "code": {
+        "javascript": "function eggDrop(eggs, floors) {\n  const dp = Array.from({length: eggs+1}, () => new Array(floors+1).fill(0));\n  for (let j = 1; j <= floors; j++) dp[1][j] = j;\n  for (let i = 1; i <= eggs; i++) dp[i][1] = 1;\n  for (let i = 2; i <= eggs; i++) {\n    for (let j = 2; j <= floors; j++) {\n      let minTrials = Infinity;\n      for (let k = 1; k <= j; k++) {\n        minTrials = Math.min(minTrials, 1 + Math.max(dp[i-1][k-1], dp[i][j-k]));\n      }\n      dp[i][j] = minTrials;\n    }\n  }\n  return dp[eggs][floors];\n}"
+    }
+  },
+  "dp-palindrome-partitioning": {
+    "id": "dp-palindrome-partitioning",
+    "name": "Palindrome Partitioning",
+    "category": "dynamic-programming",
+    "difficulty": "Hard",
+    "description": "Finds the minimum cuts needed to partition a string such that every segment is a palindrome.",
+    "timeComplexity": {
+        "best": "O(n³)",
+        "average": "O(n³)",
+        "worst": "O(n³)"
+    },
+    "spaceComplexity": "O(n²)",
+    "applications": [
+        "String segmentation parsing",
+        "Bioinformatics coding structures"
+    ],
+    "advantages": [
+        "Classic interval partition optimization solver"
+    ],
+    "disadvantages": [
+        "O(n³) computation limit"
+    ],
+    "realWorldUses": [
+        "Text alignment analysis pipelines"
+    ],
+    "defaultInput": "aab",
+    "inputType": "dp",
+    "pseudocode": "cuts(s):\n  if isPal[i][j]: dp[i][j] = 0\n  else: dp[i][j] = min_k (dp[i][k] + dp[k+1][j] + 1)",
+    "code": {
+        "javascript": "function minCuts(s) {\n  const n = s.length;\n  const dp = Array.from({length: n+1}, () => new Array(n+1).fill(0));\n  const isPal = Array.from({length: n+1}, () => new Array(n+1).fill(true));\n  for (let len = 2; len <= n; len++) {\n    for (let i = 1; i <= n - len + 1; i++) {\n      let j = i + len - 1;\n      isPal[i][j] = (s[i-1] === s[j-1]) && isPal[i+1][j-1];\n    }\n  }\n  for (let len = 1; len <= n; len++) {\n    for (let i = 1; i <= n - len + 1; i++) {\n      let j = i + len - 1;\n      if (isPal[i][j]) dp[i][j] = 0;\n      else {\n        dp[i][j] = Infinity;\n        for (let k = i; k < j; k++) {\n          dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[k+1][j] + 1);\n        }\n      }\n    }\n  }\n  return dp[1][n];\n}"
+    }
+  },
   "counting-sort": {
     "id": "counting-sort",
     "name": "Counting Sort",
@@ -5106,7 +5306,6 @@ export const COUNTERPARTS = {
   "manachers-algorithm": "palindrome-check",
   "rolling-hash": "rabin-karp",
   "longest-palindromic-substring": "palindrome-check",
-  "longest-common-substring": "lcs-dp",
   "minimum-window-substring": "sliding-window",
   "string-subsequence": "lcs-dp",
   "string-substring": "kmp-search",
@@ -5248,18 +5447,13 @@ export const COUNTERPARTS = {
   "dp-tabulation-concept": "climbing-stairs",
   "dp-space-optimization": "climbing-stairs",
   "dp-fibonacci": "climbing-stairs",
-  "dp-house-robber": "climbing-stairs",
+  "dp-house-robber": "house-robber",
   "dp-unbounded-knapsack": "knapsack-dp",
   "dp-rod-cutting": "knapsack-dp",
-  "dp-matrix-chain-multiplication": "lcs-dp",
-  "dp-longest-increasing-subsequence": "lcs-dp",
-  "dp-longest-palindromic-subsequence": "lcs-dp",
-  "dp-edit-distance": "lcs-dp",
-  "dp-wildcard-matching": "lcs-dp",
+  "dp-longest-increasing-subsequence": "longest-increasing-subsequence",
+  "dp-longest-palindromic-subsequence": "longest-palindromic-subsequence",
+  "dp-edit-distance": "edit-distance",
   "dp-partition-equal-subset-sum": "knapsack-dp",
-  "dp-egg-dropping": "lcs-dp",
-  "dp-burst-balloons": "lcs-dp",
-  "dp-palindrome-partitioning": "lcs-dp",
 
   // --- 12. GREEDY ALGORITHMS ---
   "job-scheduling": "activity-selection",

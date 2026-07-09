@@ -1327,16 +1327,146 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
   };
 
   // --- 9. RENDER DYNAMIC PROGRAMMING ---
+  const getSelectedCoins = (dpArray, coins, activeIdx) => {
+    if (!dpArray || !coins || activeIdx <= 0) return [];
+    if (dpArray[activeIdx] === Infinity || dpArray[activeIdx] === 0) return [];
+    
+    const selected = [];
+    let curr = activeIdx;
+    let safety = 0;
+    while (curr > 0 && safety < 100) {
+      safety++;
+      let found = false;
+      for (const coin of coins) {
+        if (curr >= coin && dpArray[curr - coin] !== Infinity && dpArray[curr] === dpArray[curr - coin] + 1) {
+          selected.push(coin);
+          curr -= coin;
+          found = true;
+          break;
+        }
+      }
+      if (!found) break;
+    }
+    return selected;
+  };
+
+  const getSelectedItems = (matrix, weights, i, w) => {
+    if (!matrix || !weights || i <= 0 || w <= 0) return [];
+    const selected = [];
+    let currW = w;
+    for (let k = i; k > 0; k--) {
+      const itemWt = weights[k - 1];
+      if (currW >= itemWt && matrix[k] && matrix[k - 1]) {
+        if (matrix[k][currW] !== matrix[k - 1][currW]) {
+          selected.push(k - 1);
+          currW -= itemWt;
+        }
+      }
+    }
+    return selected.reverse();
+  };
+
   const renderDpCanvas = () => {
-    if (dpState?.matrix) {
-      const { matrix, weights, values, capacity } = dpState;
+    const resolvedId = algorithm.counterpartId || algorithm.id;
+    if (resolvedId === 'generate-parentheses') {
+      const { results = [], callStack = [], current = '' } = data || {};
       
       return (
-        <div className="w-full h-72 flex flex-col items-center justify-center p-3">
-          <span className="text-[10px] font-mono text-slate-500 tracking-wider mb-2 uppercase">
+        <div className="w-full h-auto flex flex-col items-center justify-center p-4 gap-4">
+          <span className="text-[10px] font-mono text-slate-500 tracking-wider mb-1 uppercase">
+            Recursion / Backtracking Visualization
+          </span>
+          
+          <div className="w-full flex flex-col md:flex-row gap-5 items-stretch justify-around">
+            
+            {/* Call Stack Panel */}
+            <div className="flex-1 min-w-[200px] p-4 clay-inset bg-slate-50 dark:bg-black/10 flex flex-col gap-2.5 text-left">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                Active Call Stack
+              </span>
+              <div className="flex flex-col-reverse gap-1.5 border-t border-slate-700/20 pt-2.5 min-h-[140px] justify-end">
+                {callStack.map((frame, idx) => (
+                  <div 
+                    key={idx}
+                    className={`px-3 py-2 rounded-xl text-xs font-mono font-bold transition-all duration-300 border-l-4 ${
+                      idx === callStack.length - 1
+                        ? 'bg-purple-500 text-white shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4),_0_4px_8px_rgba(168,85,247,0.3)] border-purple-400'
+                        : 'bg-white dark:bg-[#1e2533] text-text-secondary border-slate-350 dark:border-transparent shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6)] dark:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.02)]'
+                    }`}
+                  >
+                    <div>bt("{frame.cur}", open: {frame.open}, close: {frame.close})</div>
+                  </div>
+                ))}
+                {callStack.length === 0 && (
+                  <span className="text-[10px] text-slate-500 italic">Call Stack Empty</span>
+                )}
+              </div>
+            </div>
+
+            {/* Current State & Results */}
+            <div className="flex-1 min-w-[200px] p-4 clay-inset bg-slate-50 dark:bg-black/10 flex flex-col gap-3 text-left">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                  Current Candidate
+                </span>
+                <div className="px-3 py-2 bg-purple-500/10 text-purple-400 font-mono text-sm font-extrabold rounded-xl border border-purple-500/20">
+                  {current || <span className="italic text-slate-500 text-xs">Empty</span>}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5 flex-1">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                  Valid Configurations ({results.length})
+                </span>
+                <div className="p-2.5 bg-slate-950/20 dark:bg-black/20 rounded-xl min-h-[80px] max-h-[120px] overflow-y-auto flex flex-wrap gap-1.5 border border-slate-700/10">
+                  {results.map((res, idx) => (
+                    <span 
+                      key={idx}
+                      className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-mono font-bold rounded shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4)] animate-scaleUp"
+                    >
+                      {res}
+                    </span>
+                  ))}
+                  {results.length === 0 && (
+                    <span className="text-[10px] text-slate-500 italic">None generated yet</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      );
+    }
+
+    if (dpState?.matrix) {
+      const { matrix, weights, values, capacity, i, w } = dpState;
+
+      // Determine selection status for the current step
+      const isComputing = currentSnap.explanation?.includes('Computing');
+      const currentI = isComputing ? i - 1 : i;
+      const currentW = w;
+
+      const selectedIndices = getSelectedItems(matrix, weights, currentI, currentW);
+      const totalWeight = selectedIndices.reduce((sum, idx) => sum + weights[idx], 0);
+      const totalValue = selectedIndices.reduce((sum, idx) => sum + values[idx], 0);
+
+      const currentItemIdx = i - 1;
+      const hasCurrentItem = i > 0 && i <= weights.length;
+      const currentItem = hasCurrentItem ? {
+        weight: weights[currentItemIdx],
+        value: values[currentItemIdx],
+        index: currentItemIdx
+      } : null;
+
+      const isCurrentItemChosen = currentItem && selectedIndices.includes(currentItemIdx);
+      
+      return (
+        <div className="w-full min-h-[18rem] h-auto flex flex-col items-center justify-center p-4 gap-4">
+          <span className="text-[10px] font-mono text-slate-500 tracking-wider mb-1 uppercase">
             Knapsack DP Table (Item wt/val row, Capacity col)
           </span>
-          <div className="w-full overflow-auto max-h-56 max-w-lg border border-slate-800 bg-slate-950 rounded-lg shadow-inner">
+          <div className="w-full overflow-x-auto border border-slate-800 bg-slate-950 rounded-lg shadow-inner">
             <table className="w-full border-collapse font-mono text-[10px] text-center text-slate-300">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-500">
@@ -1382,23 +1512,147 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
               </tbody>
             </table>
           </div>
+
+          {/* Backpack Visualization Panel */}
+          <div className="w-full clay-card bg-white dark:bg-[#161b26] p-5 md:p-6 flex flex-col md:flex-row items-center justify-around gap-6 mt-4">
+            
+            {/* 1. Item Pool (Weights Available) */}
+            <div className="flex-1 flex flex-col gap-2.5 min-w-[200px] text-left p-4 clay-inset bg-slate-50 dark:bg-black/10">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                Item Pool (Weight &amp; Value)
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {weights.map((wt, idx) => {
+                  const val = values[idx];
+                  const isCurrent = idx === currentItemIdx;
+                  const isChosen = selectedIndices.includes(idx);
+                  
+                  let borderClass = '';
+                  if (isCurrent) {
+                    borderClass = 'bg-purple-500 text-white font-extrabold scale-105 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),_inset_-2px_-2px_4px_rgba(0,0,0,0.25),_0_4px_12px_rgba(168,85,247,0.35)] border-t border-white/20 animate-pulse';
+                  } else if (isChosen) {
+                    borderClass = 'bg-emerald-500 text-white font-bold shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),_inset_-2px_-2px_4px_rgba(0,0,0,0.2),_0_2px_8px_rgba(16,185,129,0.25)] border-t border-white/20';
+                  } else {
+                    borderClass = 'bg-white dark:bg-[#1e2533] text-text-secondary border border-slate-200 dark:border-white/5 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.9),_inset_-2px_-2px_4px_rgba(0,0,0,0.02),_2px_4px_8px_rgba(0,0,0,0.03)] dark:shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.05),_inset_-1.5px_-1.5px_3px_rgba(0,0,0,0.3)]';
+                  }
+                  
+                  return (
+                    <div 
+                      key={idx}
+                      className={`px-3 py-1.5 rounded-2xl text-[11px] flex items-center gap-1.5 transition-all duration-300 ${borderClass}`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                      <span>Item {idx + 1}: <span className="font-mono">{wt}kg</span> (${val})</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Transition State (Decision Box) */}
+            <div className="flex flex-col items-center justify-center min-w-[150px] p-4 clay-inset bg-slate-50 dark:bg-black/10">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono mb-2">
+                Decision State
+              </span>
+              {currentItem ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-full bg-purple-600 text-white font-mono text-[11px] font-bold flex flex-col items-center justify-center shadow-[inset_2.5px_2.5px_5px_rgba(255,255,255,0.4),_inset_-2.5px_-2.5px_5px_rgba(0,0,0,0.3),_0_6px_15px_rgba(168,85,247,0.4)] border border-purple-400 animate-bounce">
+                    <span className="text-[8px] opacity-75">WT</span>
+                    <span>{currentItem.weight}</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono mt-2.5 text-center leading-tight">
+                    {isComputing ? (
+                      <span className="text-blue-500 dark:text-blue-400 animate-pulse font-extrabold">Evaluating Item...</span>
+                    ) : isCurrentItemChosen ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">Fits! Put In Bag</span>
+                    ) : (
+                      <span className="text-rose-500 dark:text-rose-400 font-extrabold">Skip / Rejects</span>
+                    )}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-[10px] text-slate-500 font-mono text-center">No active item</span>
+              )}
+            </div>
+
+            {/* 3. The Backpack (Bag) */}
+            <div className="flex-1 flex flex-col items-center justify-center min-w-[200px] gap-2.5 p-4 clay-inset bg-slate-50 dark:bg-black/10">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                Knapsack Bag (Capacity: {capacity}kg)
+              </span>
+              
+              <div className="relative w-30 h-36 bg-amber-800 dark:bg-amber-900 rounded-3xl shadow-[inset_4px_4px_8px_rgba(255,255,255,0.3),_inset_-4px_-4px_8px_rgba(0,0,0,0.4),_6px_8px_16px_rgba(0,0,0,0.25)] border-4 border-amber-950/60 flex flex-col justify-end p-2.5 gap-1.5 overflow-hidden transition-all duration-300">
+                {/* Backpack flap */}
+                <div className="absolute top-0 inset-x-0 h-4.5 bg-amber-950/90 border-b border-amber-900/50 flex items-center justify-center shadow-md">
+                  <div className="w-8 h-1 rounded-full bg-yellow-600/60" />
+                </div>
+                
+                {/* Bottom pouch pocket */}
+                <div className="absolute bottom-1 right-2 left-2 h-7 rounded-xl bg-amber-950/60 border border-amber-900/40 flex items-center justify-center shadow-[inset_1px_1px_3px_rgba(0,0,0,0.4)]">
+                  <span className="text-[7px] font-mono text-amber-500/70 uppercase tracking-widest font-black">Pack</span>
+                </div>
+
+                {/* Items in the bag */}
+                <div className="flex flex-wrap items-end justify-center gap-1 max-h-[50px] overflow-y-auto mb-8 z-10">
+                  {selectedIndices.map((idx) => (
+                    <div 
+                      key={idx}
+                      className="px-2 py-1 bg-emerald-500 text-white font-mono text-[10px] font-black rounded-lg shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.45),_inset_-1.5px_-1.5px_3px_rgba(0,0,0,0.2),_2px_3px_6px_rgba(0,0,0,0.15)] transition-all animate-scaleUp"
+                      title={`Item ${idx + 1}: wt ${weights[idx]}`}
+                    >
+                      {weights[idx]}kg
+                    </div>
+                  ))}
+                  {selectedIndices.length === 0 && (
+                    <span className="text-[9px] font-mono text-amber-600/70 font-semibold italic">Empty Bag</span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Capacity bar */}
+              <div className="w-full max-w-[180px] flex flex-col gap-1">
+                <div className="flex justify-between text-[9px] font-mono text-slate-400">
+                  <span>Wt: {totalWeight} / {capacity}kg</span>
+                  <span>Val: ${totalValue}</span>
+                </div>
+                <div className="h-2.5 bg-slate-200 dark:bg-slate-950 rounded-full overflow-hidden shadow-[inset_1.5px_1.5px_3px_rgba(0,0,0,0.1),_inset_-1px_-1px_2px_rgba(255,255,255,0.05)] border border-slate-300 dark:border-slate-800">
+                  <div 
+                    className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.4)] transition-all duration-500"
+                    style={{ width: `${Math.min(100, (totalWeight / capacity) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            
+          </div>
         </div>
       );
     }
 
     const activeIdx = dpState?.activeIdx;
+    const isCoinChange = algorithm.id === 'coin-change-dp';
+    const isClimbingStairs = algorithm.id === 'climbing-stairs';
+    const coins = dpState?.coins || [];
+    const selectedCoins = isCoinChange && activeIdx > 0 && data[activeIdx] !== Infinity 
+      ? getSelectedCoins(data, coins, activeIdx) 
+      : [];
+    const totalCoinsVal = selectedCoins.reduce((sum, val) => sum + val, 0);
+    const stepsTarget = isClimbingStairs ? data.length - 1 : 0;
+
     return (
-      <div className="w-full h-72 flex flex-col items-center justify-center gap-6 px-6">
-        <span className="text-xs font-mono text-slate-500 tracking-wider">
-          {algorithm.id === 'coin-change-dp' ? 'COIN CHANGE DP TABLE' : 'STAIRS STATE ARRAY'}
+      <div className="w-full h-auto flex flex-col items-center justify-center gap-4 p-4">
+        <span className="text-[10px] font-mono text-slate-500 tracking-wider mb-1 uppercase">
+          {isCoinChange ? 'COIN CHANGE DP TABLE (1D STATE ARRAY)' : isClimbingStairs ? 'CLIMBING STAIRS DP TABLE (1D STATE ARRAY)' : 'STAIRS STATE ARRAY'}
         </span>
-        <div className="flex flex-wrap items-center justify-center gap-2 max-h-56 overflow-y-auto">
+        <div className="flex flex-wrap items-center justify-center gap-2 max-h-56 overflow-y-auto w-full p-2 bg-slate-950/20 dark:bg-black/10 rounded-2xl border border-slate-800/20">
           {data.map((val, idx) => {
             const isActive = activeIdx === idx;
             let isReadInput = false;
             
-            if (algorithm.id === 'coin-change-dp' && dpState?.coins) {
-              isReadInput = dpState.coins.some(coin => idx === activeIdx - coin);
+            if (isCoinChange && coins) {
+              isReadInput = coins.some(coin => idx === activeIdx - coin);
+            } else if (isClimbingStairs) {
+              isReadInput = activeIdx > 0 && (idx === activeIdx - 1 || idx === activeIdx - 2);
             } else {
               isReadInput = idx === activeIdx - 1 || idx === activeIdx - 2;
             }
@@ -1413,16 +1667,191 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
               <div
                 key={idx}
                 className={`
-                  w-14 h-14 rounded-lg border-2 flex flex-col items-center justify-center font-mono text-sm transition-all duration-300
+                  w-12 h-12 rounded-xl border-2 flex flex-col items-center justify-center font-mono text-xs transition-all duration-300
                   ${cellClass}
                 `}
               >
-                <span className="text-[9px] text-slate-500 leading-none">dp[{idx}]</span>
+                <span className="text-[8px] text-slate-500 leading-none">dp[{idx}]</span>
                 <span className="font-bold mt-1">{val === Infinity ? '∞' : val}</span>
               </div>
             );
           })}
         </div>
+
+        {/* Coin Change Pictorial Representation */}
+        {isCoinChange && coins.length > 0 && (
+          <div className="w-full clay-card bg-white dark:bg-[#161b26] p-5 md:p-6 flex flex-col md:flex-row items-center justify-around gap-6 mt-4">
+            {/* 1. Coins Available */}
+            <div className="flex-1 flex flex-col gap-2.5 min-w-[200px] text-left p-4 clay-inset bg-slate-50 dark:bg-black/10">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                Coin Denominations
+              </span>
+              <div className="flex flex-wrap gap-3 items-center mt-1">
+                {coins.map((coin, idx) => {
+                  const isActiveChecking = activeIdx >= coin;
+                  
+                  return (
+                    <div 
+                      key={idx}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center font-mono text-sm font-black border-2 transition-all duration-300 ${
+                        isActiveChecking 
+                          ? 'bg-amber-500 border-amber-400 text-white shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.4),_inset_-1.5px_-1.5px_3px_rgba(0,0,0,0.2),_0_4px_8px_rgba(245,158,11,0.3)]' 
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-400 border-transparent opacity-50'
+                      }`}
+                    >
+                      ${coin}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Decision / Target */}
+            <div className="flex flex-col items-center justify-center min-w-[150px] p-4 clay-inset bg-slate-50 dark:bg-black/10">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono mb-2">
+                Subproblem Target
+              </span>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-12 h-12 rounded-full bg-purple-600 text-white font-mono text-xs font-bold flex flex-col items-center justify-center shadow-[inset_2.5px_2.5px_5px_rgba(255,255,255,0.4),_inset_-2.5px_-2.5px_5px_rgba(0,0,0,0.3),_0_6px_15px_rgba(168,85,247,0.4)] border border-purple-400 animate-pulse">
+                  <span className="text-[8px] opacity-75">AMT</span>
+                  <span>{activeIdx}</span>
+                </div>
+                <span className="text-[9px] text-slate-400 font-mono mt-1 text-center font-bold">
+                  {activeIdx === 0 ? 'Base Case: $0' : `Solving for $${activeIdx}`}
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Optimal Coins Chosen Tray */}
+            <div className="flex-1 flex flex-col items-center justify-center min-w-[200px] gap-2.5 p-4 clay-inset bg-slate-50 dark:bg-black/10">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                Optimal Coins Tray
+              </span>
+              
+              <div className="relative w-36 h-24 bg-slate-200 dark:bg-slate-900 rounded-3xl shadow-[inset_2px_2px_4px_rgba(0,0,0,0.1),_inset_-2px_-2px_4px_rgba(255,255,255,0.05)] border border-slate-350 dark:border-slate-800 flex items-center justify-center p-3 overflow-hidden transition-all duration-300">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 max-h-[70px] overflow-y-auto w-full">
+                  {selectedCoins.map((coin, idx) => (
+                    <div 
+                      key={idx}
+                      className="w-8 h-8 rounded-full bg-amber-500 border border-amber-400 text-white font-mono text-[10px] font-black flex items-center justify-center shadow-[inset_1px_1px_2px_rgba(255,255,255,0.4),_inset_-1px_-1px_2px_rgba(0,0,0,0.2),_2px_3px_6px_rgba(0,0,0,0.15)] animate-scaleUp"
+                      title={`Coin: $${coin}`}
+                    >
+                      ${coin}
+                    </div>
+                  ))}
+                  {selectedCoins.length === 0 && (
+                    <span className="text-[9px] font-mono text-slate-500 font-semibold italic">No coins yet</span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="w-full max-w-[180px] flex justify-between text-[9px] font-mono text-slate-400">
+                <span>Total Coins: {selectedCoins.length}</span>
+                <span>Sum: ${totalCoinsVal}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Climbing Stairs Pictorial Representation */}
+        {isClimbingStairs && stepsTarget > 0 && (
+          <div className="w-full clay-card bg-white dark:bg-[#161b26] p-5 md:p-6 flex flex-col md:flex-row items-center justify-around gap-6 mt-4">
+            
+            {/* 1. The Staircase */}
+            <div className="flex-1 flex flex-col gap-2.5 min-w-[240px] text-left p-4 clay-inset bg-slate-50 dark:bg-black/10">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+                Staircase (Target Stair: {stepsTarget})
+              </span>
+              <div className="flex items-end justify-center gap-1.5 mt-6 min-h-[90px] overflow-x-auto pb-2">
+                {Array.from({ length: stepsTarget + 1 }).map((_, s) => {
+                  const isActive = activeIdx === s;
+                  const isSource = activeIdx > 0 && (s === activeIdx - 1 || s === activeIdx - 2);
+                  const isTarget = s === stepsTarget;
+                  const val = data[s];
+                  
+                  let borderClass = '';
+                  if (isActive) {
+                    borderClass = 'bg-purple-500 text-white font-extrabold shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),_inset_-2px_-2px_4px_rgba(0,0,0,0.25),_0_4px_10px_rgba(168,85,247,0.3)] border-t border-purple-400';
+                  } else if (isSource) {
+                    borderClass = 'bg-blue-500 text-white font-bold shadow-[inset_2px_2px_4px_rgba(255,255,255,0.4),_inset_-2px_-2px_4px_rgba(0,0,0,0.2),_0_2px_6px_rgba(59,130,246,0.25)] border-t border-blue-400';
+                  } else {
+                    borderClass = 'bg-white dark:bg-[#1e2533] text-text-secondary border border-slate-200 dark:border-white/5 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.9),_inset_-2px_-2px_4px_rgba(0,0,0,0.02),_2px_4px_8px_rgba(0,0,0,0.03)] dark:shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.05),_inset_-1.5px_-1.5px_3px_rgba(0,0,0,0.3)]';
+                  }
+
+                  // Height scale based on index - reduced multiplier
+                  const heightPx = (s + 1) * 9 + 18;
+
+                  return (
+                    <div 
+                      key={s}
+                      style={{ height: `${heightPx}px` }}
+                      className={`w-8 rounded-t-lg flex flex-col justify-end pb-1.5 items-center text-[9px] font-mono transition-all duration-300 relative ${borderClass}`}
+                    >
+                      {/* Stick figure running animation */}
+                      {isActive && (
+                        <div className="absolute -top-5.5 left-1/2 -translate-x-1/2 text-sm animate-bounce select-none">
+                          🏃
+                        </div>
+                      )}
+                      
+                      {isTarget && !isActive && (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-[10px] select-none">
+                          🎯
+                        </div>
+                      )}
+                      
+                      <div className="text-[7px] opacity-75 font-mono">#{s}</div>
+                      <div className="font-bold font-mono">{val}w</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Transition State / DP Logic Formula */}
+            <div className="flex flex-col items-center justify-center min-w-[200px] p-4 clay-inset bg-slate-50 dark:bg-black/10 text-center">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono mb-3">
+                Transition Relation
+              </span>
+              {activeIdx >= 3 ? (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="flex items-center gap-1.5 font-mono font-bold text-xs font-black">
+                    <span className="text-purple-500 font-black">dp[{activeIdx}]</span>
+                    <span className="text-slate-400">=</span>
+                    <span className="text-blue-500 font-black">dp[{activeIdx-1}]</span>
+                    <span className="text-slate-400">+</span>
+                    <span className="text-blue-500 font-black">dp[{activeIdx-2}]</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 font-mono text-xs p-2 bg-slate-950/20 rounded-xl">
+                    <span className="text-purple-500 font-black">{data[activeIdx]}</span>
+                    <span className="text-slate-400">=</span>
+                    <span className="text-blue-500 font-black">{data[activeIdx-1]}</span>
+                    <span className="text-slate-400">+</span>
+                    <span className="text-blue-500 font-black">{data[activeIdx-2]}</span>
+                  </div>
+                  
+                  <span className="text-[10px] text-slate-400 font-mono leading-tight">
+                    Add ways from 1 step below and 2 steps below.
+                  </span>
+                </div>
+              ) : activeIdx === 1 || activeIdx === 2 ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 rounded-full bg-purple-600 text-white font-mono text-xs font-bold flex flex-col items-center justify-center shadow-[inset_2.5px_2.5px_5px_rgba(255,255,255,0.4),_inset_-2.5px_-2.5px_5px_rgba(0,0,0,0.3),_0_6px_15px_rgba(168,85,247,0.4)] border border-purple-400 animate-pulse">
+                    <span className="text-[8px] opacity-75">BASE</span>
+                    <span>{data[activeIdx]}</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 text-center font-bold">
+                    Base Case for Stair {activeIdx}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-[10px] text-slate-500 font-mono text-center">Staircase initialization</span>
+              )}
+            </div>
+
+          </div>
+        )}
       </div>
     );
   };
@@ -1755,11 +2184,11 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
     const { updated, via } = highlights;
     const INF = 9999;
     return (
-      <div className="w-full h-72 flex flex-col items-center justify-center gap-3 p-4">
+      <div className="w-full min-h-[18rem] h-auto flex flex-col items-center justify-center gap-3 p-4">
         <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">
           Floyd-Warshall Distance Matrix {k >= 0 ? `— k=${k}` : ''}
         </span>
-        <div className="overflow-auto max-h-52 w-full">
+        <div className="overflow-x-auto w-full">
           <table className="text-xs font-mono mx-auto border-collapse">
             <thead>
               <tr>
@@ -1998,44 +2427,181 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
       table = data.dp;
       s1 = data.s1 || "";
       s2 = data.s2 || "";
-      activeI = data.i;
-      activeJ = data.j;
+      // Prefer highlights.row/col (set by new step generators) over data.i/j
+      activeI = highlights.row !== undefined ? highlights.row : data.i;
+      activeJ = highlights.col !== undefined ? highlights.col : data.j;
     }
 
     if (!table) return renderDpCanvas();
     const m = table.length, n2 = table[0]?.length || 0;
     const maxDim = Math.max(m, n2);
     const cellSize = maxDim > 10 ? 'w-6 h-6 text-[8px]' : 'w-8 h-8 text-xs';
+
+    // Detect if this is a character-based DP (string labels) or numeric (index labels)
+    const isCharBased = s1 && /[A-Za-z]/.test(s1);
+    // Whether this is the contiguous substring algorithm (distinct match/mismatch coloring)
+    const isSubstringType = highlights.type === 'substring';
+    const hasMatchInfo = isSubstringType && highlights.match !== undefined;
+    const isMatch = highlights.match === true;
+
+    const getCellStyle = (i, j) => {
+      const isActive = i === activeI && j === activeJ;
+      const isRowActive = i === activeI;
+      const isColActive = j === activeJ;
+      const val = table[i]?.[j];
+
+      if (isActive) {
+        // Substring-style: colour green on match, red/dim on mismatch (val===0 and not row 0)
+        if (hasMatchInfo) {
+          return isMatch
+            ? 'bg-emerald-600 text-white scale-110 shadow-lg shadow-emerald-500/40'
+            : 'bg-rose-700/80 text-white';
+        }
+        return 'bg-accent text-white';
+      }
+      // Highlight cells that just became non-zero for substring-style
+      if (hasMatchInfo && !isActive && val > 0 && i > 0 && j > 0) {
+        return 'bg-emerald-900/50 text-emerald-300 border border-emerald-700';
+      }
+      if (isRowActive || isColActive) return 'bg-accent/20 text-accent';
+      return 'bg-slate-900 text-slate-400';
+    };
+
+    // Row label: character or index
+    const rowLabel = (i) => {
+      if (i === 0) return 'ε';
+      if (isCharBased) return s1[i - 1];
+      return i.toString();
+    };
+
+    // Col label: character or index
+    const colLabel = (j) => {
+      if (j === 0) return 'ε';
+      if (isCharBased && s2) return s2[j - 1];
+      return j.toString();
+    };
+
+    const resolvedId = algorithm.counterpartId || algorithm.id;
+    const isStringDP = (resolvedId === 'lcs-dp' || resolvedId === 'longest-common-substring' || resolvedId === 'longest-common-subsequence' || resolvedId === 'edit-distance') && s1 && s2;
+    const char1 = isStringDP && activeI > 0 && activeI <= s1.length ? s1[activeI - 1] : null;
+    const char2 = isStringDP && activeJ > 0 && activeJ <= s2.length ? s2[activeJ - 1] : null;
+    const isMatchChar = char1 && char2 && char1 === char2;
+
     return (
-      <div className="w-full h-72 flex flex-col items-center justify-center overflow-auto p-2">
-        <div className="text-[10px] font-mono text-slate-400 mb-1">{s1 && s2 ? `"${s1}" → "${s2}"` : 'DP Table'}</div>
-        <div className="overflow-auto max-h-60">
-          <table className="border-collapse">
+      <div className="w-full min-h-[18rem] h-auto flex flex-col items-center justify-center p-4">
+        <div className="text-[10px] font-mono text-slate-400 mb-2">{s1 && s2 ? `"${s1}" → "${s2}"` : 'DP Table'}</div>
+        {hasMatchInfo && (
+          <div className="flex gap-3 mb-2 text-[9px] font-mono">
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-600 inline-block"/>Match (extend)</span>
+            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-rose-700 inline-block"/>Mismatch (reset to 0)</span>
+          </div>
+        )}
+        <div className="overflow-x-auto w-full">
+          <table className="border-collapse mx-auto">
             <thead>
               <tr>
-                <th className="w-6 h-6"></th>
-                <th className={`${cellSize} font-mono text-slate-500 font-bold`}>ε</th>
-                {(s2 || '').split('').map((c, j) => (
-                  <th key={j} className={`${cellSize} font-mono text-accent font-bold ${j + 1 === activeJ ? 'text-white' : ''}`}>{c}</th>
+                <th className={`${cellSize}`}></th>
+                {Array.from({length: n2}, (_, j) => (
+                  <th key={j} className={`${cellSize} text-center align-middle font-mono font-bold transition-all duration-200 ${j === activeJ ? 'bg-accent text-white rounded' : j === 0 ? 'text-slate-500' : 'text-accent'}`}>
+                    {colLabel(j)}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {table.map((row, i) => (
                 <tr key={i}>
-                  <td className={`${cellSize} font-mono text-accent font-bold ${i === activeI ? 'text-white' : ''}`}>{i === 0 ? 'ε' : (s1 || '')[i - 1]}</td>
+                  <td className={`${cellSize} text-center align-middle font-mono font-bold transition-all duration-200 ${i === activeI ? 'bg-accent text-white rounded' : i === 0 ? 'text-slate-500' : 'text-accent'}`}>
+                    {rowLabel(i)}
+                  </td>
                   {row.map((val, j) => (
-                    <td key={j} className={`${cellSize} flex items-center justify-center border border-slate-800 font-mono font-bold transition-all ${
-                      i === activeI && j === activeJ ? 'bg-accent text-white' :
-                      i === activeI || j === activeJ ? 'bg-accent/20 text-accent' :
-                      'bg-slate-900 text-slate-400'
-                    }`}>{val}</td>
+                    <td key={j} className={`${cellSize} text-center align-middle border border-slate-800 font-mono font-bold transition-all duration-200 ${getCellStyle(i, j)}`}>
+                      {val === Infinity ? '∞' : val}
+                    </td>
                   ))}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
+        {/* String Comparison Dashboard */}
+        {isStringDP && (
+          <div className="w-full clay-card bg-white dark:bg-[#161b26] p-5 flex flex-col items-center justify-around gap-4 mt-6">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono">
+              String Comparison Dashboard
+            </span>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-around gap-6 w-full mt-2">
+              
+              {/* String 1 Row */}
+              <div className="flex flex-col gap-1.5 items-center">
+                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-wider">String 1 (i)</span>
+                <div className="flex gap-1 flex-wrap justify-center">
+                  {s1.split('').map((char, idx) => {
+                    const isCurrent = idx === activeI - 1;
+                    return (
+                      <div 
+                        key={idx}
+                        className={`w-8 h-8 rounded-xl font-mono text-xs font-extrabold flex items-center justify-center transition-all duration-300 ${
+                          isCurrent 
+                            ? 'bg-purple-500 text-white scale-110 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.4),_inset_-1.5px_-1.5px_3px_rgba(0,0,0,0.2),_0_4px_10px_rgba(168,85,247,0.35)] animate-pulse'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-transparent shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6)] dark:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.02)]'
+                        }`}
+                      >
+                        {char}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Match State */}
+              <div className="flex flex-col items-center justify-center p-3.5 clay-inset bg-slate-50 dark:bg-black/10 min-w-[140px]">
+                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider font-mono mb-2 font-black">Comparison</span>
+                {char1 && char2 ? (
+                  <div className="flex flex-col items-center gap-1.5">
+                    <div className="flex items-center gap-2 font-mono font-bold text-xs">
+                      <span className="text-purple-500 font-extrabold">{char1}</span>
+                      <span className="text-slate-400">{isMatchChar ? '===' : '!=='}</span>
+                      <span className="text-purple-500 font-extrabold">{char2}</span>
+                    </div>
+                    {isMatchChar ? (
+                      <span className="text-[10px] text-emerald-500 font-extrabold animate-pulse">Match! (value + 1)</span>
+                    ) : (
+                      <span className="text-[10px] text-rose-500 dark:text-rose-400 font-extrabold">Mismatch</span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-[9px] text-slate-500 font-mono italic">Waiting...</span>
+                )}
+              </div>
+
+              {/* String 2 Row */}
+              <div className="flex flex-col gap-1.5 items-center">
+                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-wider">String 2 (j)</span>
+                <div className="flex gap-1 flex-wrap justify-center">
+                  {s2.split('').map((char, idx) => {
+                    const isCurrent = idx === activeJ - 1;
+                    return (
+                      <div 
+                        key={idx}
+                        className={`w-8 h-8 rounded-xl font-mono text-xs font-extrabold flex items-center justify-center transition-all duration-300 ${
+                          isCurrent 
+                            ? 'bg-purple-500 text-white scale-110 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.4),_inset_-1.5px_-1.5px_3px_rgba(0,0,0,0.2),_0_4px_10px_rgba(168,85,247,0.35)] animate-pulse'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-transparent shadow-[inset_1px_1px_2px_rgba(255,255,255,0.6)] dark:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.02)]'
+                        }`}
+                      >
+                        {char}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -2052,7 +2618,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
     if (resolvedId === 'palindrome-check') return renderStringCharCanvas();
     if (resolvedId === 'reverse-string') return renderStringCharCanvas();
     if (resolvedId === 'generate-parentheses') return renderDpCanvas();
-    if (resolvedId === 'lcs-dp') return renderDpTableCanvas();
+    if (resolvedId === 'lcs-dp' || resolvedId === 'longest-common-substring' || resolvedId === 'dp-burst-balloons' || resolvedId === 'dp-matrix-chain-multiplication' || resolvedId === 'dp-wildcard-matching' || resolvedId === 'dp-egg-dropping' || resolvedId === 'dp-palindrome-partitioning') return renderDpTableCanvas();
     // New dedicated algorithm routing
     if (resolvedId === 'spiral-matrix' || algorithm.inputType === 'spiral-matrix') return renderSpiralMatrixCanvas();
     if (resolvedId === 'matrix-multiplication' || algorithm.inputType === 'matrix-mult') return renderMatrixMultCanvas();
