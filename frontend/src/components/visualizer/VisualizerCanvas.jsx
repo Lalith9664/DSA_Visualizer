@@ -1266,17 +1266,17 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
 
       const renderSubList = (label, items, activeIdx, colorScheme) => {
         return (
-          <div className="flex flex-col gap-1.5 items-start w-full">
+          <div className="flex flex-col gap-1 sm:gap-1.5 items-start w-full">
             <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider">
               {label}
             </span>
-            <div className="flex gap-4 items-center flex-wrap min-h-[60px]">
+            <div className="flex gap-2 sm:gap-4 items-center flex-wrap min-h-[50px] sm:min-h-[60px]">
               {items.map((val, idx) => {
                 const isActive = idx === activeIdx && !done;
                 const isPassed = idx < activeIdx || done;
 
                 let borderClass =
-                  "border-slate-200/40 dark:border-slate-700/45";
+                  "border-slate-200/45 dark:border-slate-700/45";
                 let bgClass = "bg-white dark:bg-slate-800 opacity-60";
                 if (isActive) {
                   borderClass =
@@ -1292,23 +1292,23 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                 }
 
                 return (
-                  <div key={idx} className="flex items-center gap-3">
+                  <div key={idx} className="flex items-center gap-2 sm:gap-3">
                     <div
-                      className={`w-18 h-10 rounded-lg border flex overflow-hidden shadow-sm transition-all duration-300 ${bgClass} ${borderClass}`}
+                      className={`w-14 sm:w-18 h-8 sm:h-10 rounded-lg border flex overflow-hidden shadow-sm transition-all duration-300 ${bgClass} ${borderClass}`}
                     >
-                      <div className="w-12 h-full flex items-center justify-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30 font-mono font-bold text-xs text-text-primary dark:text-slate-200">
+                      <div className="w-9 sm:w-12 h-full flex items-center justify-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30 font-mono font-bold text-[10px] sm:text-xs text-text-primary dark:text-slate-200">
                         {val}
                       </div>
                       <div className="flex-1 h-full flex items-center justify-center bg-slate-100/30 dark:bg-slate-950/20">
-                        <div className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-600" />
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-400 dark:bg-slate-600" />
                       </div>
                     </div>
                     {idx < items.length - 1 ? (
-                      <span className="text-slate-400 dark:text-slate-600 text-sm">
+                      <span className="text-slate-400 dark:text-slate-600 text-xs sm:text-sm">
                         →
                       </span>
                     ) : (
-                      <span className="text-slate-400 dark:text-slate-600 text-[8px] font-black">
+                      <span className="text-slate-400 dark:text-slate-600 text-[7px] sm:text-[8px] font-black">
                         ∅
                       </span>
                     )}
@@ -1349,26 +1349,26 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
               <span className="text-[8px] font-black uppercase text-success tracking-wider">
                 Merged List (sorted result)
               </span>
-              <div className="flex gap-4 items-center flex-wrap min-h-[60px]">
+              <div className="flex gap-2 sm:gap-4 items-center flex-wrap min-h-[50px] sm:min-h-[60px]">
                 {merged.map((val, idx) => (
                   <motion.div
                     key={idx}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="flex items-center gap-3"
+                    className="flex items-center gap-2 sm:gap-3"
                   >
-                    <div className="w-18 h-10 rounded-lg border border-success bg-success/5 dark:bg-success/15 flex overflow-hidden shadow-inner font-bold">
-                      <div className="w-12 h-full flex items-center justify-center border-r border-success/30 bg-success/10 font-mono text-xs text-success">
+                    <div className="w-14 sm:w-18 h-8 sm:h-10 rounded-lg border border-success bg-success/5 dark:bg-success/15 flex overflow-hidden shadow-inner font-bold">
+                      <div className="w-9 sm:w-12 h-full flex items-center justify-center border-r border-success/30 bg-success/10 font-mono text-[10px] sm:text-xs text-success">
                         {val}
                       </div>
                       <div className="flex-1 h-full flex items-center justify-center bg-success/5">
-                        <div className="w-2 h-2 rounded-full bg-success" />
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-success" />
                       </div>
                     </div>
                     {idx < merged.length - 1 ? (
-                      <span className="text-success text-sm">→</span>
+                      <span className="text-success text-xs sm:text-sm">→</span>
                     ) : (
-                      <span className="text-success text-[8px] font-black">
+                      <span className="text-success text-[7px] sm:text-[8px] font-black">
                         ∅
                       </span>
                     )}
@@ -1403,7 +1403,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
         </div>
 
         {/* Nodes Row container */}
-        <div className="w-full overflow-x-auto flex items-center gap-6 py-12 px-6 min-h-[160px] skeuo-inset-panel bg-slate-950/20 dark:bg-slate-900/10 rounded-2xl border border-slate-200/10 dark:border-slate-800/10 relative">
+        <div className="w-full overflow-x-auto flex items-center gap-2 sm:gap-6 py-6 sm:py-12 px-3 sm:px-6 min-h-[120px] sm:min-h-[160px] skeuo-inset-panel bg-slate-950/20 dark:bg-slate-900/10 rounded-2xl border border-slate-200/10 dark:border-slate-800/10 relative">
           {listNodes.map((node, idx) => {
             const isHead = listState?.head === node.id;
             const isCurr = listState?.curr === node.id;
@@ -1433,34 +1433,34 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
             return (
               <div
                 key={node.id}
-                className="flex items-center gap-4 flex-shrink-0 relative"
+                className="flex items-center gap-2 sm:gap-4 flex-shrink-0 relative"
               >
                 <div className="flex flex-col items-center relative">
                   {/* Node Structure */}
                   <motion.div
                     layout
-                    className={`w-24 h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
+                    className={`w-16 sm:w-24 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
                   >
-                    <div className="w-16 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
-                      <span className="text-slate-500/60 uppercase select-none text-[6px]">
+                    <div className="w-10 sm:w-16 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
+                      <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
                         data
                       </span>
-                      <span className="text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
+                      <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
                         {node.val}
                       </span>
                     </div>
 
                     <div className="flex-1 h-full flex flex-col justify-center items-center relative bg-slate-100/30 dark:bg-slate-950/20">
-                      <span className="text-slate-500/60 uppercase select-none text-[6px]">
+                      <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
                         next
                       </span>
-                      <div className="w-2.5 h-2.5 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
-                        <div className="w-1 h-1 rounded-full bg-white" />
+                      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
+                        <div className="w-0.5 sm:w-1 h-0.5 sm:h-1 rounded-full bg-white" />
                       </div>
                     </div>
                   </motion.div>
 
-                  {/* Pointer Tags */}
+                {/* Pointer Tags */}
                   <div className="absolute -bottom-8 flex flex-col gap-1 items-center z-10">
                     <div className="flex gap-1.5 flex-wrap justify-center max-w-[120px]">
                       {isHead && (
@@ -1498,7 +1498,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                 </div>
 
                 {/* Connection Arrow */}
-                <div className="w-10 h-6 flex items-center justify-center relative select-none">
+                <div className="w-6 sm:w-10 h-6 flex items-center justify-center relative select-none">
                   {node.next !== null ? (
                     <svg
                       className="w-full h-full text-slate-400 dark:text-slate-600"
@@ -1529,9 +1529,9 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                       />
                     </svg>
                   ) : (
-                    <div className="flex flex-col items-center font-mono text-[9px] font-black text-slate-500 select-none">
+                    <div className="flex flex-col items-center font-mono text-[8px] sm:text-[9px] font-black text-slate-500 select-none">
                       <svg
-                        className="w-4 h-4 text-slate-500"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-slate-500"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -1541,7 +1541,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                         <line x1="7" y1="16" x2="17" y2="16" />
                         <line x1="10" y1="20" x2="14" y2="20" />
                       </svg>
-                      <span className="text-[6px] tracking-widest text-slate-500/80 uppercase">
+                      <span className="text-[5px] sm:text-[6px] tracking-widest text-slate-500/80 uppercase">
                         NULL
                       </span>
                     </div>
@@ -1578,7 +1578,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
         </div>
 
         {/* Nodes Row container */}
-        <div className="w-full overflow-x-auto flex items-center gap-12 py-12 px-6 min-h-[180px] skeuo-inset-panel bg-slate-950/20 dark:bg-slate-900/10 rounded-2xl border border-slate-200/10 dark:border-slate-800/10 relative">
+        <div className="w-full overflow-x-auto flex items-center gap-4 sm:gap-12 py-6 sm:py-12 px-3 sm:px-6 min-h-[140px] sm:min-h-[180px] skeuo-inset-panel bg-slate-950/20 dark:bg-slate-900/10 rounded-2xl border border-slate-200/10 dark:border-slate-800/10 relative">
           {/* Head ground indicator */}
           <div className="flex flex-col items-center justify-center select-none text-[8px] font-black text-slate-500 gap-1 flex-shrink-0">
             <svg
@@ -1627,40 +1627,40 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
             return (
               <div
                 key={node.id}
-                className="flex items-center gap-12 flex-shrink-0 relative"
+                className="flex items-center gap-4 sm:gap-12 flex-shrink-0 relative"
               >
                 <div className="flex flex-col items-center relative">
                   {/* DLL Node Structure (3 cells: prev, data, next) */}
                   <motion.div
                     layout
-                    className={`w-32 h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
+                    className={`w-22 sm:w-32 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
                   >
                     {/* Prev Pointer Cell */}
-                    <div className="w-8 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-100/30 dark:bg-slate-950/20">
-                      <span className="text-slate-500/60 uppercase select-none text-[5px]">
+                    <div className="w-6 sm:w-8 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-100/30 dark:bg-slate-950/20">
+                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
                         prev
                       </span>
-                      <div className="w-2 h-2 rounded-full bg-purple-500/70 border border-purple-500 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple-500/70 border border-purple-500 flex items-center justify-center">
                         <div className="w-0.5 h-0.5 rounded-full bg-white" />
                       </div>
                     </div>
 
                     {/* Data Cell */}
                     <div className="flex-1 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
-                      <span className="text-slate-500/60 uppercase select-none text-[5px]">
+                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
                         data
                       </span>
-                      <span className="text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
+                      <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
                         {node.val}
                       </span>
                     </div>
 
                     {/* Next Pointer Cell */}
-                    <div className="w-8 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20">
-                      <span className="text-slate-500/60 uppercase select-none text-[5px]">
+                    <div className="w-6 sm:w-8 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20">
+                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
                         next
                       </span>
-                      <div className="w-2 h-2 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
                         <div className="w-0.5 h-0.5 rounded-full bg-white" />
                       </div>
                     </div>
@@ -1694,7 +1694,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                 </div>
 
                 {/* Double SVG Pointer Arrow connecting to next node */}
-                <div className="w-12 h-8 flex flex-col justify-center gap-1.5 relative select-none">
+                <div className="w-8 sm:w-12 h-8 flex flex-col justify-center gap-1 sm:gap-1.5 relative select-none">
                   {idx < listNodes.length - 1 ? (
                     <>
                       {/* Top arrow pointing right (Next link) */}
@@ -1812,8 +1812,8 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
         </div>
 
         {/* Nodes Row container */}
-        <div className="w-full overflow-x-auto flex flex-col items-center gap-6 py-12 px-6 skeuo-inset-panel bg-slate-950/20 dark:bg-slate-900/10 rounded-2xl border border-slate-200/10 dark:border-slate-800/10 relative">
-          <div className="flex items-center gap-6 relative z-10">
+        <div className="w-full overflow-x-auto flex flex-col items-center gap-4 sm:gap-6 py-6 sm:py-12 px-3 sm:px-6 skeuo-inset-panel bg-slate-950/20 dark:bg-slate-900/10 rounded-2xl border border-slate-200/10 dark:border-slate-800/10 relative">
+          <div className="flex items-center gap-2 sm:gap-6 relative z-10">
             {listNodes.map((node, idx) => {
               const isHead = listState?.head === node.id;
               const isCurr = listState?.curr === node.id;
@@ -1841,28 +1841,28 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
               return (
                 <div
                   key={node.id}
-                  className="flex items-center gap-4 flex-shrink-0 relative"
+                  className="flex items-center gap-2 sm:gap-4 flex-shrink-0 relative"
                 >
                   <div className="flex flex-col items-center relative">
                     <motion.div
                       layout
-                      className={`w-24 h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
+                      className={`w-16 sm:w-24 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
                     >
-                      <div className="w-16 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
-                        <span className="text-slate-500/60 uppercase select-none text-[6px]">
+                      <div className="w-10 sm:w-16 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
+                        <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
                           data
                         </span>
-                        <span className="text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
+                        <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
                           {node.val}
                         </span>
                       </div>
 
                       <div className="flex-1 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20">
-                        <span className="text-slate-500/60 uppercase select-none text-[6px]">
+                        <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
                           next
                         </span>
-                        <div className="w-2.5 h-2.5 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
-                          <div className="w-1 h-1 rounded-full bg-white" />
+                        <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
+                          <div className="w-0.5 sm:w-1 h-0.5 sm:h-1 rounded-full bg-white" />
                         </div>
                       </div>
                     </motion.div>
@@ -1896,7 +1896,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
 
                   {/* Next connection pointer */}
                   {idx < listNodes.length - 1 && (
-                    <div className="w-10 h-6 flex items-center justify-center relative select-none">
+                    <div className="w-6 sm:w-10 h-6 flex items-center justify-center relative select-none">
                       <svg
                         className="w-full h-full text-slate-400 dark:text-slate-600"
                         viewBox="0 0 40 24"
