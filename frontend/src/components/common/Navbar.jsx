@@ -59,9 +59,9 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-4 left-4 right-4 z-50 h-16 rounded-[20px] bg-white/40 dark:bg-[#161b26]/35 backdrop-blur-xl border border-white/30 dark:border-white/5 shadow-[0_8px_32px_0_rgba(31,38,135,0.06)] flex items-center justify-between px-6 transition-all duration-300">
+    <nav className="fixed top-4 left-2 right-2 sm:left-4 sm:right-4 z-50 h-16 rounded-[20px] bg-white/40 dark:bg-[#161b26]/35 backdrop-blur-xl border border-white/30 dark:border-white/5 shadow-[0_8px_32px_0_rgba(31,38,135,0.06)] flex items-center justify-between px-3 sm:px-6 transition-all duration-300">
       {/* Brand Logo & Sidebar Toggle */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="clay-btn w-10 h-10 flex items-center justify-center text-accent focus:outline-none bg-white dark:bg-slate-800"
@@ -71,10 +71,13 @@ const Navbar = () => {
         </button>
         <Link
           to="/dashboard"
-          className="flex items-center gap-2 font-bold tracking-wider text-text-primary"
+          className="flex items-center gap-1.5 sm:gap-2 font-bold tracking-wider text-text-primary"
         >
           <Terminal className="w-5 h-5 text-accent animate-pulse" />
-          <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 bg-clip-text text-transparent font-extrabold text-sm md:text-base">
+          <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 bg-clip-text text-transparent font-extrabold text-xs sm:hidden whitespace-nowrap">
+            DSA
+          </span>
+          <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 bg-clip-text text-transparent font-extrabold text-sm md:text-base hidden sm:block whitespace-nowrap">
             DSA // VISUALIZER
           </span>
           <span className="w-2.5 h-2.5 rounded-full bg-success shadow-[0_0_8px_#22c55e] animate-ping duration-1000 hidden md:block"></span>
@@ -119,9 +122,9 @@ const Navbar = () => {
       </div>
 
       {/* Right Action Deck */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3">
         {/* Bookmark Count badge */}
-        <Link to="/dashboard" className="relative" title="Favorites">
+        <Link to="/dashboard" className="relative hidden sm:block" title="Favorites">
           <Button
             variant="default"
             className="w-10 h-10 !p-0 clay-btn clay-btn-default flex items-center justify-center"
@@ -163,7 +166,7 @@ const Navbar = () => {
                   console.error('Logout error:', err);
                 }
               }}
-              className="h-10 px-3 w-10 !p-0 clay-btn flex items-center justify-center text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 border-0"
+              className="h-10 px-3 w-10 !p-0 clay-btn hidden sm:flex items-center justify-center text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 border-0"
               title="Sign Out"
             >
               <LogOut className="w-4.5 h-4.5" />
