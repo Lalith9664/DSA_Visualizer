@@ -8,4 +8,9 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
+  server: {
+    allowedHosts: [
+      'safeness-barmaid-stricken.ngrok-free.dev'
+    ]
+  }
 })
