@@ -64,6 +64,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/favorites', favoritesRoutes);
+app.use('/api/progress', progressRoutes);
 
 // 404 handler for unknown routes
 app.use((_req, res) => {

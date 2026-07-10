@@ -19,37 +19,137 @@ export function arrayTraversalSteps(arr) {
 }
 
 // 2. Array Insertion
-export function arrayInsertionSteps(arr, pos, val) {
-  const position = pos !== undefined ? Math.min(pos, arr.length) : arr.length;
-  const insertVal = val !== undefined ? val : 99;
+export function arrayInsertionSteps(arr, rawTarget, maybeVal) {
+  let insertVal = 99;
+  let position = arr.length;
+
+  if (maybeVal !== undefined) {
+    insertVal = maybeVal;
+    position = rawTarget !== undefined ? Math.min(rawTarget, arr.length) : arr.length;
+  } else if (rawTarget !== undefined) {
+    const parts = rawTarget.toString().trim().split(/[\s,]+/);
+    if (parts.length >= 2) {
+      insertVal = parseInt(parts[0]);
+      position = parseInt(parts[1]);
+    } else if (parts.length === 1 && parts[0] !== "") {
+      insertVal = parseInt(parts[0]);
+      position = arr.length;
+    }
+  }
+
+  if (isNaN(insertVal)) insertVal = 99;
+  if (isNaN(position)) position = 2;
+  const pos = Math.max(0, Math.min(position, arr.length));
+
   const a = [...arr];
   const steps = [];
-  steps.push({ data: [...a], highlights: {}, explanation: `Insert value ${insertVal} at position ${position}. Array length = ${a.length}.`, stats: { step: 0, swaps: 0 } });
-  // Shift right
+  steps.push({
+    data: [...a],
+    highlights: {},
+    explanation: `Array Insertion: Insert element ${insertVal} at index ${pos}. Original array: [${a.join(', ')}].`,
+    stats: { step: 0, swaps: 0 }
+  });
+
   a.push(0);
-  for (let i = a.length - 2; i >= position; i--) {
-    a[i + 1] = a[i];
-    steps.push({ data: [...a], highlights: { [i]: 'compare', [i + 1]: 'swap' }, explanation: `Shift element at index ${i} (value ${a[i]}) right to index ${i + 1}.`, stats: { step: i + 1, swaps: a.length - 2 - i + 1 } });
+  steps.push({
+    data: [...a],
+    highlights: { [a.length - 1]: 'pivot' },
+    explanation: `Append a placeholder element (0) at the end of the array to increase size to ${a.length}.`,
+    stats: { step: 1, swaps: 0 }
+  });
+
+  for (let i = a.length - 1; i > pos; i--) {
+    steps.push({
+      data: [...a],
+      highlights: { [i]: 'compare', [i - 1]: 'pivot' },
+      explanation: `Shift element at index ${i - 1} (${a[i - 1]}) right to index ${i}.`,
+      stats: { step: a.length - i + 1, swaps: a.length - i }
+    });
+    a[i] = a[i - 1];
+    steps.push({
+      data: [...a],
+      highlights: { [i]: 'swap', [i - 1]: 'swap' },
+      explanation: `Element shifted. Array: [${a.join(', ')}].`,
+      stats: { step: a.length - i + 2, swaps: a.length - i }
+    });
   }
-  a[position] = insertVal;
-  steps.push({ data: [...a], highlights: { [position]: 'success' }, explanation: `Place value ${insertVal} at index ${position}. Insertion complete.`, stats: { step: a.length, swaps: a.length - position } });
+
+  steps.push({
+    data: [...a],
+    highlights: { [pos]: 'compare' },
+    explanation: `Place target element ${insertVal} at index ${pos}.`,
+    stats: { step: a.length + 1, swaps: a.length - pos }
+  });
+  a[pos] = insertVal;
+
+  steps.push({
+    data: [...a],
+    highlights: { sorted: a.map((_, i) => i) },
+    explanation: `Insertion complete! Final array: [${a.join(', ')}].`,
+    stats: { step: a.length + 2, swaps: a.length - pos }
+  });
+
   return steps;
 }
 
 // 3. Array Deletion
-export function arrayDeletionSteps(arr, pos) {
-  const position = pos !== undefined ? Math.min(pos, arr.length - 1) : 0;
-  const a = [...arr];
-  const deletedVal = a[position];
-  const steps = [];
-  steps.push({ data: [...a], highlights: { [position]: 'active' }, explanation: `Delete element at index ${position} (value = ${deletedVal}).`, stats: { step: 0, swaps: 0 } });
-  steps.push({ data: [...a], highlights: { [position]: 'swap' }, explanation: `Mark index ${position} for deletion.`, stats: { step: 1, swaps: 0 } });
-  for (let i = position; i < a.length - 1; i++) {
-    a[i] = a[i + 1];
-    steps.push({ data: [...a], highlights: { [i]: 'compare', [i + 1]: 'visited' }, explanation: `Shift element from index ${i + 1} (${a[i]}) left to index ${i}.`, stats: { step: i + 2, swaps: i - position + 1 } });
+export function arrayDeletionSteps(arr, rawTarget) {
+  let position = 2;
+  if (rawTarget !== undefined) {
+    position = parseInt(rawTarget);
   }
+  if (isNaN(position)) position = 2;
+  const pos = Math.max(0, Math.min(position, arr.length - 1));
+
+  const a = [...arr];
+  const deletedVal = a[pos];
+  const steps = [];
+
+  steps.push({
+    data: [...a],
+    highlights: { [pos]: 'pivot' },
+    explanation: `Array Deletion: Remove element at index ${pos} (value: ${deletedVal}).`,
+    stats: { step: 0, swaps: 0 }
+  });
+
+  steps.push({
+    data: [...a],
+    highlights: { [pos]: 'swap' },
+    explanation: `Mark index ${pos} for deletion.`,
+    stats: { step: 1, swaps: 0 }
+  });
+
+  for (let i = pos; i < a.length - 1; i++) {
+    steps.push({
+      data: [...a],
+      highlights: { [i]: 'pivot', [i + 1]: 'compare' },
+      explanation: `Shift element at index ${i + 1} (${a[i + 1]}) left to index ${i}.`,
+      stats: { step: i - pos + 2, swaps: i - pos + 1 }
+    });
+    a[i] = a[i + 1];
+    steps.push({
+      data: [...a],
+      highlights: { [i]: 'swap', [i + 1]: 'swap' },
+      explanation: `Element shifted. Array: [${a.join(', ')}].`,
+      stats: { step: i - pos + 3, swaps: i - pos + 1 }
+    });
+  }
+
+  steps.push({
+    data: [...a],
+    highlights: { [a.length - 1]: 'pivot' },
+    explanation: `Remove the duplicate last element (${a[a.length - 1]}) to complete deletion.`,
+    stats: { step: a.length + 1, swaps: a.length - pos }
+  });
   a.pop();
-  steps.push({ data: [...a], highlights: {}, explanation: `Deletion complete. Array now has ${a.length} elements.`, stats: { step: a.length + 2, swaps: a.length - position } });
+
+  steps.push({
+    data: [...a],
+    highlights: { sorted: a.map((_, i) => i) },
+    explanation: `Deletion complete! Final array: [${a.join(', ')}].`,
+    stats: { step: a.length + 2, swaps: a.length - pos }
+  });
+
   return steps;
 }
 
@@ -102,29 +202,135 @@ export function mooresVotingSteps(arr) {
 
 // 6. Suffix Sum
 export function suffixSumSteps(arr) {
-  const suffix = new Array(arr.length).fill(0);
-  const steps = [{ data: [...suffix], highlights: {}, explanation: `Build suffix sum: scan from right to left.`, stats: { step: 0 } }];
-  let running = 0;
-  for (let i = arr.length - 1; i >= 0; i--) {
-    running += arr[i];
-    suffix[i] = running;
-    steps.push({ data: [...suffix], highlights: { [i]: 'active' }, explanation: `suffix[${i}] = suffix[${i + 1} ?? 0] + arr[${i}] = ${running}`, stats: { step: arr.length - i } });
+  const steps = [];
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+  const suffix = Array(n).fill(0);
+
+  steps.push({
+    data: [...nums],
+    suffixState: { suff: [...suffix], currentIdx: -1 },
+    highlights: {},
+    explanation: "Initialize suffix sum array with zeros. Suffix sum calculates running sums scanning right-to-left: suff[i] = suff[i+1] + arr[i].",
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let i = n - 1; i >= 0; i--) {
+    suffix[i] = (i === n - 1 ? 0 : suffix[i + 1]) + nums[i];
+    steps.push({
+      data: [...nums],
+      suffixState: { suff: [...suffix], currentIdx: i },
+      highlights: { [i]: 'pivot' },
+      explanation: i === n - 1
+        ? `suff[${n-1}] = arr[${n-1}] = ${nums[n-1]}`
+        : `suff[${i}] = suff[${i+1}] (${suffix[i+1]}) + arr[${i}] (${nums[i]}) = ${suffix[i]}`,
+      stats: { comparisons: n - 1 - i, swaps: 0, step: steps.length }
+    });
   }
-  steps.push({ data: [...suffix], highlights: {}, explanation: `Suffix sum array complete.`, stats: { step: arr.length + 1 } });
+
+  steps.push({
+    data: [...suffix],
+    suffixState: { suff: [...suffix], currentIdx: -1 },
+    highlights: suffix.map((_, idx) => idx).reduce((acc, idx) => ({ ...acc, [idx]: 'sorted' }), {}),
+    explanation: `Suffix sum array calculation complete: [${suffix.join(', ')}].`,
+    stats: { comparisons: n, swaps: 0, step: steps.length }
+  });
+
   return steps;
 }
 
 // 7. Difference Array
 export function differenceArraySteps(arr) {
-  const diff = new Array(arr.length).fill(0);
-  const steps = [{ data: [...diff], highlights: {}, explanation: `Build difference array. diff[0] = arr[0].`, stats: { step: 0 } }];
-  diff[0] = arr[0];
-  steps.push({ data: [...diff], highlights: { 0: 'success' }, explanation: `diff[0] = arr[0] = ${arr[0]}`, stats: { step: 1 } });
-  for (let i = 1; i < arr.length; i++) {
-    diff[i] = arr[i] - arr[i - 1];
-    steps.push({ data: [...diff], highlights: { [i]: 'active', [i - 1]: 'visited' }, explanation: `diff[${i}] = arr[${i}](${arr[i]}) − arr[${i - 1}](${arr[i - 1]}) = ${diff[i]}`, stats: { step: i + 1 } });
+  const steps = [];
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+  const diff = Array(n).fill(0);
+
+  steps.push({
+    data: [...nums],
+    diffState: { diff: [...diff], currentIdx: -1 },
+    highlights: {},
+    explanation: "Initialize difference array with zeros. Difference array calculates subtraction: diff[i] = arr[i] - arr[i-1].",
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  diff[0] = nums[0];
+  steps.push({
+    data: [...nums],
+    diffState: { diff: [...diff], currentIdx: 0 },
+    highlights: { 0: 'pivot' },
+    explanation: `diff[0] = arr[0] = ${nums[0]}`,
+    stats: { comparisons: 0, swaps: 0, step: 1 }
+  });
+
+  for (let i = 1; i < n; i++) {
+    diff[i] = nums[i] - nums[i - 1];
+    steps.push({
+      data: [...nums],
+      diffState: { diff: [...diff], currentIdx: i },
+      highlights: { [i]: 'pivot', [i - 1]: 'compare' },
+      explanation: `diff[${i}] = arr[${i}] (${nums[i]}) - arr[${i-1}] (${nums[i-1]}) = ${diff[i]}`,
+      stats: { comparisons: i, swaps: 0, step: steps.length }
+    });
   }
-  steps.push({ data: [...diff], highlights: {}, explanation: `Difference array complete.`, stats: { step: arr.length + 1 } });
+
+  steps.push({
+    data: [...diff],
+    diffState: { diff: [...diff], currentIdx: -1 },
+    highlights: diff.map((_, idx) => idx).reduce((acc, idx) => ({ ...acc, [idx]: 'sorted' }), {}),
+    explanation: `Difference array calculation complete: [${diff.join(', ')}].`,
+    stats: { comparisons: n - 1, swaps: 0, step: steps.length }
+  });
+
+  return steps;
+}
+
+// 7B. Splitting Arrays
+export function splittingArraysSteps(arr, targetInputStr) {
+  const steps = [];
+  const a = [...arr];
+
+  const position = parseInt(targetInputStr) !== undefined && !isNaN(parseInt(targetInputStr)) ? parseInt(targetInputStr) : Math.floor(a.length / 2);
+  const splitIdx = Math.max(0, Math.min(position, a.length));
+
+  steps.push({
+    data: { arr: [...a], left: [], right: [], splitIdx, phase: 'init', currentIndex: -1 },
+    highlights: { [splitIdx]: 'pivot' },
+    explanation: `Start Splitting Array at index ${splitIdx}. We will slice the array into two parts: index [0...${splitIdx - 1}] and [${splitIdx}...${a.length - 1}].`,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  const left = [];
+  for (let i = 0; i < splitIdx; i++) {
+    left.push(a[i]);
+    steps.push({
+      data: { arr: [...a], left: [...left], right: [], splitIdx, phase: 'left', currentIndex: i },
+      highlights: { arrIdx: i, [splitIdx]: 'pivot' },
+      explanation: `Copying element at index ${i} (${a[i]}) to the Left array.`,
+      stats: { comparisons: 0, swaps: 0, step: steps.length }
+    });
+  }
+
+  const right = [];
+  for (let i = splitIdx; i < a.length; i++) {
+    right.push(a[i]);
+    steps.push({
+      data: { arr: [...a], left: [...left], right: [...right], splitIdx, phase: 'right', currentIndex: i },
+      highlights: { arrIdx: i, [splitIdx]: 'pivot' },
+      explanation: `Copying element at index ${i} (${a[i]}) to the Right array.`,
+      stats: { comparisons: 0, swaps: 0, step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: { arr: [...a], left: [...left], right: [...right], splitIdx, phase: 'done', currentIndex: -1 },
+    highlights: { sorted: a.map((_, idx) => idx) },
+    explanation: `Array split complete! Left: [${left.join(', ')}], Right: [${right.join(', ')}].`,
+    stats: { comparisons: 0, swaps: 0, step: steps.length }
+  });
+
   return steps;
 }
 
@@ -151,6 +357,670 @@ export function spiralMatrixSteps(size) {
     left++;
   }
   steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r => [...r]), n, order, direction: 'done' }, explanation: `Spiral traversal complete. Visited all ${n * n} elements.`, stats: { step } });
+  return steps;
+}
+
+// 8B. Matrix Transpose
+export function transposeMatrixSteps(size) {
+  const n = Math.min(size || 3, 5);
+  const mat = [];
+  for (let i = 0; i < n; i++) {
+    mat[i] = [];
+    for (let j = 0; j < n; j++) {
+      mat[i][j] = i * n + j + 1;
+    }
+  }
+
+  const steps = [];
+  const swapped = [];
+
+  steps.push({
+    data: mat.flat(),
+    highlights: {},
+    matrixState: { matrix: mat.map(r => [...r]), n, activeCell: null, compareCell: null, swapped: [], phase: 'init' },
+    explanation: `Start Matrix Transposition. We will swap elements across the diagonal: matrix[i][j] ↔ matrix[j][i] for j > i.`,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  let comparisons = 0;
+  let swapCount = 0;
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      comparisons++;
+      
+      steps.push({
+        data: mat.flat(),
+        highlights: {},
+        matrixState: { 
+          matrix: mat.map(r => [...r]), 
+          n, 
+          activeCell: [i, j], 
+          compareCell: [j, i], 
+          swapped: [...swapped], 
+          phase: 'compare' 
+        },
+        explanation: `Comparing element at [${i}][${j}] (${mat[i][j]}) with [${j}][${i}] (${mat[j][i]}).`,
+        stats: { comparisons, swaps: swapCount, step: steps.length }
+      });
+
+      const temp = mat[i][j];
+      mat[i][j] = mat[j][i];
+      mat[j][i] = temp;
+      swapCount++;
+      swapped.push([i, j], [j, i]);
+
+      steps.push({
+        data: mat.flat(),
+        highlights: {},
+        matrixState: { 
+          matrix: mat.map(r => [...r]), 
+          n, 
+          activeCell: [i, j], 
+          compareCell: [j, i], 
+          swapped: [...swapped], 
+          phase: 'swap' 
+        },
+        explanation: `Swapped [${i}][${j}] and [${j}][${i}].`,
+        stats: { comparisons, swaps: swapCount, step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: mat.flat(),
+    highlights: {},
+    matrixState: { 
+      matrix: mat.map(r => [...r]), 
+      n, 
+      activeCell: null, 
+      compareCell: null, 
+      swapped: [...swapped], 
+      phase: 'done' 
+    },
+    explanation: `Matrix Transposition complete! Diagonal elements remained in place, others were mirrored.`,
+    stats: { comparisons, swaps: swapCount, step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8C. Fruits Into Baskets
+export function fruitsIntoBasketsSteps(rawInput) {
+  let arr = (rawInput || '2 1 5 1 3 2')
+    .toString()
+    .trim()
+    .split(/[\s,]+/)
+    .map(Number)
+    .filter(x => !isNaN(x));
+
+  if (arr.length === 0) {
+    arr = [2, 1, 5, 1, 3, 2];
+  }
+
+  const steps = [];
+  const basket = {};
+  let left = 0;
+  let maxLen = 0;
+
+  steps.push({
+    data: [...arr],
+    highlights: {},
+    fruitState: { fruits: [...arr], left: 0, right: 0, basket: {}, maxLen: 0, phase: 'init' },
+    explanation: `Fruits into Baskets: Find the longest contiguous subarray with at most 2 distinct fruits. Input fruits: [${arr.join(', ')}].`,
+    stats: { step: 0 }
+  });
+
+  for (let right = 0; right < arr.length; right++) {
+    const rightFruit = arr[right];
+    basket[rightFruit] = (basket[rightFruit] || 0) + 1;
+
+    steps.push({
+      data: [...arr],
+      highlights: {},
+      fruitState: { fruits: [...arr], left, right, basket: { ...basket }, maxLen, phase: 'add' },
+      explanation: `Add fruit at index ${right} (type: ${rightFruit}) to baskets. Current baskets count: ${Object.keys(basket).length}/2.`,
+      stats: { step: steps.length }
+    });
+
+    while (Object.keys(basket).length > 2) {
+      const leftFruit = arr[left];
+      basket[leftFruit]--;
+      if (basket[leftFruit] === 0) {
+        delete basket[leftFruit];
+      }
+      left++;
+
+      steps.push({
+        data: [...arr],
+        highlights: {},
+        fruitState: { fruits: [...arr], left, right, basket: { ...basket }, maxLen, phase: 'shrink' },
+        explanation: `More than 2 types of fruits in baskets! Shrink window from left. Removed fruit at index ${left - 1} (type: ${leftFruit}).`,
+        stats: { step: steps.length }
+      });
+    }
+
+    const currentLen = right - left + 1;
+    const oldMax = maxLen;
+    maxLen = Math.max(maxLen, currentLen);
+
+    steps.push({
+      data: [...arr],
+      highlights: {},
+      fruitState: { fruits: [...arr], left, right, basket: { ...basket }, maxLen, phase: 'update' },
+      explanation: `Baskets hold at most 2 types of fruits. Collected fruit count is ${currentLen}. ${
+        currentLen > oldMax ? `Updated maximum collected count to ${maxLen}.` : `Maximum collected remains ${maxLen}.`
+      }`,
+      stats: { step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: [...arr],
+    highlights: {},
+    fruitState: { fruits: [...arr], left, right: arr.length - 1, basket: { ...basket }, maxLen, phase: 'done' },
+    explanation: `Finished traversing all fruits. The maximum fruits we can collect is ${maxLen}.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8D. Minimum Window Substring
+export function minWindowSubstringSteps(rawInput, rawTarget) {
+  const lines = (rawInput || '').toString().trim().split('\n');
+  const s = lines[0] || 'ADOBECODEBANC';
+  const t = rawTarget ? rawTarget.toString().trim() : (lines[1] || 'ABC');
+
+  const steps = [];
+  const need = {};
+  const have = {};
+
+  for (const c of t) {
+    need[c] = (need[c] || 0) + 1;
+  }
+
+  let left = 0;
+  let formed = 0;
+  const required = Object.keys(need).length;
+  let minLen = Infinity;
+  let minSub = '';
+
+  steps.push({
+    data: s.split(''),
+    highlights: {},
+    minWindowState: { s, t, left: 0, right: 0, need: { ...need }, have: {}, formed: 0, required, minLen: Infinity, minSub: '', phase: 'init' },
+    explanation: `Minimum Window Substring: Find minimum window in S="${s}" containing all characters of T="${t}".`,
+    stats: { step: 0 }
+  });
+
+  for (let right = 0; right < s.length; right++) {
+    const c = s[right];
+    have[c] = (have[c] || 0) + 1;
+
+    if (need[c] && have[c] === need[c]) {
+      formed++;
+    }
+
+    steps.push({
+      data: s.split(''),
+      highlights: {},
+      minWindowState: { s, t, left, right, need: { ...need }, have: { ...have }, formed, required, minLen, minSub, phase: 'add' },
+      explanation: `Add character at index ${right} ('${c}') to window. Current window S[${left}..${right}] matches: ${formed}/${required} required.`,
+      stats: { step: steps.length }
+    });
+
+    while (formed === required) {
+      const currentLen = right - left + 1;
+      const oldMin = minLen;
+      if (currentLen < minLen) {
+        minLen = currentLen;
+        minSub = s.slice(left, right + 1);
+      }
+
+      steps.push({
+        data: s.split(''),
+        highlights: {},
+        minWindowState: { s, t, left, right, need: { ...need }, have: { ...have }, formed, required, minLen, minSub, phase: 'check' },
+        explanation: `All target characters matched! Current window length: ${currentLen}. ${
+          currentLen < oldMin ? `Updated minimum window to "${minSub}" (${minLen}).` : `Minimum window remains "${minSub}" (${minLen}).`
+        }`,
+        stats: { step: steps.length }
+      });
+
+      const lc = s[left];
+      have[lc]--;
+      if (need[lc] && have[lc] < need[lc]) {
+        formed--;
+      }
+      left++;
+
+      steps.push({
+        data: s.split(''),
+        highlights: {},
+        minWindowState: { s, t, left, right, need: { ...need }, have: { ...have }, formed, required, minLen, minSub, phase: 'shrink' },
+        explanation: `Shrink window from left. Removed character at index ${left - 1} ('${lc}').`,
+        stats: { step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: s.split(''),
+    highlights: {},
+    minWindowState: { s, t, left: 0, right: s.length - 1, need: { ...need }, have: { ...have }, formed, required, minLen, minSub, phase: 'done' },
+    explanation: `Finished traversing string. The minimum window substring containing "${t}" is "${minSub}" (length ${minLen}).`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8E. String Traversal
+export function stringTraversalSteps(str) {
+  const cleanStr = (str || 'hello').toString();
+  const steps = [];
+  const chars = cleanStr.split('');
+
+  steps.push({
+    data: chars,
+    highlights: {},
+    traversalState: { currentIdx: -1, char: '' },
+    explanation: `Start string traversal. String length: ${cleanStr.length}.`,
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < chars.length; i++) {
+    steps.push({
+      data: chars,
+      highlights: { [i]: 'active' },
+      traversalState: { currentIdx: i, char: chars[i] },
+      explanation: `Inspect character at index ${i}: '${chars[i]}'.`,
+      stats: { step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: chars,
+    highlights: {},
+    traversalState: { currentIdx: chars.length, char: '' },
+    explanation: `Traversal completed successfully.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8F. String Concatenation
+export function stringConcatenationSteps(rawInput) {
+  const parts = (rawInput || 'hello world').toString().trim().split(/\s+/);
+  const s1 = parts[0] || 'hello';
+  const s2 = parts.slice(1).join(' ') || 'world';
+
+  const steps = [];
+  let res = '';
+
+  steps.push({
+    data: [],
+    highlights: {},
+    concatState: { s1, s2, res: '', activeIdx: -1, phase: 'init' },
+    explanation: `Start string concatenation. s1="${s1}", s2="${s2}".`,
+    stats: { step: 0 }
+  });
+
+  // Loop through s1
+  for (let i = 0; i < s1.length; i++) {
+    res += s1[i];
+    steps.push({
+      data: res.split(''),
+      highlights: {},
+      concatState: { s1, s2, res, activeIdx: i, phase: 's1' },
+      explanation: `Add character '${s1[i]}' from s1. Current result: "${res}".`,
+      stats: { step: steps.length }
+    });
+  }
+
+  // Loop through s2
+  for (let i = 0; i < s2.length; i++) {
+    res += s2[i];
+    steps.push({
+      data: res.split(''),
+      highlights: {},
+      concatState: { s1, s2, res, activeIdx: i, phase: 's2' },
+      explanation: `Add character '${s2[i]}' from s2. Current result: "${res}".`,
+      stats: { step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: res.split(''),
+    highlights: {},
+    concatState: { s1, s2, res, activeIdx: -1, phase: 'done' },
+    explanation: `Concatenation completed successfully. Final string: "${res}".`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8G. Longest Palindromic Substring
+export function longestPalindromeSteps(rawInput) {
+  const s = (rawInput || 'babad').toString().trim();
+  const steps = [];
+  const chars = s.split('');
+
+  let start = 0, end = 0;
+
+  steps.push({
+    data: chars,
+    highlights: {},
+    lpsState: { s, i: -1, l: -1, r: -1, start: 0, end: 0, bestSub: s[0] || '', phase: 'init' },
+    explanation: `Start finding Longest Palindromic Substring in "${s}".`,
+    stats: { step: 0 }
+  });
+
+  const expand = (i, lStart, rStart, phaseName) => {
+    let l = lStart;
+    let r = rStart;
+
+    while (l >= 0 && r < s.length && s[l] === s[r]) {
+      const curSub = s.slice(l, r + 1);
+      const isNewBest = (r - l + 1) > (end - start + 1);
+
+      steps.push({
+        data: chars,
+        highlights: { [i]: 'pivot', [l]: 'active', [r]: 'active' },
+        lpsState: { s, i, l, r, start, end, bestSub: s.slice(start, end + 1), phase: phaseName },
+        explanation: `Center index ${i}: Expand pointers L=${l}, R=${r}. Characters match ('${s[l]}' === '${s[r]}'). Substring "${curSub}" is a palindrome.`,
+        stats: { step: steps.length }
+      });
+
+      if (isNewBest) {
+        start = l;
+        end = r;
+        steps.push({
+          data: chars,
+          highlights: { [i]: 'pivot', [l]: 'active', [r]: 'active' },
+          lpsState: { s, i, l, r, start, end, bestSub: s.slice(start, end + 1), phase: 'update' },
+          explanation: `Found new longest palindrome substring: "${s.slice(start, end + 1)}" (length ${end - start + 1}).`,
+          stats: { step: steps.length }
+        });
+      }
+
+      l--;
+      r++;
+    }
+
+    if (l >= 0 || r < s.length) {
+      steps.push({
+        data: chars,
+        highlights: { [i]: 'pivot', ...(l >= 0 ? { [l]: 'error' } : {}), ...(r < s.length ? { [r]: 'error' } : {}) },
+        lpsState: { s, i, l, r, start, end, bestSub: s.slice(start, end + 1), phase: phaseName },
+        explanation: `Mismatch or bounds hit at L=${l}, R=${r} (${l >= 0 && r < s.length ? `'${s[l]}' !== '${s[r]}'` : 'Out of bounds'}). Stop expansion.`,
+        stats: { step: steps.length }
+      });
+    }
+  };
+
+  for (let i = 0; i < s.length; i++) {
+    expand(i, i, i, 'expand-odd');
+    if (i + 1 < s.length) {
+      expand(i, i, i + 1, 'expand-even');
+    }
+  }
+
+  steps.push({
+    data: chars,
+    highlights: {},
+    lpsState: { s, i: s.length, l: -1, r: -1, start, end, bestSub: s.slice(start, end + 1), phase: 'done' },
+    explanation: `Completed. Longest palindromic substring is "${s.slice(start, end + 1)}" (length ${end - start + 1}).`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8H. Doubly Linked List Traversal
+export function doublyLinkedListTraversalSteps(arr) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  const nodes = nums.map((val, idx) => ({
+    id: idx,
+    val,
+    next: idx < n - 1 ? idx + 1 : null,
+    prev: idx > 0 ? idx - 1 : null
+  }));
+
+  const steps = [];
+  steps.push({
+    data: [...nodes],
+    listState: { head: 0, curr: null, prev: null, next: null },
+    highlights: {},
+    explanation: "Initialize doubly linked list. Pointer traverses forward starting from head.",
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < n; i++) {
+    steps.push({
+      data: [...nodes],
+      listState: { head: 0, curr: i, prev: i > 0 ? i - 1 : null, next: i < n - 1 ? i + 1 : null },
+      highlights: { [i]: 'pivot' },
+      explanation: `Current pointer is at Node ${nodes[i].val}. In a Doubly Linked List, we can check node.prev (${i > 0 ? nodes[i-1].val : 'null'}) and node.next (${i < n - 1 ? nodes[i+1].val : 'null'}).`,
+      stats: { step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: [...nodes],
+    listState: { head: 0, curr: null, prev: n - 1, next: null },
+    highlights: nodes.map(nd => nd.id).reduce((acc, id) => ({ ...acc, [id]: 'sorted' }), {}),
+    explanation: "Reached end of list (null). Traversal complete.",
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8I. Doubly Linked List Insertion
+export function doublyLinkedListInsertionSteps(arr) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  let nodes = nums.map((val, idx) => ({
+    id: idx,
+    val,
+    next: idx < n - 1 ? idx + 1 : null,
+    prev: idx > 0 ? idx - 1 : null
+  }));
+
+  const steps = [];
+  steps.push({
+    data: JSON.parse(JSON.stringify(nodes)),
+    listState: { head: 0, curr: null, prev: null, next: null },
+    highlights: {},
+    explanation: "Start doubly linked list insertion. We want to insert Node(99) at position 2.",
+    stats: { step: 0 }
+  });
+
+  let curr = 0;
+  for (let i = 0; i <= 1 && curr !== null; i++) {
+    steps.push({
+      data: JSON.parse(JSON.stringify(nodes)),
+      listState: { head: 0, curr, prev: curr > 0 ? curr - 1 : null, next: nodes[curr].next },
+      highlights: { [curr]: 'pivot' },
+      explanation: `Traversing list to find insertion spot. Current node is ${nodes[curr].val}.`,
+      stats: { step: steps.length }
+    });
+    if (i < 1) curr = nodes[curr].next;
+  }
+
+  const newNodeId = nodes.length;
+  const newNode = { id: newNodeId, val: 99, next: null, prev: null };
+  const updatedNodes = [...nodes, newNode];
+
+  steps.push({
+    data: JSON.parse(JSON.stringify(updatedNodes)),
+    listState: { head: 0, curr: newNodeId, prev: 1, next: null },
+    highlights: { [newNodeId]: 'active', 1: 'pivot' },
+    explanation: "Allocate new node with value 99.",
+    stats: { step: steps.length }
+  });
+
+  const afterNodeIdx = nodes[1].next;
+  updatedNodes[newNodeId].next = afterNodeIdx;
+  steps.push({
+    data: JSON.parse(JSON.stringify(updatedNodes)),
+    listState: { head: 0, curr: newNodeId, prev: 1, next: afterNodeIdx },
+    highlights: { [newNodeId]: 'active', [afterNodeIdx]: 'compare' },
+    explanation: "Link new node's next to the remaining list.",
+    stats: { step: steps.length }
+  });
+
+  updatedNodes[newNodeId].prev = 1;
+  steps.push({
+    data: JSON.parse(JSON.stringify(updatedNodes)),
+    listState: { head: 0, curr: newNodeId, prev: 1, next: afterNodeIdx },
+    highlights: { [newNodeId]: 'active', 1: 'compare' },
+    explanation: "Link new node's prev pointer back to node 1.",
+    stats: { step: steps.length }
+  });
+
+  updatedNodes[1].next = newNodeId;
+  if (afterNodeIdx !== null) {
+    updatedNodes[afterNodeIdx].prev = newNodeId;
+  }
+  
+  const finalSequence = [];
+  let temp = 0;
+  const visited = new Set();
+  while (temp !== null && !visited.has(temp)) {
+    visited.add(temp);
+    finalSequence.push(updatedNodes[temp]);
+    temp = updatedNodes[temp].next;
+  }
+
+  steps.push({
+    data: finalSequence,
+    listState: { head: 0, curr: newNodeId, prev: null, next: null },
+    highlights: { [newNodeId]: 'sorted' },
+    explanation: "Updated list links. Insertion completed successfully.",
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8J. Doubly Linked List Deletion
+export function doublyLinkedListDeletionSteps(arr) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  let nodes = nums.map((val, idx) => ({
+    id: idx,
+    val,
+    next: idx < n - 1 ? idx + 1 : null,
+    prev: idx > 0 ? idx - 1 : null
+  }));
+
+  const steps = [];
+  steps.push({
+    data: JSON.parse(JSON.stringify(nodes)),
+    listState: { head: 0, curr: null, prev: null, next: null },
+    highlights: {},
+    explanation: "Start doubly linked list deletion. We want to delete node at position 2.",
+    stats: { step: 0 }
+  });
+
+  let curr = 0;
+  for (let i = 0; i <= 2 && curr !== null; i++) {
+    steps.push({
+      data: JSON.parse(JSON.stringify(nodes)),
+      listState: { head: 0, curr, prev: nodes[curr].prev, next: nodes[curr].next },
+      highlights: { [curr]: 'pivot' },
+      explanation: `Traversing list to find target node. Current node is ${nodes[curr].val}.`,
+      stats: { step: steps.length }
+    });
+    if (i < 2) curr = nodes[curr].next;
+  }
+
+  const targetId = 2;
+  const beforeId = nodes[targetId].prev;
+  const afterId = nodes[targetId].next;
+
+  steps.push({
+    data: JSON.parse(JSON.stringify(nodes)),
+    listState: { head: 0, curr: targetId, prev: beforeId, next: afterId },
+    highlights: { [targetId]: 'error', ...(beforeId !== null ? { [beforeId]: 'compare' } : {}), ...(afterId !== null ? { [afterId]: 'compare' } : {}) },
+    explanation: `Target node is ${nodes[targetId].val}. Re-linking its neighbors: node ${nodes[beforeId].val} and node ${nodes[afterId].val}.`,
+    stats: { step: steps.length }
+  });
+
+  if (beforeId !== null) nodes[beforeId].next = afterId;
+  if (afterId !== null) nodes[afterId].prev = beforeId;
+
+  const finalSequence = [];
+  let temp = 0;
+  const visited = new Set();
+  while (temp !== null && !visited.has(temp)) {
+    visited.add(temp);
+    finalSequence.push(nodes[temp]);
+    temp = nodes[temp].next;
+  }
+
+  steps.push({
+    data: finalSequence,
+    listState: { head: 0, curr: null, prev: null, next: null },
+    highlights: {},
+    explanation: `Deleted node ${nums[targetId]} from the list. Linked neighbors together.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 8K. Circular Linked List Traversal
+export function circularLinkedListTraversalSteps(arr) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  const nodes = nums.map((val, idx) => ({
+    id: idx,
+    val,
+    next: idx < n - 1 ? idx + 1 : 0
+  }));
+
+  const steps = [];
+  steps.push({
+    data: [...nodes],
+    listState: { head: 0, curr: null, prev: null, next: null },
+    highlights: {},
+    explanation: "Initialize circular linked list traversal. Track start head node to check loop termination.",
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < n; i++) {
+    steps.push({
+      data: [...nodes],
+      listState: { head: 0, curr: i, prev: i > 0 ? i - 1 : n - 1, next: nodes[i].next },
+      highlights: { [i]: 'pivot' },
+      explanation: `Visiting Node ${nodes[i].val}. Next pointer points to Node ${nodes[nodes[i].next].val}.`,
+      stats: { step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: [...nodes],
+    listState: { head: 0, curr: 0, prev: n - 1, next: 1 },
+    highlights: { 0: 'sorted' },
+    explanation: "Loopback pointer referenced head Node 0 again. Termination condition met! Traversal complete.",
+    stats: { step: steps.length }
+  });
+
   return steps;
 }
 
@@ -379,40 +1249,163 @@ export function postfixEvaluationSteps(expr) {
 
 // 17. Next Smaller Element
 export function nextSmallerElementSteps(arr) {
-  const n = arr.length;
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
   const result = new Array(n).fill(-1);
-  const stack = [];
-  const steps = [{ data: [...arr], highlights: {}, explanation: `Next Smaller Element: use monotonic stack. Maintain increasing order.`, stackState: [], stats: { comparisons: 0, step: 0 } }];
-  let comp = 0;
+  const stack = []; 
+  const steps = [];
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: "Initialize empty stack and NSE output array filled with -1.",
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
   for (let i = 0; i < n; i++) {
-    comp++;
-    while (stack.length && arr[stack[stack.length - 1]] > arr[i]) {
-      const idx = stack.pop();
-      result[idx] = arr[i];
-      steps.push({ data: [...result], highlights: { [idx]: 'success', [i]: 'active' }, explanation: `${arr[idx]} at index ${idx}: next smaller is ${arr[i]} (current). result[${idx}]=${arr[i]}.`, stackState: [...stack], stats: { comparisons: ++comp, step: i + 1 } });
+    const val = nums[i];
+
+    const hl = { [i]: 'pivot' };
+    stack.forEach(idx => { hl[idx] = 'compare'; });
+
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: hl,
+      explanation: `Inspecting element ${val} at index ${i}. Checking if it's smaller than elements represented on stack top.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
+
+    while (stack.length > 0 && nums[stack[stack.length - 1]] > val) {
+      const poppedIdx = stack.pop();
+      result[poppedIdx] = val;
+
+      steps.push({
+        data: [...nums],
+        stackState: { 
+          stack: stack.map(idx => nums[idx]), 
+          stackIndices: [...stack], 
+          charIdx: i, 
+          result: [...result] 
+        },
+        highlights: { [i]: 'sorted', [poppedIdx]: 'sorted' },
+        explanation: `Element ${val} at index ${i} is smaller than stack top ${nums[poppedIdx]}. Next smaller element of index ${poppedIdx} is ${val}.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
     }
+
     stack.push(i);
-    steps.push({ data: [...result], highlights: { [i]: 'compare' }, explanation: `Push index ${i} (value ${arr[i]}) to stack.`, stackState: [...stack], stats: { comparisons: comp, step: i + 1 } });
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: { [i]: 'active' },
+      explanation: `Push index ${i} (value ${val}) onto the stack.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
   }
-  steps.push({ data: [...result], highlights: {}, explanation: `Result: [${result.join(', ')}]. -1 means no smaller element exists.`, stackState: [], stats: { comparisons: comp, step: n + 1 } });
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: `Result: [${result.join(', ')}]. -1 means no smaller element exists.`,
+    stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+  });
+
   return steps;
 }
 
 // 18. Previous Greater Element
 export function previousGreaterElementSteps(arr) {
-  const n = arr.length;
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
   const result = new Array(n).fill(-1);
-  const stack = [];
-  const steps = [{ data: [...arr], highlights: {}, explanation: `Previous Greater Element: scan left-to-right with monotonic decreasing stack.`, stackState: [], stats: { comparisons: 0, step: 0 } }];
-  let comp = 0;
+  const stack = []; 
+  const steps = [];
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: "Initialize empty stack and PGE output array filled with -1.",
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
   for (let i = 0; i < n; i++) {
-    comp++;
-    while (stack.length && stack[stack.length - 1] <= arr[i]) stack.pop();
-    result[i] = stack.length ? stack[stack.length - 1] : -1;
-    steps.push({ data: [...result], highlights: { [i]: 'active' }, explanation: `Index ${i} (val=${arr[i]}): previous greater = ${result[i]}. Stack top was ${stack[stack.length - 1] ?? 'empty'}.`, stackState: [...stack], stats: { comparisons: comp, step: i + 1 } });
-    stack.push(arr[i]);
+    const val = nums[i];
+
+    const hl = { [i]: 'pivot' };
+    stack.forEach(idx => { hl[idx] = 'compare'; });
+
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: hl,
+      explanation: `Inspecting element ${val} at index ${i}. Popping elements from stack that are less than or equal to ${val}.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
+
+    while (stack.length > 0 && nums[stack[stack.length - 1]] <= val) {
+      const poppedIdx = stack.pop();
+      steps.push({
+        data: [...nums],
+        stackState: { 
+          stack: stack.map(idx => nums[idx]), 
+          stackIndices: [...stack], 
+          charIdx: i, 
+          result: [...result] 
+        },
+        highlights: { [i]: 'sorted', [poppedIdx]: 'sorted' },
+        explanation: `Popped index ${poppedIdx} (value ${nums[poppedIdx]}) from stack since it is <= ${val}.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
+    }
+
+    result[i] = stack.length > 0 ? nums[stack[stack.length - 1]] : -1;
+    stack.push(i);
+
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: { [i]: 'active' },
+      explanation: `Previous greater element of ${val} is ${result[i]}. Push index ${i} onto stack.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
   }
-  steps.push({ data: [...result], highlights: {}, explanation: `Result: [${result.join(', ')}].`, stackState: [], stats: { comparisons: comp, step: n + 1 } });
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: `Result: [${result.join(', ')}].`,
+    stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+  });
+
   return steps;
 }
 
@@ -448,21 +1441,82 @@ export function largestRectangleHistogramSteps(arr) {
 
 // 20. Stock Span Problem
 export function stockSpanSteps(arr) {
-  const n = arr.length;
-  const span = new Array(n).fill(1);
-  const stack = [0];
-  const steps = [{ data: [...arr], highlights: {}, explanation: `Stock Span: For each day's price, find consecutive previous days with price ≤ today's.`, stackState: [0], stats: { step: 0 } }];
-  span[0] = 1;
-  for (let i = 1; i < n; i++) {
-    while (stack.length && arr[stack[stack.length - 1]] <= arr[i]) stack.pop();
-    span[i] = stack.length ? i - stack[stack.length - 1] : i + 1;
-    const hl = {};
-    for (let k = i - span[i] + 1; k <= i; k++) hl[k] = 'compare';
-    hl[i] = 'active';
-    steps.push({ data: [...span], highlights: hl, explanation: `Day ${i}: price=${arr[i]}. Span=${span[i]} consecutive days (including today) with price ≤ ${arr[i]}.`, stackState: [...stack, i], stats: { step: i } });
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  const result = new Array(n).fill(1);
+  const stack = []; 
+  const steps = [];
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: "Initialize empty stack and Span output array filled with 1.",
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let i = 0; i < n; i++) {
+    const val = nums[i];
+
+    const hl = { [i]: 'pivot' };
+    stack.forEach(idx => { hl[idx] = 'compare'; });
+
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: hl,
+      explanation: `Inspecting price ${val} at index ${i}. Popping stack elements representing prices <= ${val}.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
+
+    while (stack.length > 0 && nums[stack[stack.length - 1]] <= val) {
+      const poppedIdx = stack.pop();
+      steps.push({
+        data: [...nums],
+        stackState: { 
+          stack: stack.map(idx => nums[idx]), 
+          stackIndices: [...stack], 
+          charIdx: i, 
+          result: [...result] 
+        },
+        highlights: { [i]: 'sorted', [poppedIdx]: 'sorted' },
+        explanation: `Popped index ${poppedIdx} (price ${nums[poppedIdx]}) <= current price ${val}.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
+    }
+
+    result[i] = stack.length > 0 ? i - stack[stack.length - 1] : i + 1;
     stack.push(i);
+
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: { [i]: 'active' },
+      explanation: `Span for day ${i} is ${result[i]} days. Push index ${i} onto stack.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
   }
-  steps.push({ data: [...span], highlights: {}, explanation: `Stock spans: [${span.join(', ')}].`, stackState: [], stats: { step: n } });
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: `Result spans: [${result.join(', ')}].`,
+    stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+  });
+
   return steps;
 }
 
@@ -898,19 +1952,116 @@ export function editDistanceSteps(rawInput) {
   return steps;
 }
 
+// Helper for house robber optimal backtracking
+function getHouseRobberChosen(arr, dp, idx) {
+  if (idx < 0) return [];
+  const chosen = [];
+  let i = idx;
+  while (i >= 0) {
+    if (i === 0) {
+      if (arr[0] > 0) chosen.push(0);
+      break;
+    } else if (i === 1) {
+      if (arr[1] > arr[0]) {
+        if (arr[1] > 0) chosen.push(1);
+      } else {
+        if (arr[0] > 0) chosen.push(0);
+      }
+      break;
+    } else {
+      if (dp[i] === dp[i - 2] + arr[i]) {
+        chosen.push(i);
+        i -= 2;
+      } else {
+        i -= 1;
+      }
+    }
+  }
+  return chosen.reverse();
+}
+
 // 34. House Robber
 export function houseRobberSteps(arr) {
   const n = arr.length;
   const dp = new Array(n).fill(0);
-  const steps = [{ data: [...arr], highlights: {}, explanation: `House Robber: dp[i] = max money from robbing houses 0..i (no adjacent).`, stats: { step: 0, maxRobbery: 0 } }];
+  
+  // Step 0: Initial state (all unvisited)
+  const steps = [{ 
+    data: new Array(n).fill(0), 
+    highlights: {}, 
+    dpState: {
+      originalArr: [...arr],
+      dp: new Array(n).fill(0),
+      activeIdx: -1,
+      robbedHouses: []
+    },
+    explanation: `House Robber: dp[i] = max money from robbing houses 0..i (no adjacent). Starting DP initialization.`, 
+    stats: { step: 0, maxRobbery: 0 } 
+  }];
+
+  // Step 1: Base case dp[0]
   dp[0] = arr[0];
-  steps.push({ data: [...dp], highlights: { 0: 'success' }, explanation: `dp[0] = arr[0] = ${arr[0]} (only one house).`, stats: { step: 1, maxRobbery: dp[0] } });
-  if (n > 1) { dp[1] = Math.max(arr[0], arr[1]); steps.push({ data: [...dp], highlights: { 1: 'active' }, explanation: `dp[1] = max(arr[0]=${arr[0]}, arr[1]=${arr[1]}) = ${dp[1]}.`, stats: { step: 2, maxRobbery: dp[1] } }); }
+  steps.push({ 
+    data: [...dp], 
+    highlights: { 0: 'success' }, 
+    dpState: {
+      originalArr: [...arr],
+      dp: [...dp],
+      activeIdx: 0,
+      robbedHouses: getHouseRobberChosen(arr, dp, 0)
+    },
+    explanation: `dp[0] = arr[0] = ${arr[0]} (only one house, so we rob it).`, 
+    stats: { step: 1, maxRobbery: dp[0] } 
+  });
+
+  if (n > 1) { 
+    // Step 2: Base case dp[1]
+    dp[1] = Math.max(arr[0], arr[1]); 
+    steps.push({ 
+      data: [...dp], 
+      highlights: { 1: 'active' }, 
+      dpState: {
+        originalArr: [...arr],
+        dp: [...dp],
+        activeIdx: 1,
+        robbedHouses: getHouseRobberChosen(arr, dp, 1)
+      },
+      explanation: `dp[1] = max(arr[0]=${arr[0]}, arr[1]=${arr[1]}) = ${dp[1]}. Compare robbing first house vs second house.`, 
+      stats: { step: 2, maxRobbery: dp[1] } 
+    }); 
+  }
+
+  // Iterative DP for subsequent houses
   for (let i = 2; i < n; i++) {
     dp[i] = Math.max(dp[i - 1], dp[i - 2] + arr[i]);
-    steps.push({ data: [...dp], highlights: { [i]: 'active', [i - 1]: 'compare', [i - 2]: 'visited' }, explanation: `dp[${i}] = max(dp[${i - 1}]=${dp[i - 1]}, dp[${i - 2}]=${dp[i - 2]} + arr[${i}]=${arr[i]}) = ${dp[i]}.`, stats: { step: i + 1, maxRobbery: dp[i] } });
+    steps.push({ 
+      data: [...dp], 
+      highlights: { [i]: 'active', [i - 1]: 'compare', [i - 2]: 'visited' }, 
+      dpState: {
+        originalArr: [...arr],
+        dp: [...dp],
+        activeIdx: i,
+        robbedHouses: getHouseRobberChosen(arr, dp, i)
+      },
+      explanation: `dp[${i}] = max(dp[${i - 1}]=${dp[i - 1]} [skip house ${i}], dp[${i - 2}]=${dp[i - 2]} + arr[${i}]=${arr[i]} [rob house ${i}]) = ${dp[i]}.`, 
+      stats: { step: i + 1, maxRobbery: dp[i] } 
+    });
   }
-  steps.push({ data: [...dp], highlights: {}, explanation: `Max robbery = dp[${n - 1}] = ${dp[n - 1]}.`, stats: { step: n + 1, maxRobbery: dp[n - 1] } });
+
+  // Final summary step
+  steps.push({ 
+    data: [...dp], 
+    highlights: {}, 
+    dpState: {
+      originalArr: [...arr],
+      dp: [...dp],
+      activeIdx: n - 1,
+      robbedHouses: getHouseRobberChosen(arr, dp, n - 1)
+    },
+    explanation: `Robbery complete. Max profit obtained by robbing optimal non-adjacent houses is dp[${n - 1}] = ${dp[n - 1]}.`, 
+    stats: { step: n + 1, maxRobbery: dp[n - 1] } 
+  });
+
   return steps;
 }
 
@@ -1729,6 +2880,1645 @@ export function cartesianTreeSteps(arr) {
     }));
     steps.push({ data: nodes, highlights: {}, explanation: `Cartesian Tree constructed successfully. Inorder traversal: [${filtered.join(', ')}], Parent < Child (Min-Heap property satisfied).`, stats: { step: 1 } });
   }
+  return steps;
+}
+
+// 56. Undo Redo Steps
+export function undoRedoSteps(inputStr) {
+  const ops = inputStr.split(/[\s,]+/);
+  const undoStack = [];
+  const redoStack = [];
+  let currentText = '';
+  const steps = [];
+
+  steps.push({
+    data: [currentText || '(empty)'],
+    stackState: { stack: [], stack2: [], charIdx: -1 },
+    highlights: {},
+    explanation: "Initialize Undo/Redo system. Undo and Redo stacks are empty.",
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < ops.length; i++) {
+    const op = ops[i].toLowerCase();
+    let explanation = '';
+    
+    if (op === 'undo') {
+      if (undoStack.length > 0) {
+        const popped = undoStack.pop();
+        redoStack.push(popped);
+        currentText = undoStack.join('');
+        explanation = `Undo action: Pop "${popped}" from Undo stack and push to Redo stack. Current editor text: "${currentText}".`;
+      } else {
+        explanation = `Undo action: Undo stack is empty. Nothing to undo.`;
+      }
+    } else if (op === 'redo') {
+      if (redoStack.length > 0) {
+        const popped = redoStack.pop();
+        undoStack.push(popped);
+        currentText = undoStack.join('');
+        explanation = `Redo action: Pop "${popped}" from Redo stack and push to Undo stack. Current editor text: "${currentText}".`;
+      } else {
+        explanation = `Redo action: Redo stack is empty. Nothing to redo.`;
+      }
+    } else if (op === 'write' && i + 1 < ops.length) {
+      const val = ops[++i];
+      undoStack.push(val);
+      redoStack.length = 0; // Clear redo
+      currentText = undoStack.join('');
+      explanation = `Write "${val}": Push "${val}" to Undo stack. Clear Redo stack. Current editor text: "${currentText}".`;
+    } else if (op) {
+      undoStack.push(op);
+      redoStack.length = 0;
+      currentText = undoStack.join('');
+      explanation = `Write "${op}": Push "${op}" to Undo stack. Clear Redo stack. Current editor text: "${currentText}".`;
+    }
+
+    steps.push({
+      data: [currentText || '(empty)'],
+      stackState: { 
+        stack: [...undoStack], 
+        stack2: [...redoStack], 
+        charIdx: i 
+      },
+      highlights: {},
+      explanation,
+      stats: { step: steps.length }
+    });
+  }
+
+  return steps;
+}
+
+// 57. Browser History Steps
+export function browserHistorySteps(inputStr) {
+  const ops = inputStr.split(/[\s,]+/);
+  const backStack = [];
+  const forwardStack = [];
+  let currentUrl = 'about:blank';
+  const steps = [];
+
+  steps.push({
+    data: [currentUrl],
+    stackState: { stack: [], stack2: [], charIdx: -1 },
+    highlights: {},
+    explanation: "Browser loaded. Home page is set to 'about:blank'.",
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < ops.length; i++) {
+    const op = ops[i].toLowerCase();
+    let explanation = '';
+
+    if (op === 'back') {
+      if (backStack.length > 0) {
+        const popped = backStack.pop();
+        forwardStack.push(currentUrl);
+        currentUrl = popped;
+        explanation = `Back action: Push current URL "${forwardStack[forwardStack.length - 1]}" to Forward stack, navigate to "${currentUrl}".`;
+      } else {
+        explanation = `Back action: Back stack is empty. Can't go back.`;
+      }
+    } else if (op === 'forward') {
+      if (forwardStack.length > 0) {
+        const popped = forwardStack.pop();
+        backStack.push(currentUrl);
+        currentUrl = popped;
+        explanation = `Forward action: Push current URL "${backStack[backStack.length - 1]}" to Back stack, navigate to "${currentUrl}".`;
+      } else {
+        explanation = `Forward action: Forward stack is empty. Can't go forward.`;
+      }
+    } else if (op === 'visit' && i + 1 < ops.length) {
+      const url = ops[++i];
+      if (currentUrl !== 'about:blank') {
+        backStack.push(currentUrl);
+      }
+      forwardStack.length = 0; // Clear forward history
+      currentUrl = url;
+      explanation = `Visit "${url}": Save "${backStack[backStack.length - 1] ?? 'home'}" to Back stack. Clear Forward stack. Navigate to "${url}".`;
+    } else if (op) {
+      if (currentUrl !== 'about:blank') {
+        backStack.push(currentUrl);
+      }
+      forwardStack.length = 0;
+      currentUrl = op;
+      explanation = `Visit "${op}": Save "${backStack[backStack.length - 1] ?? 'home'}" to Back stack. Navigate to "${op}".`;
+    }
+
+    steps.push({
+      data: [currentUrl],
+      stackState: { 
+        stack: [...backStack], 
+        stack2: [...forwardStack], 
+        charIdx: i 
+      },
+      highlights: {},
+      explanation,
+      stats: { step: steps.length }
+    });
+  }
+
+  return steps;
+}
+
+// 58. Previous Smaller Element Steps
+export function previousSmallerElementSteps(arr) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  const result = new Array(n).fill(-1);
+  const stack = []; 
+  const steps = [];
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: "Initialize empty stack and PSE output array filled with -1.",
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let i = 0; i < n; i++) {
+    const val = nums[i];
+
+    const hl = { [i]: 'pivot' };
+    stack.forEach(idx => { hl[idx] = 'compare'; });
+
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: hl,
+      explanation: `Inspecting element ${val} at index ${i}. Popping elements from stack that are greater than or equal to ${val}.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
+
+    while (stack.length > 0 && nums[stack[stack.length - 1]] >= val) {
+      const poppedIdx = stack.pop();
+      steps.push({
+        data: [...nums],
+        stackState: { 
+          stack: stack.map(idx => nums[idx]), 
+          stackIndices: [...stack], 
+          charIdx: i, 
+          result: [...result] 
+        },
+        highlights: { [i]: 'sorted', [poppedIdx]: 'sorted' },
+        explanation: `Popped index ${poppedIdx} (value ${nums[poppedIdx]}) from stack since it is >= ${val}.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
+    }
+
+    result[i] = stack.length > 0 ? nums[stack[stack.length - 1]] : -1;
+    stack.push(i);
+
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: { [i]: 'active' },
+      explanation: `Previous smaller element of ${val} is ${result[i]}. Push index ${i} onto stack.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: `Result: [${result.join(', ')}].`,
+    stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+  });
+
+  return steps;
+}
+
+// 59. Daily Temperatures Steps
+export function dailyTemperaturesSteps(arr) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  const result = new Array(n).fill(0);
+  const stack = []; 
+  const steps = [];
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: "Initialize empty stack and daily temperatures result array filled with 0.",
+    stats: { comparisons: 0, swaps: 0, step: 0 }
+  });
+
+  for (let i = 0; i < n; i++) {
+    const val = nums[i];
+
+    const hl = { [i]: 'pivot' };
+    stack.forEach(idx => { hl[idx] = 'compare'; });
+
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: hl,
+      explanation: `Inspecting temperature ${val}°F at day ${i}. Checking if it's warmer than temperatures on stack top.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
+
+    while (stack.length > 0 && nums[stack[stack.length - 1]] < val) {
+      const poppedIdx = stack.pop();
+      result[poppedIdx] = i - poppedIdx;
+
+      steps.push({
+        data: [...nums],
+        stackState: { 
+          stack: stack.map(idx => nums[idx]), 
+          stackIndices: [...stack], 
+          charIdx: i, 
+          result: [...result] 
+        },
+        highlights: { [i]: 'sorted', [poppedIdx]: 'sorted' },
+        explanation: `Day ${i} (${val}°F) is warmer than day ${poppedIdx} (${nums[poppedIdx]}°F). Wait time is ${i} - ${poppedIdx} = ${result[poppedIdx]} days.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+      });
+    }
+
+    stack.push(i);
+    steps.push({
+      data: [...nums],
+      stackState: { 
+        stack: stack.map(idx => nums[idx]), 
+        stackIndices: [...stack], 
+        charIdx: i, 
+        result: [...result] 
+      },
+      highlights: { [i]: 'active' },
+      explanation: `Push day ${i} onto stack.`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: [...nums],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [...result] },
+    highlights: {},
+    explanation: `Result wait days: [${result.join(', ')}].`,
+    stats: { comparisons: steps.length, swaps: 0, step: steps.length }
+  });
+
+  return steps;
+}
+
+// 60. Remove K Digits Steps
+export function removeKDigitsSteps(numStr, kStr) {
+  const S = String(numStr).trim().replace(/\s+/g, '');
+  let k = parseInt(kStr);
+  if (isNaN(k) || k < 0) k = 3;
+
+  const digits = S.split('');
+  const stack = [];
+  const stackIndices = [];
+  const steps = [];
+
+  steps.push({
+    data: [...digits],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: [], k },
+    highlights: {},
+    explanation: `Remove K Digits: Find smallest number by removing ${k} digits. Use monotonic increasing stack.`,
+    stats: { step: 0 }
+  });
+
+  let remainingK = k;
+  for (let i = 0; i < S.length; i++) {
+    const d = S[i];
+
+    const hl = { [i]: 'pivot' };
+    stackIndices.forEach(idx => { hl[idx] = 'compare'; });
+
+    steps.push({
+      data: [...digits],
+      stackState: { stack: [...stack], stackIndices: [...stackIndices], charIdx: i, result: [...stack], k: remainingK },
+      highlights: hl,
+      explanation: `Inspecting digit '${d}'. Checking if it's smaller than stack top.`,
+      stats: { step: steps.length }
+    });
+
+    while (stack.length > 0 && stack[stack.length - 1] > d && remainingK > 0) {
+      const popped = stack.pop();
+      stackIndices.pop();
+      remainingK--;
+      steps.push({
+        data: [...digits],
+        stackState: { stack: [...stack], stackIndices: [...stackIndices], charIdx: i, result: [...stack], k: remainingK },
+        highlights: { [i]: 'sorted' },
+        explanation: `popped '${popped}' from stack since '${d}' is smaller and we have ${remainingK + 1} removals left.`,
+        stats: { step: steps.length }
+      });
+    }
+
+    stack.push(d);
+    stackIndices.push(i);
+    steps.push({
+      data: [...digits],
+      stackState: { stack: [...stack], stackIndices: [...stackIndices], charIdx: i, result: [...stack], k: remainingK },
+      highlights: { [i]: 'active' },
+      explanation: `Push '${d}' to stack.`,
+      stats: { step: steps.length }
+    });
+  }
+
+  while (remainingK > 0 && stack.length > 0) {
+    stack.pop();
+    stackIndices.pop();
+    remainingK--;
+    steps.push({
+      data: [...digits],
+      stackState: { stack: [...stack], stackIndices: [...stackIndices], charIdx: -1, result: [...stack], k: remainingK },
+      highlights: {},
+      explanation: `Pop from end to satisfy remaining removals. Removals left: ${remainingK}.`,
+      stats: { step: steps.length }
+    });
+  }
+
+  let finalStr = stack.join('').replace(/^0+/, '');
+  if (!finalStr) finalStr = '0';
+
+  steps.push({
+    data: [...digits],
+    stackState: { stack: [], stackIndices: [], charIdx: -1, result: finalStr.split(''), k: 0 },
+    highlights: {},
+    explanation: `Remove leading zeros. Smallest number is "${finalStr}".`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 61. Josephus Problem Steps
+export function josephusSteps(rawInput) {
+  const parts = (rawInput || "5 2").trim().split(/\s+/).map(Number);
+  const n = parts[0] || 5;
+  let k = parts[1] || 2;
+  if (k <= 0) k = 1;
+
+  const people = Array.from({ length: n }, (_, idx) => ({
+    id: idx + 1,
+    eliminated: false,
+    active: false
+  }));
+
+  const steps = [];
+  steps.push({
+    data: people.map(p => ({ ...p })),
+    explanation: `Josephus Problem: ${n} people in a circle. Every ${k}-th person is eliminated.`,
+    stats: { survivor: null, step: 0 }
+  });
+
+  let index = 0;
+  const activeList = [...people];
+
+  while (activeList.length > 1) {
+    index = (index + k - 1) % activeList.length;
+    const eliminatedPerson = activeList[index];
+
+    const hlPeople = people.map(p => {
+      if (p.id === eliminatedPerson.id) {
+        return { ...p, active: true };
+      }
+      return { ...p, active: false };
+    });
+
+    steps.push({
+      data: hlPeople.map(p => ({ ...p })),
+      explanation: `Count ${k} steps. Eliminate person ${eliminatedPerson.id}.`,
+      stats: { survivor: null, step: steps.length }
+    });
+
+    const target = people.find(p => p.id === eliminatedPerson.id);
+    if (target) target.eliminated = true;
+
+    activeList.splice(index, 1);
+
+    steps.push({
+      data: people.map(p => ({ ...p })),
+      explanation: `Person ${eliminatedPerson.id} is eliminated. Remaining circle size is ${activeList.length}.`,
+      stats: { survivor: null, step: steps.length }
+    });
+  }
+
+  const survivor = activeList[0].id;
+  const finalPeople = people.map(p => {
+    if (p.id === survivor) return { ...p, active: true };
+    return p;
+  });
+
+  steps.push({
+    data: finalPeople,
+    explanation: `Only Person ${survivor} remains. Person ${survivor} is the survivor!`,
+    stats: { survivor, step: steps.length }
+  });
+
+  return steps;
+}
+
+// 62. Deque Steps
+export function dequeSteps(rawInput) {
+  const tokens = (rawInput || "push_back 5 push_back 10 push_front 2 pop_back pop_front").trim().split(/\s+/);
+  const queue = [];
+  const steps = [];
+
+  steps.push({
+    data: [],
+    explanation: "Initialize empty Double Ended Queue (Deque). Operations can occur at both Front and Back.",
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < tokens.length; i++) {
+    const op = tokens[i].toLowerCase();
+    let val = '';
+    let explanation = '';
+
+    if (op.startsWith('push_front') || op === 'pushfront') {
+      val = tokens[++i] || '0';
+      queue.unshift(val);
+      explanation = `Push Front: Insert element "${val}" at the front of the Deque.`;
+    } else if (op.startsWith('push_back') || op === 'pushback' || op === 'push') {
+      val = tokens[++i] || '0';
+      queue.push(val);
+      explanation = `Push Back: Insert element "${val}" at the back of the Deque.`;
+    } else if (op.startsWith('pop_front') || op === 'popfront' || op === 'pop') {
+      if (queue.length > 0) {
+        const popped = queue.shift();
+        explanation = `Pop Front: Remove element "${popped}" from the front of the Deque.`;
+      } else {
+        explanation = `Pop Front: Deque is empty.`;
+      }
+    } else if (op.startsWith('pop_back') || op === 'popback') {
+      if (queue.length > 0) {
+        const popped = queue.pop();
+        explanation = `Pop Back: Remove element "${popped}" from the back of the Deque.`;
+      } else {
+        explanation = `Pop Back: Deque is empty.`;
+      }
+    } else if (op) {
+      queue.push(op);
+      explanation = `Push Back: Insert element "${op}" at the back of the Deque.`;
+    }
+
+    steps.push({
+      data: [...queue],
+      explanation,
+      stats: { step: steps.length }
+    });
+  }
+
+  return steps;
+}
+
+// 63. CPU Scheduling Steps
+export function cpuSchedulingSteps(rawInput) {
+  const lines = (rawInput || "P1:8 P2:4 P3:6\n3").split('\n');
+  const procTokens = lines[0].trim().split(/\s+/);
+  let quantum = parseInt(lines[1]);
+  if (isNaN(quantum) || quantum <= 0) quantum = 3;
+
+  const processes = [];
+  procTokens.forEach((tok, idx) => {
+    if (tok.includes(':')) {
+      const parts = tok.split(':');
+      processes.push({ name: parts[0], totalBurst: parseInt(parts[1]) || 5, remaining: parseInt(parts[1]) || 5 });
+    } else {
+      const val = parseInt(tok);
+      if (!isNaN(val)) {
+        processes.push({ name: `P${idx + 1}`, totalBurst: val, remaining: val });
+      }
+    }
+  });
+
+  if (processes.length === 0) {
+    processes.push(
+      { name: "P1", totalBurst: 8, remaining: 8 },
+      { name: "P2", totalBurst: 4, remaining: 4 },
+      { name: "P3", totalBurst: 6, remaining: 6 }
+    );
+  }
+
+  const readyQueue = [...processes];
+  const completedProcesses = [];
+  let activeProcess = null;
+  let time = 0;
+  const steps = [];
+
+  steps.push({
+    data: {
+      readyQueue: readyQueue.map(p => ({ ...p })),
+      activeProcess: null,
+      completedProcesses: [],
+      time,
+      quantum
+    },
+    explanation: `Round Robin CPU Scheduling: Quantum = ${quantum}ms. All processes added to the Ready Queue.`,
+    stats: { time }
+  });
+
+  while (readyQueue.length > 0 || activeProcess !== null) {
+    if (activeProcess === null) {
+      activeProcess = readyQueue.shift();
+      steps.push({
+        data: {
+          readyQueue: readyQueue.map(p => ({ ...p })),
+          activeProcess: { ...activeProcess },
+          completedProcesses: completedProcesses.map(p => ({ ...p })),
+          time,
+          quantum
+        },
+        explanation: `Dispatch Process ${activeProcess.name} to CPU. Remaining burst time: ${activeProcess.remaining}ms.`,
+        stats: { time }
+      });
+    }
+
+    const runTime = Math.min(activeProcess.remaining, quantum);
+    time += runTime;
+    activeProcess.remaining -= runTime;
+
+    if (activeProcess.remaining === 0) {
+      completedProcesses.push({
+        name: activeProcess.name,
+        totalBurst: activeProcess.totalBurst,
+        finishTime: time
+      });
+      steps.push({
+        data: {
+          readyQueue: readyQueue.map(p => ({ ...p })),
+          activeProcess: { ...activeProcess },
+          completedProcesses: completedProcesses.map(p => ({ ...p })),
+          time,
+          quantum
+        },
+        explanation: `Process ${activeProcess.name} completed execution in CPU at time = ${time}ms.`,
+        stats: { time }
+      });
+      activeProcess = null;
+    } else {
+      steps.push({
+        data: {
+          readyQueue: readyQueue.map(p => ({ ...p })),
+          activeProcess: { ...activeProcess },
+          completedProcesses: completedProcesses.map(p => ({ ...p })),
+          time,
+          quantum
+        },
+        explanation: `Process ${activeProcess.name} time slice expired. Ran for ${runTime}ms. Remaining: ${activeProcess.remaining}ms.`,
+        stats: { time }
+      });
+      
+      readyQueue.push(activeProcess);
+      steps.push({
+        data: {
+          readyQueue: readyQueue.map(p => ({ ...p })),
+          activeProcess: null,
+          completedProcesses: completedProcesses.map(p => ({ ...p })),
+          time,
+          quantum
+        },
+        explanation: `Context Switch: Move ${activeProcess.name} to the back of the Ready Queue.`,
+        stats: { time }
+      });
+      activeProcess = null;
+    }
+  }
+
+  steps.push({
+    data: {
+      readyQueue: [],
+      activeProcess: null,
+      completedProcesses: completedProcesses.map(p => ({ ...p })),
+      time,
+      quantum
+    },
+    explanation: `All processes successfully scheduled. Total turnaround time: ${time}ms.`,
+    stats: { time }
+  });
+
+  return steps;
+}
+
+// 64. Printer Queue Steps
+export function printerQueueSteps(rawInput) {
+  const jobs = (rawInput || "Report.pdf Photo.png Script.js").trim().split(/\s+/);
+  const queue = [...jobs];
+  const completedJobs = [];
+  let currentJob = null;
+  const steps = [];
+
+  steps.push({
+    data: {
+      queue: [...queue],
+      currentJob: null,
+      completedJobs: [],
+      progress: 0
+    },
+    explanation: "Printer Online. Printer queue populated with print jobs.",
+    stats: { jobsLeft: queue.length }
+  });
+
+  while (queue.length > 0 || currentJob !== null) {
+    if (currentJob === null) {
+      currentJob = queue.shift();
+      steps.push({
+        data: {
+          queue: [...queue],
+          currentJob,
+          completedJobs: [...completedJobs],
+          progress: 0
+        },
+        explanation: `Load job "${currentJob}" from queue. Start printing pages.`,
+        stats: { jobsLeft: queue.length + 1 }
+      });
+    }
+
+    for (let progress = 25; progress <= 100; progress += 25) {
+      steps.push({
+        data: {
+          queue: [...queue],
+          currentJob,
+          completedJobs: [...completedJobs],
+          progress
+        },
+        explanation: `Printing "${currentJob}": Progress ${progress}%.`,
+        stats: { jobsLeft: queue.length + 1 }
+      });
+    }
+
+    completedJobs.push(currentJob);
+    steps.push({
+      data: {
+        queue: [...queue],
+        currentJob,
+        completedJobs: [...completedJobs],
+        progress: 100
+      },
+      explanation: `Finished printing "${currentJob}". Added paper sheet to printed tray slot.`,
+      stats: { jobsLeft: queue.length }
+    });
+    currentJob = null;
+  }
+
+  steps.push({
+    data: {
+      queue: [],
+      currentJob: null,
+      completedJobs: [...completedJobs],
+      progress: 0
+    },
+    explanation: "All printing jobs completed successfully. Printer in idle state.",
+    stats: { jobsLeft: 0 }
+  });
+
+  return steps;
+}
+
+// 65. LFU Cache Steps
+export function lfuCacheSteps(rawInput) {
+  const tokens = (rawInput || "capacity=2 put 1 1 put 2 2 get 1 put 3 3 get 2 get 3").trim().split(/\s+/);
+  let capacity = 2;
+  const ops = [];
+
+  tokens.forEach(tok => {
+    if (tok.startsWith("capacity=")) {
+      capacity = parseInt(tok.split("=")[1]) || 2;
+    } else {
+      ops.push(tok);
+    }
+  });
+
+  const cache = {}; 
+  const keyToFreq = {}; 
+  const freqToKeys = {}; 
+  let minFreq = 0;
+  const steps = [];
+
+  const updateFreq = (key) => {
+    const freq = keyToFreq[key];
+    keyToFreq[key] = freq + 1;
+
+    freqToKeys[freq] = freqToKeys[freq].filter(k => k !== key);
+    if (freqToKeys[freq].length === 0 && minFreq === freq) {
+      minFreq = freq + 1;
+    }
+
+    const newFreq = freq + 1;
+    if (!freqToKeys[newFreq]) freqToKeys[newFreq] = [];
+    freqToKeys[newFreq].push(key);
+  };
+
+  steps.push({
+    data: { cache: {}, freqToKeys: {}, capacity },
+    explanation: `LFU Cache initialized with capacity = ${capacity}.`,
+    stats: { size: 0, capacity }
+  });
+
+  for (let i = 0; i < ops.length; i++) {
+    const op = ops[i].toLowerCase();
+    let explanation = '';
+
+    if (op === 'put' && i + 2 < ops.length) {
+      const key = ops[++i];
+      const val = ops[++i];
+
+      if (capacity === 0) continue;
+
+      if (cache[key] !== undefined) {
+        cache[key] = val;
+        updateFreq(key);
+        explanation = `Put (${key}, ${val}): Key already exists. Update value to ${val} and increment frequency to ${keyToFreq[key]}.`;
+      } else {
+        if (Object.keys(cache).length >= capacity) {
+          const evictKey = freqToKeys[minFreq].shift();
+          delete cache[evictKey];
+          delete keyToFreq[evictKey];
+          explanation = `Cache full. Evict LFU key "${evictKey}" from frequency bucket ${minFreq}. `;
+        }
+        
+        cache[key] = val;
+        keyToFreq[key] = 1;
+        minFreq = 1;
+        if (!freqToKeys[1]) freqToKeys[1] = [];
+        freqToKeys[1].push(key);
+        explanation = (explanation || '') + `Put (${key}, ${val}): Insert new key and set frequency to 1.`;
+      }
+    } else if (op === 'get' && i + 1 < ops.length) {
+      const key = ops[++i];
+      if (cache[key] !== undefined) {
+        updateFreq(key);
+        explanation = `Get (${key}): Key found! Value = ${cache[key]}. Increment frequency to ${keyToFreq[key]}.`;
+      } else {
+        explanation = `Get (${key}): Key not found (cache miss).`;
+      }
+    } else if (op) {
+      const key = op;
+      if (cache[key] !== undefined) {
+        updateFreq(key);
+        explanation = `Get (${key}): Key found! Value = ${cache[key]}. Increment frequency to ${keyToFreq[key]}.`;
+      } else {
+        if (Object.keys(cache).length >= capacity) {
+          const evictKey = freqToKeys[minFreq].shift();
+          delete cache[evictKey];
+          delete keyToFreq[evictKey];
+          explanation = `Cache full. Evict LFU key "${evictKey}". `;
+        }
+        cache[key] = "val";
+        keyToFreq[key] = 1;
+        minFreq = 1;
+        if (!freqToKeys[1]) freqToKeys[1] = [];
+        freqToKeys[1].push(key);
+        explanation = (explanation || '') + `Put (${key}, "val"): Insert new key and set frequency to 1.`;
+      }
+    }
+
+    const activeFreqs = {};
+    Object.entries(freqToKeys).forEach(([freq, arr]) => {
+      if (arr.length > 0) activeFreqs[freq] = [...arr];
+    });
+
+    steps.push({
+      data: {
+        cache: { ...cache },
+        freqToKeys: activeFreqs,
+        capacity
+      },
+      explanation,
+      stats: { size: Object.keys(cache).length, capacity }
+    });
+  }
+
+  return steps;
+}
+
+// 66. Sliding Window Max Mono Steps
+export function slidingWindowMaxMonoSteps(arr, kVal) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  let k = parseInt(kVal);
+  if (isNaN(k) || k <= 0 || k > n) k = 3;
+
+  const result = [];
+  const deque = []; 
+  const steps = [];
+
+  steps.push({
+    data: [...nums],
+    stackState: { deque: [], charIdx: -1, result: [], k },
+    highlights: {},
+    explanation: `Sliding Window Max: Find maximum in each window of size ${k}. Use monotonic decreasing deque.`,
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < n; i++) {
+    const val = nums[i];
+
+    if (deque.length > 0 && deque[0] < i - k + 1) {
+      const removed = deque.shift();
+      steps.push({
+        data: [...nums],
+        stackState: { deque: [...deque], charIdx: i, result: [...result], k },
+        highlights: { [removed]: 'compare' },
+        explanation: `Remove index ${removed} from deque front since it is out of the sliding window range.`,
+        stats: { step: steps.length }
+      });
+    }
+
+    while (deque.length > 0 && nums[deque[deque.length - 1]] <= val) {
+      const removed = deque.pop();
+      steps.push({
+        data: [...nums],
+        stackState: { deque: [...deque], charIdx: i, result: [...result], k },
+        highlights: { [i]: 'pivot', [removed]: 'sorted' },
+        explanation: `Remove index ${removed} (value ${nums[removed]}) from deque back since it is smaller than current element ${val}.`,
+        stats: { step: steps.length }
+      });
+    }
+
+    deque.push(i);
+    steps.push({
+      data: [...nums],
+      stackState: { deque: [...deque], charIdx: i, result: [...result], k },
+      highlights: { [i]: 'active' },
+      explanation: `Add index ${i} (value ${val}) to deque back.`,
+      stats: { step: steps.length }
+    });
+
+    if (i >= k - 1) {
+      result.push(nums[deque[0]]);
+      steps.push({
+        data: [...nums],
+        stackState: { deque: [...deque], charIdx: i, result: [...result], k },
+        highlights: { [deque[0]]: 'active' },
+        explanation: `Sliding window covers index ${i - k + 1} to ${i}. Maximum element is at deque front: ${nums[deque[0]]}.`,
+        stats: { step: steps.length }
+      });
+    }
+  }
+
+  return steps;
+}
+
+// 67. Hash Map Steps
+export function hashMapChainingSteps(rawInput) {
+  const tokens = (rawInput || "put apple 5 put banana 3 get apple put apple 10").trim().split(/\s+/);
+  const size = 5;
+  const buckets = Array.from({ length: size }, () => []);
+  const steps = [];
+
+  const getHash = (key) => {
+    let sum = 0;
+    for (let i = 0; i < key.length; i++) sum += key.charCodeAt(i);
+    return sum % size;
+  };
+
+  steps.push({
+    data: { buckets: Array.from({ length: size }, () => []), size },
+    explanation: `Initialize Hash Map with ${size} buckets. Collisions are handled using chaining (linked list).`,
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < tokens.length; i++) {
+    const op = tokens[i].toLowerCase();
+    let explanation = '';
+
+    if (op === 'put' && i + 2 < tokens.length) {
+      const key = tokens[++i];
+      const val = tokens[++i];
+      const hashVal = getHash(key);
+      const bucket = buckets[hashVal];
+      const existing = bucket.find(item => item.key === key);
+
+      if (existing) {
+        existing.val = val;
+        explanation = `Put: Hash of "${key}" is ${hashVal}. Key already exists in bucket ${hashVal}, updated value to "${val}".`;
+      } else {
+        bucket.push({ key, val });
+        explanation = `Put: Hash of "${key}" is ${hashVal}. Placed ("${key}", "${val}") in bucket ${hashVal}.`;
+      }
+    } else if (op === 'get' && i + 1 < tokens.length) {
+      const key = tokens[++i];
+      const hashVal = getHash(key);
+      const bucket = buckets[hashVal];
+      const existing = bucket.find(item => item.key === key);
+
+      if (existing) {
+        explanation = `Get: Hash of "${key}" is ${hashVal}. Found in bucket ${hashVal}: value is "${existing.val}".`;
+      } else {
+        explanation = `Get: Hash of "${key}" is ${hashVal}. Key "${key}" not found in bucket ${hashVal} (cache miss).`;
+      }
+    } else if (op === 'remove' && i + 1 < tokens.length) {
+      const key = tokens[++i];
+      const hashVal = getHash(key);
+      const bucket = buckets[hashVal];
+      const idx = bucket.findIndex(item => item.key === key);
+
+      if (idx !== -1) {
+        bucket.splice(idx, 1);
+        explanation = `Remove: Hash of "${key}" is ${hashVal}. Removed key "${key}" from bucket ${hashVal}.`;
+      } else {
+        explanation = `Remove: Hash of "${key}" is ${hashVal}. Key "${key}" not found in bucket ${hashVal}.`;
+      }
+    } else if (op) {
+      const key = op;
+      const hashVal = getHash(key);
+      const bucket = buckets[hashVal];
+      const existing = bucket.find(item => item.key === key);
+
+      if (existing) {
+        existing.val = "val";
+        explanation = `Put: Hash of "${key}" is ${hashVal}. Key already exists in bucket ${hashVal}, updated value to "val".`;
+      } else {
+        bucket.push({ key, val: "val" });
+        explanation = `Put: Hash of "${key}" is ${hashVal}. Placed ("${key}", "val") in bucket ${hashVal}.`;
+      }
+    }
+
+    steps.push({
+      data: {
+        buckets: buckets.map(b => b.map(item => ({ ...item }))),
+        size
+      },
+      explanation,
+      stats: { step: steps.length }
+    });
+  }
+
+  return steps;
+}
+
+// 68. Hash Set Steps
+export function hashSetSteps(rawInput) {
+  const tokens = (rawInput || "add apple add banana add apple remove apple").trim().split(/\s+/);
+  const size = 5;
+  const buckets = Array.from({ length: size }, () => []);
+  const steps = [];
+
+  const getHash = (key) => {
+    let sum = 0;
+    for (let i = 0; i < key.length; i++) sum += key.charCodeAt(i);
+    return sum % size;
+  };
+
+  steps.push({
+    data: { buckets: Array.from({ length: size }, () => []), size },
+    explanation: `Initialize Hash Set with ${size} buckets. Sets store only unique keys.`,
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < tokens.length; i++) {
+    const op = tokens[i].toLowerCase();
+    let explanation = '';
+
+    if (op === 'add' && i + 1 < tokens.length) {
+      const key = tokens[++i];
+      const hashVal = getHash(key);
+      const bucket = buckets[hashVal];
+      const existing = bucket.find(item => item.key === key);
+
+      if (existing) {
+        explanation = `Add: Hash of "${key}" is ${hashVal}. Key already exists in bucket ${hashVal} (no duplicates allowed).`;
+      } else {
+        bucket.push({ key });
+        explanation = `Add: Hash of "${key}" is ${hashVal}. Inserted "${key}" into bucket ${hashVal}.`;
+      }
+    } else if (op === 'remove' && i + 1 < tokens.length) {
+      const key = tokens[++i];
+      const hashVal = getHash(key);
+      const bucket = buckets[hashVal];
+      const idx = bucket.findIndex(item => item.key === key);
+
+      if (idx !== -1) {
+        bucket.splice(idx, 1);
+        explanation = `Remove: Hash of "${key}" is ${hashVal}. Removed "${key}" from bucket ${hashVal}.`;
+      } else {
+        explanation = `Remove: Hash of "${key}" is ${hashVal}. Key "${key}" not found in bucket ${hashVal}.`;
+      }
+    } else if (op === 'contains' && i + 1 < tokens.length) {
+      const key = tokens[++i];
+      const hashVal = getHash(key);
+      const bucket = buckets[hashVal];
+      const existing = bucket.find(item => item.key === key);
+
+      if (existing) {
+        explanation = `Contains: Hash of "${key}" is ${hashVal}. "${key}" found in bucket ${hashVal}.`;
+      } else {
+        explanation = `Contains: Hash of "${key}" is ${hashVal}. "${key}" not found in set.`;
+      }
+    } else if (op) {
+      const key = op;
+      const hashVal = getHash(key);
+      const bucket = buckets[hashVal];
+      const existing = bucket.find(item => item.key === key);
+
+      if (existing) {
+        explanation = `Add: Hash of "${key}" is ${hashVal}. Key already exists in bucket ${hashVal}.`;
+      } else {
+        bucket.push({ key });
+        explanation = `Add: Hash of "${key}" is ${hashVal}. Inserted "${key}" into bucket ${hashVal}.`;
+      }
+    }
+
+    steps.push({
+      data: {
+        buckets: buckets.map(b => b.map(item => ({ ...item }))),
+        size
+      },
+      explanation,
+      stats: { step: steps.length }
+    });
+  }
+
+  return steps;
+}
+
+// 69. Two Sum Hash Steps
+export function twoSumChainingSteps(arr, targetVal) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  let target = parseInt(targetVal);
+  if (isNaN(target)) target = 9;
+
+  const map = {};
+  const steps = [];
+
+  steps.push({
+    data: { nums: [...nums], map: {}, currentIdx: -1, complement: null, target },
+    explanation: `Two Sum: Find two numbers that sum up to ${target}. Initialize empty Hash Map.`,
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < nums.length; i++) {
+    const val = nums[i];
+    const complement = target - val;
+
+    steps.push({
+      data: { nums: [...nums], map: { ...map }, currentIdx: i, complement, target },
+      explanation: `Inspect element ${val} at index ${i}. Complement = ${target} - ${val} = ${complement}.`,
+      stats: { step: steps.length }
+    });
+
+    if (map[complement] !== undefined) {
+      steps.push({
+        data: { nums: [...nums], map: { ...map }, currentIdx: i, complement, target },
+        explanation: `Complement ${complement} found in Hash Map at index ${map[complement]}! Pair indices: [${map[complement]}, ${i}].`,
+        stats: { solution: [map[complement], i], step: steps.length }
+      });
+      return steps;
+    }
+
+    map[val] = i;
+    steps.push({
+      data: { nums: [...nums], map: { ...map }, currentIdx: i, complement, target },
+      explanation: `Complement not found. Insert value ${val} -> index ${i} into the Hash Map.`,
+      stats: { step: steps.length }
+    });
+  }
+
+  steps.push({
+    data: { nums: [...nums], map: { ...map }, currentIdx: -1, complement: null, target },
+    explanation: "No two sum solution exists in the array.",
+    stats: { solution: null, step: steps.length }
+  });
+
+  return steps;
+}
+
+// 70. Longest Consecutive Sequence Steps
+export function longestConsecutiveSequenceSteps(arr) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  const set = new Set(nums);
+  let longestStreak = 0;
+  const steps = [];
+
+  steps.push({
+    data: { nums: [...nums], set: [...set], activeNum: null, streak: 0, longestStreak: 0 },
+    explanation: "Longest Consecutive Sequence: Insert all elements into a Hash Set to allow O(1) lookups.",
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < nums.length; i++) {
+    const num = nums[i];
+
+    if (!set.has(num - 1)) {
+      let currentNum = num;
+      let currentStreak = 1;
+
+      steps.push({
+        data: { nums: [...nums], set: [...set], activeNum: currentNum, streak: currentStreak, longestStreak },
+        explanation: `${currentNum} is the start of a potential sequence (since ${currentNum - 1} is not in the set).`,
+        stats: { step: steps.length }
+      });
+
+      while (set.has(currentNum + 1)) {
+        currentNum += 1;
+        currentStreak += 1;
+
+        steps.push({
+          data: { nums: [...nums], set: [...set], activeNum: currentNum, streak: currentStreak, longestStreak },
+          explanation: `Sequence element ${currentNum} found in set. Current streak length: ${currentStreak}.`,
+          stats: { step: steps.length }
+        });
+      }
+
+      if (currentStreak > longestStreak) {
+        longestStreak = currentStreak;
+      }
+
+      steps.push({
+        data: { nums: [...nums], set: [...set], activeNum: null, streak: 0, longestStreak },
+        explanation: `Sequence completed. Longest streak so far: ${longestStreak}.`,
+        stats: { step: steps.length }
+      });
+    } else {
+      steps.push({
+        data: { nums: [...nums], set: [...set], activeNum: num, streak: 0, longestStreak },
+        explanation: `Skip ${num} since it is not the start of a sequence (element ${num - 1} exists in set).`,
+        stats: { step: steps.length }
+      });
+    }
+  }
+
+  steps.push({
+    data: { nums: [...nums], set: [...set], activeNum: null, streak: 0, longestStreak },
+    explanation: `Computation complete. The longest consecutive sequence length is ${longestStreak}.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 71. Bloom Filter Steps
+export function bloomFilterSteps(rawInput) {
+  const tokens = (rawInput || "add apple add banana check apple check cherry").trim().split(/\s+/);
+  const size = 10;
+  const bits = Array(size).fill(0);
+  const steps = [];
+
+  const getHashes = (key) => {
+    let sum = 0;
+    for (let i = 0; i < key.length; i++) sum += key.charCodeAt(i);
+    const h1 = sum % size;
+    const h2 = (sum * 7) % size;
+    return [h1, h2];
+  };
+
+  steps.push({
+    data: { bits: [...bits], activeHashes: [], queryKey: '', result: null },
+    explanation: `Bloom Filter initialized with bit array of size ${size} (all zeros). Using 2 hash functions.`,
+    stats: { step: 0 }
+  });
+
+  for (let i = 0; i < tokens.length; i++) {
+    const op = tokens[i].toLowerCase();
+    let explanation = '';
+    let queryKey = '';
+    let result = null;
+    let activeHashes = [];
+
+    if (op === 'add' && i + 1 < tokens.length) {
+      const key = tokens[++i];
+      activeHashes = getHashes(key);
+      activeHashes.forEach(h => { bits[h] = 1; });
+      explanation = `Add: Hash of "${key}" sets bits at indices [${activeHashes.join(', ')}] to 1.`;
+    } else if (op === 'check' && i + 1 < tokens.length) {
+      const key = tokens[++i];
+      queryKey = key;
+      activeHashes = getHashes(key);
+      const isPresent = activeHashes.every(h => bits[h] === 1);
+      result = isPresent ? 'Probably In Set' : 'Definitely Not In Set';
+      explanation = `Check "${key}": Bits at [${activeHashes.join(', ')}] are queried. All checked bits are ${isPresent ? '1 (probably present)' : 'not 1 (definitely absent)'}.`;
+    } else if (op) {
+      const key = op;
+      activeHashes = getHashes(key);
+      activeHashes.forEach(h => { bits[h] = 1; });
+      explanation = `Add: Hash of "${key}" sets bits at indices [${activeHashes.join(', ')}] to 1.`;
+    }
+
+    steps.push({
+      data: {
+        bits: [...bits],
+        activeHashes: [...activeHashes],
+        queryKey,
+        result
+      },
+      explanation,
+      stats: { step: steps.length }
+    });
+  }
+
+  return steps;
+}
+
+// 72. Factorial Recursion Steps
+export function factorialRecursionSteps(rawInput) {
+  const valN = Math.min(Math.max(0, parseInt(rawInput) || 4), 6);
+  const steps = [];
+  const nodes = [];
+
+  for (let i = 0; i <= valN; i++) {
+    const val = valN - i;
+    const x = Math.round(15 + i * (70 / (valN || 1)));
+    const y = 120;
+    nodes.push({
+      id: i,
+      val,
+      result: null,
+      x,
+      y,
+      childId: i + 1 <= valN ? i + 1 : null
+    });
+  }
+
+  steps.push({
+    data: nodes.map(n => ({ ...n })),
+    treeState: { activeNode: null },
+    explanation: `Compute Factorial(${valN}) using recursion. fact(n) = n * fact(n-1).`,
+    stats: { step: 0 }
+  });
+
+  const runFact = (idx) => {
+    const node = nodes[idx];
+    const nodeId = node.id;
+
+    steps.push({
+      data: nodes.map(n => ({ ...n })),
+      treeState: { activeNode: nodeId },
+      highlights: { [nodeId]: 'pivot' },
+      explanation: `Calling fact(${node.val}).`,
+      stats: { step: steps.length }
+    });
+
+    if (node.val <= 1) {
+      node.result = 1;
+      nodes[idx].result = 1;
+
+      steps.push({
+        data: nodes.map(n => ({ ...n })),
+        treeState: { activeNode: nodeId },
+        highlights: { [nodeId]: 'sorted' },
+        explanation: `Base Case: fact(${node.val}) = 1.`,
+        stats: { step: steps.length }
+      });
+      return 1;
+    }
+
+    const sub = runFact(idx + 1);
+    const res = node.val * sub;
+    node.result = res;
+    nodes[idx].result = res;
+
+    steps.push({
+      data: nodes.map(n => ({ ...n })),
+      treeState: { activeNode: nodeId },
+      highlights: { [nodeId]: 'sorted' },
+      explanation: `Returning from sub-call: fact(${node.val}) = ${node.val} * fact(${node.val - 1}) (${sub}) = ${res}.`,
+      stats: { step: steps.length }
+    });
+
+    return res;
+  };
+
+  runFact(0);
+
+  steps.push({
+    data: nodes.map(n => ({ ...n })),
+    treeState: { activeNode: null },
+    highlights: nodes.reduce((acc, n) => ({ ...acc, [n.id]: 'sorted' }), {}),
+    explanation: `Recursion complete. Factorial(${valN}) = ${nodes[0].result}.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 73. Letter Combinations of a Phone Number Steps
+export function letterCombinationsSteps(rawInput) {
+  const digits = (rawInput || "23").trim().replace(/[^2-9]/g, "");
+  const steps = [];
+
+  const KEYPAD = {
+    '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl',
+    '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz'
+  };
+
+  if (!digits) {
+    return [{
+      data: { digits: "", currentPrefix: "", combinations: [], activeDigit: "", letters: "" },
+      explanation: "No valid digits (2-9) provided.",
+      stats: { step: 0 }
+    }];
+  }
+
+  const combinations = [];
+
+  steps.push({
+    data: { digits, currentPrefix: "", combinations: [], activeDigit: "", letters: "" },
+    explanation: `Initialize: Map digits "${digits}" to corresponding letter groups.`,
+    stats: { step: 0 }
+  });
+
+  const backtrack = (idx, currentPrefix) => {
+    if (idx === digits.length) {
+      if (currentPrefix) combinations.push(currentPrefix);
+      steps.push({
+        data: { digits, currentPrefix, combinations: [...combinations], activeDigit: "", letters: "" },
+        explanation: `Reached leaf node. Found valid combination: "${currentPrefix}".`,
+        stats: { step: steps.length }
+      });
+      return;
+    }
+
+    const digit = digits[idx];
+    const letters = KEYPAD[digit] || "";
+
+    steps.push({
+      data: { digits, currentPrefix, combinations: [...combinations], activeDigit: digit, letters },
+      explanation: `Digit '${digit}' maps to [${letters.split('').join(', ')}]. Appending to current prefix "${currentPrefix}".`,
+      stats: { step: steps.length }
+    });
+
+    for (let char of letters) {
+      backtrack(idx + 1, currentPrefix + char);
+    }
+  };
+
+  backtrack(0, "");
+
+  steps.push({
+    data: { digits, currentPrefix: "", combinations: [...combinations], activeDigit: "", letters: "" },
+    explanation: `Backtracking complete. All ${combinations.length} combinations generated.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 74. Palindrome Partitioning Steps (Backtracking)
+export function backtrackingPalindromePartitioningSteps(rawInput) {
+  const str = (rawInput || "aab").trim();
+  const steps = [];
+  const partitions = [];
+
+  const isPalindrome = (s) => {
+    let l = 0, r = s.length - 1;
+    while (l < r) {
+      if (s[l] !== s[r]) return false;
+      l++; r--;
+    }
+    return true;
+  };
+
+  steps.push({
+    data: { str, current: [], subStr: "", matchedIndex: -1, completed: [] },
+    explanation: `Initialize Palindrome Partitioning for string "${str}".`,
+    stats: { step: 0 }
+  });
+
+  const backtrack = (start, current) => {
+    if (start === str.length) {
+      partitions.push([...current]);
+      steps.push({
+        data: { str, current: [...current], subStr: "", matchedIndex: -1, completed: [...partitions] },
+        explanation: `Reached end of string. Valid partitioning found: [${current.join(', ')}].`,
+        stats: { step: steps.length }
+      });
+      return;
+    }
+
+    for (let i = start + 1; i <= str.length; i++) {
+      const sub = str.substring(start, i);
+      const ok = isPalindrome(sub);
+
+      steps.push({
+        data: { str, current: [...current], subStr: sub, matchedIndex: i - 1, completed: [...partitions] },
+        explanation: `Inspect substring "${sub}" (indices ${start} to ${i - 1}).`,
+        stats: { step: steps.length }
+      });
+
+      if (ok) {
+        steps.push({
+          data: { str, current: [...current], subStr: sub, matchedIndex: i - 1, completed: [...partitions] },
+          explanation: `"${sub}" is a palindrome. Push to active partition list and recurse.`,
+          stats: { step: steps.length }
+        });
+        current.push(sub);
+        backtrack(i, current);
+        current.pop();
+      } else {
+        steps.push({
+          data: { str, current: [...current], subStr: sub, matchedIndex: i - 1, completed: [...partitions] },
+          explanation: `"${sub}" is not a palindrome. Skip branch.`,
+          stats: { step: steps.length }
+        });
+      }
+    }
+  };
+
+  backtrack(0, []);
+
+  steps.push({
+    data: { str, current: [], subStr: "", matchedIndex: -1, completed: [...partitions] },
+    explanation: `Backtracking complete. Found ${partitions.length} partitions.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 75. Permutations Steps
+export function permutationsSteps(rawInput) {
+  const elements = (rawInput || "1 2 3").trim().split(/\s+/);
+  const steps = [];
+  const results = [];
+
+  steps.push({
+    data: { arr: [...elements], current: [], remaining: [...elements], completed: [] },
+    explanation: `Initialize permutations for elements [${elements.join(', ')}].`,
+    stats: { step: 0 }
+  });
+
+  const backtrack = (curr, rem) => {
+    if (rem.length === 0) {
+      results.push([...curr]);
+      steps.push({
+        data: { arr: [...elements], current: [...curr], remaining: [], completed: [...results] },
+        explanation: `Permutation candidate complete: [${curr.join(', ')}].`,
+        stats: { step: steps.length }
+      });
+      return;
+    }
+
+    for (let i = 0; i < rem.length; i++) {
+      const nextVal = rem[i];
+      const nextRem = rem.filter((_, idx) => idx !== i);
+
+      steps.push({
+        data: { arr: [...elements], current: [...curr], remaining: [...rem], completed: [...results] },
+        explanation: `Pick element "${nextVal}" from remaining.`,
+        stats: { step: steps.length }
+      });
+
+      curr.push(nextVal);
+      backtrack(curr, nextRem);
+      curr.pop();
+    }
+  };
+
+  backtrack([], [...elements]);
+
+  steps.push({
+    data: { arr: [...elements], current: [], remaining: [], completed: [...results] },
+    explanation: `Permutations generator complete. Found ${results.length} total configurations.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 76. Crossword Solver Steps
+export function crosswordSolverSteps(rawInput) {
+  const board = [
+    ['#', '#', '#'],
+    ['-', '#', '-'],
+    ['-', '#', '-']
+  ];
+  const words = ["CAT", "DOG"];
+  const steps = [];
+
+  steps.push({
+    data: { board: board.map(r => [...r]), words: [...words], activeWord: "", stepIndex: 0 },
+    explanation: "Initialize Crossword Solver on 3x3 grid. Words to fit: [CAT, DOG].",
+    stats: { step: 0 }
+  });
+
+  const board1 = [
+    ['C', 'A', 'T'],
+    ['-', '#', '-'],
+    ['-', '#', '-']
+  ];
+  steps.push({
+    data: { board: board1.map(r => [...r]), words: ["DOG"], activeWord: "CAT", stepIndex: 1 },
+    explanation: "Try placing 'CAT' horizontally at row 0. Characters fit perfectly.",
+    stats: { step: 1 }
+  });
+
+  const board2 = [
+    ['C', 'D', 'T'],
+    ['-', '#', '-'],
+    ['-', '#', '-']
+  ];
+  steps.push({
+    data: { board: board2.map(r => [...r]), words: ["DOG"], activeWord: "DOG", stepIndex: 2 },
+    explanation: "Try placing 'DOG' vertically at column 1. Collision at row 0: 'A' vs 'D'! Backtrack.",
+    stats: { step: 2 }
+  });
+
+  const board3 = [
+    ['D', 'O', 'G'],
+    ['-', '#', '-'],
+    ['-', '#', '-']
+  ];
+  steps.push({
+    data: { board: board3.map(r => [...r]), words: ["CAT"], activeWord: "DOG", stepIndex: 3 },
+    explanation: "Backtrack. Try placing 'DOG' horizontally at row 0 instead.",
+    stats: { step: 3 }
+  });
+
+  const board4 = [
+    ['D', 'C', 'G'],
+    ['-', 'A', '-'],
+    ['-', 'T', '-']
+  ];
+  steps.push({
+    data: { board: board4.map(r => [...r]), words: ["CAT"], activeWord: "CAT", stepIndex: 4 },
+    explanation: "Try placing 'CAT' vertically at column 1. Collision at intersection: 'O' vs 'C'! Backtrack.",
+    stats: { step: 4 }
+  });
+
+  const boardSolved = [
+    ['C', 'A', 'T'],
+    ['-', 'P', '-'],
+    ['-', 'E', '-']
+  ];
+  steps.push({
+    data: { board: boardSolved.map(r => [...r]), words: [], activeWord: "", stepIndex: 5 },
+    explanation: "Crossword puzzle solved successfully! Matching words: CAT, APE.",
+    stats: { solved: true, step: 5 }
+  });
+
+  return steps;
+}
+
+// 77. Branch and Bound Concept Steps
+export function branchAndBoundSteps(rawInput) {
+  const steps = [];
+
+  const nodes = [
+    { id: 0, path: [0], bound: 20, pruned: false, active: true },
+    { id: 1, path: [0, 1], bound: 22, pruned: false, active: false },
+    { id: 2, path: [0, 2], bound: 35, pruned: false, active: false },
+    { id: 3, path: [0, 3], bound: 45, pruned: true, active: false },
+    { id: 4, path: [0, 1, 2], bound: 25, pruned: false, active: false },
+    { id: 5, path: [0, 1, 3], bound: 28, pruned: false, active: false }
+  ];
+
+  steps.push({
+    data: { nodes: [nodes[0]], activeNodeId: 0, minCost: 999 },
+    explanation: "Initialize Branch and Bound TSP search tree. Root node (City 0) Lower Bound Cost is 20.",
+    stats: { step: 0 }
+  });
+
+  steps.push({
+    data: { nodes: [nodes[0], nodes[1]], activeNodeId: 1, minCost: 999 },
+    explanation: "Branch to City 1. Calculated lower bound cost for path [0, 1] is 22.",
+    stats: { step: 1 }
+  });
+
+  steps.push({
+    data: { nodes: [nodes[0], nodes[1], nodes[2]], activeNodeId: 2, minCost: 999 },
+    explanation: "Branch to City 2. Calculated lower bound cost for path [0, 2] is 35.",
+    stats: { step: 2 }
+  });
+
+  steps.push({
+    data: { nodes: [nodes[0], nodes[1], nodes[2], nodes[4]], activeNodeId: 4, minCost: 25 },
+    explanation: "Branch from [0, 1] to City 2. Complete path [0, 1, 2, 3, 0] found! Update minCost to 25.",
+    stats: { step: 3 }
+  });
+
+  steps.push({
+    data: { nodes: [nodes[0], nodes[1], nodes[2], nodes[4], nodes[3]], activeNodeId: 3, minCost: 25 },
+    explanation: "Branch to City 3. Lower Bound for path [0, 3] is 45. Since 45 > minCost (25), prune this branch!",
+    stats: { step: 4 }
+  });
+
+  steps.push({
+    data: { nodes: [nodes[0], nodes[1], nodes[2], nodes[4], nodes[3]], activeNodeId: null, minCost: 25 },
+    explanation: "Branch and Bound search complete. Optimal TSP cost found: 25.",
+    stats: { solved: true, step: 5 }
+  });
+
   return steps;
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useVisualizer } from "../../context/VisualizerContext";
 import { ALGORITHMS } from "../../data/algorithmsData";
@@ -23,6 +23,19 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const navigate = useNavigate();
+  const searchRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setSearchResults([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
@@ -33,8 +46,8 @@ const Navbar = () => {
     }
     const filtered = Object.values(ALGORITHMS).filter(
       (algo) =>
-        algo.name.toLowerCase().includes(query.toLowerCase()) ||
-        algo.category.toLowerCase().includes(query.toLowerCase()),
+        (algo?.name?.toLowerCase() || "").includes(query.toLowerCase()) ||
+        (algo?.category?.toLowerCase() || "").includes(query.toLowerCase())
     );
     setSearchResults(filtered);
   };
@@ -69,7 +82,7 @@ const Navbar = () => {
       </div>
 
       {/* Center Search Bar */}
-      <div className="relative flex-1 max-w-md mx-6 hidden md:block">
+      <div ref={searchRef} className="relative flex-1 max-w-md mx-6 hidden md:block">
         <div className="relative flex items-center">
           <Search className="absolute left-3.5 w-4 h-4 text-text-secondary opacity-75" />
           <input
@@ -77,6 +90,11 @@ const Navbar = () => {
             placeholder="Search algorithms (e.g. Binary)..."
             value={searchQuery}
             onChange={handleSearchChange}
+            onFocus={() => {
+              if (searchQuery.trim()) {
+                handleSearchChange({ target: { value: searchQuery } });
+              }
+            }}
             className="w-full pl-10 pr-4 py-2 text-xs rounded-full bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-primary/20 text-text-primary placeholder-text-secondary transition-all"
           />
         </div>
