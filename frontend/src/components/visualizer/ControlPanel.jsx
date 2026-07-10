@@ -124,15 +124,15 @@ const ControlPanel = ({
       {/* Speed dial and presets row */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pt-2">
         {/* Presets */}
-        <div className="flex items-center gap-2 w-full lg:w-auto">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto">
           <span className="text-xs font-bold text-text-secondary opacity-75 mr-1">Presets:</span>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {speedMultipliers.map((m) => (
               <button
                 key={m}
                 onClick={() => setSpeed(m)}
                 className={`
-                  px-3 py-1 text-[10px] font-mono font-bold rounded-full cursor-pointer select-none transition-all duration-200 border border-transparent
+                  px-2 py-0.5 sm:px-3 sm:py-1 text-[9px] sm:text-[10px] font-mono font-bold rounded-full cursor-pointer select-none transition-all duration-200 border border-transparent
                   ${speed === m
                     ? 'bg-primary text-white shadow-sm'
                     : 'bg-slate-100 dark:bg-black/25 text-text-secondary hover:text-text-primary hover:-translate-y-0.5'}

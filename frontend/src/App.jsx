@@ -1,5 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { VisualizerProvider } from './context/VisualizerContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
@@ -9,6 +9,16 @@ const CategoryPage = lazy(() => import('./pages/CategoryPage'));
 const VisualizerPage = lazy(() => import('./pages/VisualizerPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 // Layout wrapper for pages requiring Navbar, Sidebar and BottomNav
 const AppLayout = () => (
@@ -80,6 +90,7 @@ function App() {
     <AuthProvider>
       <VisualizerProvider>
         <Router>
+          <ScrollToTop />
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
               {/* Standalone Login/Auth Screen (Public Only) */}

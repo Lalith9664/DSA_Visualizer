@@ -1745,7 +1745,7 @@ const VisualizerPage = () => {
                 Type variables separated by spaces
               </span>
             </div>
-            <div className="flex gap-3 items-start">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-start">
               <div className="flex-1">
                 {algo.inputType === "graph" ||
                 algo.inputType === "grid" ||
@@ -1790,7 +1790,7 @@ const VisualizerPage = () => {
                 )}
               </div>
               {secondInputConfig && (
-                <div className="w-28 md:w-36 flex-shrink-0 flex flex-col gap-1">
+                <div className="w-full sm:w-28 md:w-36 flex-shrink-0 flex flex-col gap-1">
                   <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
                     {secondInputConfig.label.split("(")[0].trim()}
                   </span>
@@ -1804,7 +1804,7 @@ const VisualizerPage = () => {
               <Button
                 onClick={handleApplyCustomInput}
                 variant="accent"
-                className="font-bold flex-shrink-0 clay-btn clay-btn-accent"
+                className="font-bold flex-shrink-0 clay-btn clay-btn-accent w-full sm:w-auto"
               >
                 <RefreshCw className="w-4 h-4 animate-spin-hover" />
                 <span>Compile</span>

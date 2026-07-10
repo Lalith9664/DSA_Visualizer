@@ -85,12 +85,12 @@ const Navbar = () => {
       </div>
 
       {/* Center Search Bar */}
-      <div ref={searchRef} className="relative flex-1 max-w-md mx-6 hidden md:block">
+      <div ref={searchRef} className="relative flex-1 max-w-md mx-1.5 sm:mx-4 md:mx-6">
         <div className="relative flex items-center">
-          <Search className="absolute left-3.5 w-4 h-4 text-text-secondary opacity-75" />
+          <Search className="absolute left-2.5 sm:left-3.5 w-3.5 h-3.5 sm:w-4 sm:h-4 text-text-secondary opacity-75" />
           <input
             type="text"
-            placeholder="Search algorithms (e.g. Binary)..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => {
@@ -98,21 +98,21 @@ const Navbar = () => {
                 handleSearchChange({ target: { value: searchQuery } });
               }
             }}
-            className="w-full pl-10 pr-4 py-2 text-xs rounded-full bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-primary/20 text-text-primary placeholder-text-secondary transition-all"
+            className="w-full pl-8 pr-3 py-1.5 sm:pl-10 sm:pr-4 sm:py-2 text-[10px] sm:text-xs rounded-full bg-white/40 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/5 focus:outline-none focus:ring-1 focus:ring-primary/20 text-text-primary placeholder-text-secondary transition-all"
           />
         </div>
 
         {/* Floating Search Results */}
         {searchResults.length > 0 && (
-          <div className="absolute top-12 left-0 right-0 clay-card p-3 flex flex-col gap-1.5 max-h-64 overflow-y-auto bg-white/95 dark:bg-slate-900/95 z-50">
-            {searchResults.map((algo) => (
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[85vw] sm:w-full clay-card p-3 flex flex-col gap-1.5 max-h-64 overflow-y-auto bg-white/95 dark:bg-slate-900/95 z-50">
+             {searchResults.map((algo) => (
               <button
                 key={algo.id}
                 onClick={() => handleSelectResult(algo.id)}
-                className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-primary/10 dark:hover:bg-primary/20 flex justify-between items-center text-xs text-text-primary font-semibold transition-colors"
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-primary/10 dark:hover:bg-primary/20 flex flex-col sm:flex-row sm:justify-between sm:items-start sm:items-center gap-1 sm:gap-2 text-xs text-text-primary font-semibold transition-all duration-200"
               >
-                <span>{algo.name}</span>
-                <span className="text-[10px] uppercase font-bold text-accent px-2 py-0.5 rounded-full bg-accent/10">
+                <span className="whitespace-normal break-words flex-1 pr-2 text-left">{algo.name}</span>
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold text-accent px-2 py-0.5 rounded-full bg-accent/10 w-fit shrink-0">
                   {algo.category}
                 </span>
               </button>

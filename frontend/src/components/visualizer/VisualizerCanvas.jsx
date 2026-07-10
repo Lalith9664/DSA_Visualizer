@@ -8017,7 +8017,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
         </span>
 
         {/* Houses Row */}
-        <div className="w-full overflow-x-auto flex items-end justify-center gap-4 py-6 px-4 min-h-[170px]">
+        <div className="w-full overflow-x-auto flex items-end justify-start sm:justify-center gap-1.5 sm:gap-4 py-6 px-2 sm:px-4 min-h-[120px] sm:min-h-[170px]">
           {originalArr.map((value, idx) => {
             const status = getHouseStatus(idx);
 
@@ -8034,9 +8034,9 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
               bodyColor = "fill-amber-600/20 dark:fill-amber-500/20";
               textColor = "text-amber-700 dark:text-amber-300 font-black";
               badge = (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider flex items-center gap-1 animate-pulse">
+                <div className="absolute -top-2.5 sm:-top-3 left-1/2 transform -translate-x-1/2 bg-amber-500 text-slate-950 text-[7px] sm:text-[9px] font-black px-1.5 sm:px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider flex items-center gap-0.5 sm:gap-1 animate-pulse">
                   <svg
-                    className="w-2.5 h-2.5"
+                    className="w-2 sm:w-2.5 h-2 sm:h-2.5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -8057,7 +8057,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
               bodyColor = "fill-slate-500/10";
               textColor = "text-slate-400 dark:text-slate-600";
               badge = (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-slate-200 dark:bg-slate-900 text-slate-500 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-slate-350 dark:border-slate-805 uppercase tracking-wider">
+                <div className="absolute -top-2.5 sm:-top-3 left-1/2 transform -translate-x-1/2 bg-slate-200 dark:bg-slate-900 text-slate-500 text-[7px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full border border-slate-350 dark:border-slate-805 uppercase tracking-wider">
                   Skipped
                 </div>
               );
@@ -8067,10 +8067,10 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
               bodyColor = "fill-purple-600/20 dark:fill-purple-500/20";
               textColor = "text-purple-700 dark:text-purple-300 font-black";
               badge = (
-                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-0.5">
-                  <div className="bg-purple-600 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-lg uppercase tracking-wider flex items-center gap-1 animate-bounce">
+                <div className="absolute -top-4 sm:-top-6 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-0.5">
+                  <div className="bg-purple-600 text-white text-[7px] sm:text-[9px] font-black px-1.5 sm:px-2 py-0.5 rounded-md shadow-lg uppercase tracking-wider flex items-center gap-0.5 sm:gap-1 animate-bounce">
                     <svg
-                      className="w-3 h-3"
+                      className="w-2.5 sm:w-3 h-2.5 sm:h-3"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -8089,15 +8089,17 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: status === "active" ? 1.06 : 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                className={`relative flex flex-col items-center p-3 transition-all duration-300 w-24 h-36 justify-between flex-shrink-0 ${clayClass}`}
+                className={`relative flex flex-col items-center p-1.5 sm:p-3 transition-all duration-300 w-14 h-24 sm:w-24 sm:h-36 justify-between flex-shrink-0 ${clayClass}`}
               >
                 {badge}
-                <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                  House {idx}
+                <span className="text-[7px] sm:text-[9px] font-mono text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                  <span className="sm:hidden">H</span>
+                  <span className="hidden sm:inline">House </span>
+                  {idx}
                 </span>
 
                 <svg
-                  className="w-12 h-12 my-1"
+                  className="w-8 h-8 sm:w-12 sm:h-12 my-0.5 sm:my-1"
                   viewBox="0 0 100 100"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -8142,7 +8144,7 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                 </svg>
 
                 <span
-                  className={`text-xs font-mono tracking-wider ${textColor}`}
+                  className={`text-[10px] sm:text-xs font-mono tracking-wider ${textColor}`}
                 >
                   ${value}
                 </span>
