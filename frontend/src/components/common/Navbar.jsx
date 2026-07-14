@@ -143,7 +143,7 @@ const Navbar = () => {
           <div className="flex items-center gap-2.5">
             {/* User Profile Thumbnail (Clay style) */}
             <div 
-              className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-slate-800 border border-white dark:border-slate-800 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.8),3px_4px_8px_rgba(0,0,0,0.05)] overflow-hidden flex items-center justify-center"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-emerald-100 dark:bg-slate-800 border border-white dark:border-slate-800 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.8),3px_4px_8px_rgba(0,0,0,0.05)] overflow-hidden flex items-center justify-center flex-shrink-0"
               title={currentUser.email}
             >
               {currentUser.photoURL ? (
@@ -166,10 +166,10 @@ const Navbar = () => {
                   console.error('Logout error:', err);
                 }
               }}
-              className="h-10 px-3 w-10 !p-0 clay-btn hidden sm:flex items-center justify-center text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 border-0"
+              className="h-9 w-9 sm:h-10 sm:w-10 !p-0 clay-btn flex items-center justify-center text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 border-0 flex-shrink-0"
               title="Sign Out"
             >
-              <LogOut className="w-4.5 h-4.5" />
+              <LogOut className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </Button>
           </div>
         ) : (

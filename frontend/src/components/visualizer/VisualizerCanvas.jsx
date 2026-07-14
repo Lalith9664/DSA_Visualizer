@@ -1,38 +1,76 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useVisualizer } from "../../context/VisualizerContext";
-import { Play } from "lucide-react";
+import { Play, Maximize2, Minimize2 } from "lucide-react";
 
-const VisualizerCanvas = ({ algorithm, loading }) => {
+const VisualizerCanvas = ({
+  algorithm,
+  loading,
+  isExpanded,
+  onToggleExpand,
+}) => {
   const { currentStep, steps } = useVisualizer();
 
-  if (loading || !algorithm || steps.length === 0) {
-    return (
-      <div className="skeuo-screen w-full flex flex-col items-center justify-center min-h-[320px] h-80 relative overflow-hidden bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-800">
-        <div className="skeuo-screen-overlay absolute inset-0 z-0 opacity-30" />
-        <div className="relative z-10 flex flex-col items-center gap-4">
-          <div className="relative w-16 h-16">
-            {/* Pulsing outer glow */}
-            <div className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
-            {/* Spinning gradient ring */}
-            <div className="absolute inset-0 rounded-full border-4 border-slate-800" />
-            <div
-              className="absolute inset-0 rounded-full border-4 border-t-purple-500 border-r-cyan-500 animate-spin"
-              style={{ animationDuration: "0.9s" }}
-            />
-          </div>
-          <div className="flex flex-col items-center gap-1 mt-2">
-            <span className="text-xs font-semibold tracking-widest text-slate-300 font-mono animate-pulse uppercase">
-              Initializing Engine
-            </span>
-            <span className="text-[9px] font-bold text-slate-500 font-mono tracking-widest uppercase mt-0.5">
-              DSA Visualizer Console
-            </span>
+  const getCanvasContent = () => {
+    if (loading || !algorithm) {
+      return (
+        <div
+          className={`w-full flex flex-col items-center justify-center relative overflow-hidden bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-800 ${isExpanded ? "h-full" : "min-h-[320px] h-80"}`}
+        >
+          <div className="skeuo-screen-overlay absolute inset-0 z-0 opacity-30" />
+          <div className="relative z-10 flex flex-col items-center gap-4">
+            <div className="relative w-16 h-16">
+              {/* Pulsing outer glow */}
+              <div className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
+              {/* Spinning gradient ring */}
+              <div className="absolute inset-0 rounded-full border-4 border-slate-800" />
+              <div
+                className="absolute inset-0 rounded-full border-4 border-t-purple-500 border-r-cyan-500 animate-spin"
+                style={{ animationDuration: "0.9s" }}
+              />
+            </div>
+            <div className="flex flex-col items-center gap-1 mt-2">
+              <span className="text-xs font-semibold tracking-widest text-slate-300 font-mono animate-pulse uppercase">
+                Initializing Engine
+              </span>
+              <span className="text-[9px] font-bold text-slate-500 font-mono tracking-widest uppercase mt-0.5">
+                DSA Visualizer Console
+              </span>
+            </div>
           </div>
         </div>
+      );
+    }
+
+    if (steps.length === 0) {
+      return (
+        <div
+          className={`w-full flex flex-col items-center justify-center relative overflow-hidden bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-800 ${isExpanded ? "h-full" : "min-h-[320px] h-80"}`}
+        >
+          <div className="skeuo-screen-overlay absolute inset-0 z-0 opacity-30" />
+          <div className="relative z-10 flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-full border border-dashed border-slate-700 flex items-center justify-center text-slate-500/60 animate-pulse bg-slate-900/40">
+              <Play className="w-5 h-5 opacity-40" />
+            </div>
+            <div className="flex flex-col items-center gap-1 mt-2">
+              <span className="text-xs font-semibold tracking-widest text-slate-400 font-mono uppercase">
+                Canvas Cleared
+              </span>
+              <span className="text-[9px] font-bold text-slate-600 font-mono tracking-widest uppercase mt-0.5">
+                Enter input to begin visualization
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className={`w-full relative z-10 ${isExpanded ? "h-full" : ""}`}>
+        {getCanvas()}
       </div>
     );
-  }
+  };
 
   const currentSnap = steps[currentStep] || {};
   const {
@@ -1291,16 +1329,25 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                   bgClass = "opacity-40";
                 }
 
+                const baseAddr = colorScheme === "blue" ? 0x100 : 0x200;
+                const nextAddr = idx === items.length - 1 ? "NULL" : `0x${(baseAddr + (idx + 1) * 8).toString(16).toUpperCase()}`;
+
                 return (
-                  <div key={idx} className="flex items-center gap-2 sm:gap-3">
+                  <div key={idx} className="flex items-center gap-2 sm:gap-3 relative">
+                    {/* Address above the node */}
+                    <span className="absolute -top-4 left-1 font-mono text-[6px] sm:text-[7px] text-slate-500/80">
+                      0x{(baseAddr + idx * 8).toString(16).toUpperCase()}
+                    </span>
                     <div
-                      className={`w-14 sm:w-18 h-8 sm:h-10 rounded-lg border flex overflow-hidden shadow-sm transition-all duration-300 ${bgClass} ${borderClass}`}
+                      className={`w-18 sm:w-22 h-8 sm:h-10 rounded-lg border flex overflow-hidden shadow-sm transition-all duration-300 ${bgClass} ${borderClass}`}
                     >
-                      <div className="w-9 sm:w-12 h-full flex items-center justify-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30 font-mono font-bold text-[10px] sm:text-xs text-text-primary dark:text-slate-200">
+                      <div className="w-10 sm:w-13 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30 font-mono font-bold text-[9px] sm:text-[10px] text-text-primary dark:text-slate-200 leading-none">
+                        <span className="text-[4px] uppercase text-slate-500/50 scale-75 select-none pb-0.5">data</span>
                         {val}
                       </div>
-                      <div className="flex-1 h-full flex items-center justify-center bg-slate-100/30 dark:bg-slate-950/20">
-                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-slate-400 dark:bg-slate-600" />
+                      <div className="flex-1 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20 px-0.5">
+                        <span className="text-[4px] uppercase text-slate-500/50 scale-75 select-none pb-0.5">next</span>
+                        <span className={`font-mono text-[5px] sm:text-[6px] font-black ${nextAddr === "NULL" ? "text-red-500" : "text-primary"}`}>{nextAddr}</span>
                       </div>
                     </div>
                     {idx < items.length - 1 ? (
@@ -1350,21 +1397,28 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                 Merged List (sorted result)
               </span>
               <div className="flex gap-2 sm:gap-4 items-center flex-wrap min-h-[50px] sm:min-h-[60px]">
-                {merged.map((val, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center gap-2 sm:gap-3"
-                  >
-                    <div className="w-14 sm:w-18 h-8 sm:h-10 rounded-lg border border-success bg-success/5 dark:bg-success/15 flex overflow-hidden shadow-inner font-bold">
-                      <div className="w-9 sm:w-12 h-full flex items-center justify-center border-r border-success/30 bg-success/10 font-mono text-[10px] sm:text-xs text-success">
-                        {val}
+                {merged.map((val, idx) => {
+                  const nextAddr = idx === merged.length - 1 ? "NULL" : `0x${(0x300 + (idx + 1) * 8).toString(16).toUpperCase()}`;
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center gap-2 sm:gap-3 relative"
+                    >
+                      <span className="absolute -top-4 left-1 font-mono text-[6px] sm:text-[7px] text-success/80">
+                        0x{(0x300 + idx * 8).toString(16).toUpperCase()}
+                      </span>
+                      <div className="w-18 sm:w-22 h-8 sm:h-10 rounded-lg border border-success bg-success/5 dark:bg-success/15 flex overflow-hidden shadow-inner font-bold">
+                        <div className="w-10 sm:w-13 h-full flex flex-col justify-center items-center border-r border-success/30 bg-success/10 font-mono text-[9px] sm:text-[10px] text-success leading-none">
+                          <span className="text-[4px] uppercase text-success/50 scale-75 select-none pb-0.5">data</span>
+                          {val}
+                        </div>
+                        <div className="flex-1 h-full flex flex-col justify-center items-center bg-success/5 px-0.5">
+                          <span className="text-[4px] uppercase text-success/50 scale-75 select-none pb-0.5">next</span>
+                          <span className={`font-mono text-[5px] sm:text-[6px] font-black ${nextAddr === "NULL" ? "text-red-500" : "text-success"}`}>{nextAddr}</span>
+                        </div>
                       </div>
-                      <div className="flex-1 h-full flex items-center justify-center bg-success/5">
-                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-success" />
-                      </div>
-                    </div>
                     {idx < merged.length - 1 ? (
                       <span className="text-success text-xs sm:text-sm">→</span>
                     ) : (
@@ -1373,7 +1427,8 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                       </span>
                     )}
                   </motion.div>
-                ))}
+                  );
+                })}
                 {merged.length === 0 && (
                   <span className="text-xs text-slate-400 font-mono italic">
                     No elements merged yet
@@ -1435,32 +1490,37 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                 key={node.id}
                 className="flex items-center gap-2 sm:gap-4 flex-shrink-0 relative"
               >
-                <div className="flex flex-col items-center relative">
-                  {/* Node Structure */}
-                  <motion.div
-                    layout
-                    className={`w-16 sm:w-24 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
-                  >
-                    <div className="w-10 sm:w-16 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
-                      <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
-                        data
-                      </span>
-                      <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
-                        {node.val}
-                      </span>
-                    </div>
+                  <div className="flex flex-col items-center relative">
+                    {/* Address label above the node card */}
+                    <span className="absolute -top-5 font-mono text-[7px] sm:text-[8px] font-extrabold text-slate-500 dark:text-slate-400 select-none tracking-wider uppercase">
+                      0x{(1000 + idx * 8).toString(16).toUpperCase()}
+                    </span>
 
-                    <div className="flex-1 h-full flex flex-col justify-center items-center relative bg-slate-100/30 dark:bg-slate-950/20">
-                      <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
-                        next
-                      </span>
-                      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
-                        <div className="w-0.5 sm:w-1 h-0.5 sm:h-1 rounded-full bg-white" />
+                    {/* Node Structure */}
+                    <motion.div
+                      layout
+                      className={`w-16 sm:w-24 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
+                    >
+                      <div className="w-10 sm:w-16 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
+                        <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
+                          data
+                        </span>
+                        <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
+                          {node.val}
+                        </span>
                       </div>
-                    </div>
-                  </motion.div>
 
-                {/* Pointer Tags */}
+                      <div className="flex-1 h-full flex flex-col justify-center items-center relative bg-slate-100/30 dark:bg-slate-950/20 px-1">
+                        <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
+                          next
+                        </span>
+                        <span className={`font-mono text-[7px] sm:text-[8px] font-black tracking-tight ${idx === listNodes.length - 1 ? 'text-red-500 dark:text-red-400' : 'text-primary'}`}>
+                          {idx === listNodes.length - 1 ? "NULL" : `0x${(1000 + (idx + 1) * 8).toString(16).toUpperCase()}`}
+                        </span>
+                      </div>
+                    </motion.div>
+
+                  {/* Pointer Tags */}
                   <div className="absolute -bottom-8 flex flex-col gap-1 items-center z-10">
                     <div className="flex gap-1.5 flex-wrap justify-center max-w-[120px]">
                       {isHead && (
@@ -1629,42 +1689,47 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                 key={node.id}
                 className="flex items-center gap-4 sm:gap-12 flex-shrink-0 relative"
               >
-                <div className="flex flex-col items-center relative">
-                  {/* DLL Node Structure (3 cells: prev, data, next) */}
-                  <motion.div
-                    layout
-                    className={`w-22 sm:w-32 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
-                  >
-                    {/* Prev Pointer Cell */}
-                    <div className="w-6 sm:w-8 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-100/30 dark:bg-slate-950/20">
-                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
-                        prev
-                      </span>
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-purple-500/70 border border-purple-500 flex items-center justify-center">
-                        <div className="w-0.5 h-0.5 rounded-full bg-white" />
-                      </div>
-                    </div>
+                  <div className="flex flex-col items-center relative">
+                    {/* Address label above the node card */}
+                    <span className="absolute -top-5 font-mono text-[7px] sm:text-[8px] font-extrabold text-slate-500 dark:text-slate-400 select-none tracking-wider uppercase">
+                      0x{(1000 + idx * 8).toString(16).toUpperCase()}
+                    </span>
 
-                    {/* Data Cell */}
-                    <div className="flex-1 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
-                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
-                        data
-                      </span>
-                      <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
-                        {node.val}
-                      </span>
-                    </div>
-
-                    {/* Next Pointer Cell */}
-                    <div className="w-6 sm:w-8 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20">
-                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
-                        next
-                      </span>
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
-                        <div className="w-0.5 h-0.5 rounded-full bg-white" />
+                    {/* DLL Node Structure (3 cells: prev, data, next) */}
+                    <motion.div
+                      layout
+                      className={`w-24 sm:w-36 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
+                    >
+                      {/* Prev Pointer Cell */}
+                      <div className="w-8 sm:w-10 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-100/30 dark:bg-slate-950/20 px-0.5">
+                        <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
+                          prev
+                        </span>
+                        <span className={`font-mono text-[5px] sm:text-[6px] font-bold tracking-tight ${idx === 0 ? 'text-red-500 dark:text-red-400' : 'text-purple-500'}`}>
+                          {idx === 0 ? "NULL" : `0x${(1000 + (idx - 1) * 8).toString(16).toUpperCase()}`}
+                        </span>
                       </div>
-                    </div>
-                  </motion.div>
+
+                      {/* Data Cell */}
+                      <div className="flex-1 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
+                        <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
+                          data
+                        </span>
+                        <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
+                          {node.val}
+                        </span>
+                      </div>
+
+                      {/* Next Pointer Cell */}
+                      <div className="w-8 sm:w-10 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20 px-0.5">
+                        <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
+                          next
+                        </span>
+                        <span className={`font-mono text-[5px] sm:text-[6px] font-bold tracking-tight ${idx === listNodes.length - 1 ? 'text-red-500 dark:text-red-400' : 'text-primary'}`}>
+                          {idx === listNodes.length - 1 ? "NULL" : `0x${(1000 + (idx + 1) * 8).toString(16).toUpperCase()}`}
+                        </span>
+                      </div>
+                    </motion.div>
 
                   {/* Pointer Tags */}
                   <div className="absolute -bottom-8 flex flex-col gap-1 items-center z-10">
@@ -1844,6 +1909,11 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                   className="flex items-center gap-2 sm:gap-4 flex-shrink-0 relative"
                 >
                   <div className="flex flex-col items-center relative">
+                    {/* Address label above the node card */}
+                    <span className="absolute -top-5 font-mono text-[7px] sm:text-[8px] font-extrabold text-slate-500 dark:text-slate-400 select-none tracking-wider uppercase">
+                      0x{(1000 + idx * 8).toString(16).toUpperCase()}
+                    </span>
+
                     <motion.div
                       layout
                       className={`w-16 sm:w-24 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
@@ -1857,13 +1927,13 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
                         </span>
                       </div>
 
-                      <div className="flex-1 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20">
+                      <div className="flex-1 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20 px-1">
                         <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
                           next
                         </span>
-                        <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-primary/70 border border-primary flex items-center justify-center">
-                          <div className="w-0.5 sm:w-1 h-0.5 sm:h-1 rounded-full bg-white" />
-                        </div>
+                        <span className="font-mono text-[7px] sm:text-[8px] font-black tracking-tight text-primary">
+                          0x{(idx === listNodes.length - 1 ? 1000 : 1000 + (idx + 1) * 8).toString(16).toUpperCase()}
+                        </span>
                       </div>
                     </motion.div>
 
@@ -6119,7 +6189,14 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
   // --- 10. RENDER HASH MAPS ---
   const renderHashCanvas = () => {
     const algoId = algorithm.id || "";
-    if (algoId === "hash-map") return renderHashMapSetCanvas(false);
+    if (
+      algoId === "hash-map" ||
+      algoId === "linear-probing" ||
+      algoId === "quadratic-probing" ||
+      algoId === "double-hashing" ||
+      algoId === "separate-chaining"
+    )
+      return renderHashMapSetCanvas(false);
     if (algoId === "hash-set") return renderHashMapSetCanvas(true);
     if (algoId === "longest-consecutive-sequence")
       return renderLongestConsecutiveSequenceCanvas();
@@ -8832,11 +8909,26 @@ const VisualizerCanvas = ({ algorithm, loading }) => {
   };
 
   return (
-    <div className="skeuo-screen w-full select-none">
+    <div
+      className={`skeuo-screen w-full select-none relative group transition-all duration-300 ${isExpanded ? "h-[calc(100vh-420px)] min-h-[350px]" : ""}`}
+    >
       <div className="skeuo-screen-overlay" />
 
-      {/* Render selected canvas content */}
-      <div className="relative z-10">{getCanvas()}</div>
+      {/* Render canvas or loading/empty state */}
+      <div className={isExpanded ? "h-full" : ""}>{getCanvasContent()}</div>
+
+      {/* Full screen toggle button */}
+      <button
+        onClick={onToggleExpand}
+        className="absolute bottom-3 right-3 z-30 p-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/90 text-white/80 hover:text-white backdrop-blur-md border border-slate-700/50 shadow-lg cursor-pointer hover:scale-105 active:scale-95 transition-all flex items-center justify-center"
+        title={isExpanded ? "Exit Fullscreen View" : "Fullscreen View"}
+      >
+        {isExpanded ? (
+          <Minimize2 className="w-4 h-4" />
+        ) : (
+          <Maximize2 className="w-4 h-4" />
+        )}
+      </button>
     </div>
   );
 };

@@ -108,7 +108,7 @@ const GraphWidget = () => {
       "
     >
       <div className="text-[11px] font-bold text-violet-500/80 dark:text-violet-400/80 uppercase tracking-widest self-start">
-        Graph Graph
+        Graph
       </div>
       <svg className="w-full h-full" viewBox="0 0 160 100" fill="none">
         {/* Node connections */}

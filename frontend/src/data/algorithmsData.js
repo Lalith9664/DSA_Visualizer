@@ -341,23 +341,8 @@ export const ALGORITHMS = {
     else:
       count--
   return candidate`,
-    code: {
-      javascript: `function majorityElement(arr) {
-  let candidate = null;
-  let count = 0;
-  for (let val of arr) {
-    if (count === 0) {
-      candidate = val;
-      count = 1;
-    } else if (val === candidate) {
-      count++;
-    } else {
-      count--;
-    }
-  }
-  return candidate;
-}`,
-      python: `def majority_element(arr):
+    ccode: {
+    python: `def majority_element(arr):
     candidate = None
     count = 0
     for val in arr:
@@ -368,42 +353,8 @@ export const ALGORITHMS = {
             count += 1
         else:
             count -= 1
-    return candidate`,
-      java: `public class MooresVoting {
-    public static int majorityElement(int[] arr) {
-        Integer candidate = null;
-        int count = 0;
-        for (int val : arr) {
-            if (count == 0) {
-                candidate = val;
-                count = 1;
-            } else if (val == candidate) {
-                count++;
-            } else {
-                count--;
-            }
-        }
-        return candidate != null ? candidate : -1;
-    }
-}`,
-      cpp: `#include <vector>
-using namespace std;
-int majorityElement(const vector<int>& arr) {
-    int candidate = -1;
-    int count = 0;
-    for (int val : arr) {
-        if (count == 0) {
-            candidate = val;
-            count = 1;
-        } else if (val == candidate) {
-            count++;
-        } else {
-            count--;
-        }
-    }
-    return candidate;
-}`,
-    },
+    return candidate`
+  },
   },
   "minimum-window-substring": {
     id: "minimum-window-substring",
@@ -450,35 +401,8 @@ int majorityElement(const vector<int>& arr) {
         formed--
       left++
   return min_sub`,
-    code: {
-      javascript: `function minWindow(s, t) {
-  if (!s || !t) return "";
-  const need = {}, have = {};
-  for (let c of t) need[c] = (need[c] || 0) + 1;
-  
-  let left = 0, formed = 0;
-  const required = Object.keys(need).length;
-  let minLen = Infinity, minSub = "";
-  
-  for (let right = 0; right < s.length; right++) {
-    const c = s[right];
-    have[c] = (have[c] || 0) + 1;
-    if (need[c] && have[c] === need[c]) formed++;
-    
-    while (formed === required) {
-      if (right - left + 1 < minLen) {
-        minLen = right - left + 1;
-        minSub = s.slice(left, right + 1);
-      }
-      const lc = s[left];
-      have[lc]--;
-      if (need[lc] && have[lc] < need[lc]) formed--;
-      left++;
-    }
-  }
-  return minSub;
-}`,
-      python: `def min_window(s, t):
+    ccode: {
+    python: `def min_window(s, t):
     if not s or not t:
         return ""
     need, have = {}, {}
@@ -504,70 +428,8 @@ int majorityElement(const vector<int>& arr) {
                 formed -= 1
             left += 1
             
-    return min_window`,
-      java: `import java.util.Map;
-import java.util.HashMap;
-public class MinWindow {
-    public static String minWindow(String s, String t) {
-        if (s == null || t == null || s.length() < t.length()) return "";
-        Map<Character, Integer> need = new HashMap<>();
-        for (char c : t.toCharArray()) need.put(c, need.getOrDefault(c, 0) + 1);
-        
-        Map<Character, Integer> have = new HashMap<>();
-        int left = 0, formed = 0, required = need.size();
-        int minLen = Integer.MAX_VALUE;
-        String minSub = "";
-        
-        for (int right = 0; right < s.length(); right++) {
-            char c = s.charAt(right);
-            have.put(c, have.getOrDefault(c, 0) + 1);
-            if (need.containsKey(c) && have.get(c).equals(need.get(c))) formed++;
-            
-            while (formed == required) {
-                if (right - left + 1 < minLen) {
-                    minLen = right - left + 1;
-                    minSub = s.substring(left, right + 1);
-                }
-                char lc = s.charAt(left);
-                have.put(lc, have.get(lc) - 1);
-                if (need.containsKey(lc) && have.get(lc) < need.get(lc)) formed--;
-                left++;
-            }
-        }
-        return minSub;
-    }
-}`,
-      cpp: `#include <string>
-#include <unordered_map>
-#include <climits>
-using namespace std;
-string minWindow(string s, string t) {
-    if (s.empty() || t.empty()) return "";
-    unordered_map<char, int> need, have;
-    for (char c : t) need[c]++;
-    
-    int left = 0, formed = 0, required = need.size();
-    int minLen = INT_MAX, minStart = 0;
-    
-    for (int right = 0; right < s.length(); ++right) {
-        char c = s[right];
-        have[c]++;
-        if (need.count(c) && have[c] == need[c]) formed++;
-        
-        while (formed == required) {
-            if (right - left + 1 < minLen) {
-                minLen = right - left + 1;
-                minStart = left;
-            }
-            char lc = s[left];
-            have[lc]--;
-            if (need.count(lc) && have[lc] < need[lc]) formed--;
-            left++;
-        }
-    }
-    return minLen == INT_MAX ? "" : s.substr(minStart, minLen);
-}`,
-    },
+    return min_window`
+  },
   },
   "fruits-into-baskets": {
     id: "fruits-into-baskets",
@@ -606,24 +468,8 @@ string minWindow(string s, string t) {
       left++
     max_len = max(max_len, right - left + 1)
   return max_len`,
-    code: {
-      javascript: `function totalFruit(fruits) {
-  const basket = new Map();
-  let left = 0, maxLen = 0;
-  for (let right = 0; right < fruits.length; right++) {
-    basket.set(fruits[right], (basket.get(fruits[right]) || 0) + 1);
-    while (basket.size > 2) {
-      basket.set(fruits[left], basket.get(fruits[left]) - 1);
-      if (basket.get(fruits[left]) === 0) {
-        basket.delete(fruits[left]);
-      }
-      left++;
-    }
-    maxLen = Math.max(maxLen, right - left + 1);
-  }
-  return maxLen;
-}`,
-      python: `def total_fruit(fruits):
+    ccode: {
+    python: `def total_fruit(fruits):
     basket = {}
     left = 0
     max_len = 0
@@ -635,48 +481,8 @@ string minWindow(string s, string t) {
                 del basket[fruits[left]]
             left += 1
         max_len = max(max_len, right - left + 1)
-    return max_len`,
-      java: `import java.util.Map;
-import java.util.HashMap;
-public class FruitsIntoBaskets {
-    public static int totalFruit(int[] fruits) {
-        Map<Integer, Integer> basket = new HashMap<>();
-        int left = 0, maxLen = 0;
-        for (int right = 0; right < fruits.length; right++) {
-            basket.put(fruits[right], basket.getOrDefault(fruits[right], 0) + 1);
-            while (basket.size() > 2) {
-                basket.put(fruits[left], basket.get(fruits[left]) - 1);
-                if (basket.get(fruits[left]) == 0) {
-                    basket.remove(fruits[left]);
-                }
-                left++;
-            }
-            maxLen = Math.max(maxLen, right - left + 1);
-        }
-        return maxLen;
-    }
-}`,
-      cpp: `#include <vector>
-#include <unordered_map>
-#include <algorithm>
-using namespace std;
-int totalFruit(const vector<int>& fruits) {
-    unordered_map<int, int> basket;
-    int left = 0, maxLen = 0;
-    for (int right = 0; right < fruits.size(); ++right) {
-        basket[fruits[right]]++;
-        while (basket.size() > 2) {
-            basket[fruits[left]]--;
-            if (basket[fruits[left]] == 0) {
-                basket.erase(fruits[left]);
-            }
-            left++;
-        }
-        maxLen = max(maxLen, right - left + 1);
-    }
-    return maxLen;
-}`,
-    },
+    return max_len`
+  },
   },
   "transpose-matrix": {
     id: "transpose-matrix",
@@ -708,45 +514,14 @@ int totalFruit(const vector<int>& fruits) {
     for j = i + 1 to n - 1:
       swap matrix[i][j] with matrix[j][i]
   return matrix`,
-    code: {
-      javascript: `function transpose(matrix) {
-  const n = matrix.length;
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      const temp = matrix[i][j];
-      matrix[i][j] = matrix[j][i];
-      matrix[j][i] = temp;
-    }
-  }
-  return matrix;
-}`,
-      python: `def transpose(matrix):
+    ccode: {
+    python: `def transpose(matrix):
     n = len(matrix)
     for i in range(n):
         for j in range(i + 1, n):
             matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]
-    return matrix`,
-      java: `public class MatrixTranspose {
-    public static void transpose(int[][] matrix) {
-        int n = matrix.length;
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                int temp = matrix[i][j];
-                matrix[i][j] = matrix[j][i];
-                matrix[j][i] = temp;
-            }
-        }
-    }
-}`,
-      cpp: `void transpose(vector<vector<int>>& matrix) {
-    int n = matrix.size();
-    for (int i = 0; i < n; ++i) {
-        for (int j = i + 1; j < n; ++j) {
-            swap(matrix[i][j], matrix[j][i]);
-        }
-    }
-}`,
-    },
+    return matrix`
+  },
   },
   "spiral-matrix": {
     id: "spiral-matrix",
@@ -780,30 +555,8 @@ int totalFruit(const vector<int>& fruits) {
       traverse right to left at bottom; bottom--
     if left <= right:
       traverse bottom to top at left; left++`,
-    code: {
-      javascript: `function spiralOrder(matrix) {
-  if (matrix.length === 0) return [];
-  const res = [];
-  let top = 0, bottom = matrix.length - 1;
-  let left = 0, right = matrix[0].length - 1;
-  
-  while (top <= bottom && left <= right) {
-    for (let i = left; i <= right; i++) res.push(matrix[top][i]);
-    top++;
-    for (let i = top; i <= bottom; i++) res.push(matrix[i][right]);
-    right--;
-    if (top <= bottom) {
-      for (let i = right; i >= left; i--) res.push(matrix[bottom][i]);
-      bottom--;
-    }
-    if (left <= right) {
-      for (let i = bottom; i >= top; i--) res.push(matrix[i][left]);
-      left++;
-    }
-  }
-  return res;
-}`,
-      python: `def spiral_order(matrix):
+    ccode: {
+    python: `def spiral_order(matrix):
     if not matrix:
         return []
     res = []
@@ -833,56 +586,8 @@ int totalFruit(const vector<int>& fruits) {
                 res.append(matrix[i][left])
             left += 1
             
-    return res`,
-      java: `import java.util.List;
-import java.util.ArrayList;
-public class SpiralMatrix {
-    public static List<Integer> spiralOrder(int[][] matrix) {
-        List<Integer> res = new ArrayList<>();
-        if (matrix.length == 0) return res;
-        int top = 0, bottom = matrix.length - 1;
-        int left = 0, right = matrix[0].length - 1;
-        
-        while (top <= bottom && left <= right) {
-            for (int i = left; i <= right; i++) res.add(matrix[top][i]);
-            top++;
-            for (int i = top; i <= bottom; i++) res.add(matrix[i][right]);
-            right--;
-            if (top <= bottom) {
-                for (int i = right; i >= left; i--) res.add(matrix[bottom][i]);
-                bottom--;
-            }
-            if (left <= right) {
-                for (int i = bottom; i >= top; i--) res.add(matrix[i][left]);
-                left++;
-            }
-        }
-        return res;
-    }
-}`,
-      cpp: `vector<int> spiralOrder(const vector<vector<int>>& matrix) {
-    if (matrix.empty()) return {};
-    vector<int> res;
-    int top = 0, bottom = matrix.size() - 1;
-    int left = 0, right = matrix[0].size() - 1;
-    
-    while (top <= bottom && left <= right) {
-        for (int i = left; i <= right; ++i) res.push_back(matrix[top][i]);
-        top++;
-        for (int i = top; i <= bottom; ++i) res.push_back(matrix[i][right]);
-        right--;
-        if (top <= bottom) {
-            for (int i = right; i >= left; --i) res.push_back(matrix[bottom][i]);
-            bottom--;
-        }
-        if (left <= right) {
-            for (int i = bottom; i >= top; --i) res.push_back(matrix[i][left]);
-            left++;
-        }
-    }
-    return res;
-}`,
-    },
+    return res`
+  },
   },
   "difference-array": {
     id: "difference-array",
@@ -913,44 +618,15 @@ public class SpiralMatrix {
   for i = 1 to n - 1:
     diff[i] = arr[i] - arr[i-1]
   return diff`,
-    code: {
-      javascript: `function differenceArray(arr) {
-  const n = arr.length;
-  const diff = new Array(n).fill(0);
-  diff[0] = arr[0];
-  for (let i = 1; i < n; i++) {
-    diff[i] = arr[i] - arr[i - 1];
-  }
-  return diff;
-}`,
-      python: `def difference_array(arr):
+    ccode: {
+    python: `def difference_array(arr):
     n = len(arr)
     diff = [0] * n
     diff[0] = arr[0]
     for i in range(1, n):
         diff[i] = arr[i] - arr[i-1]
-    return diff`,
-      java: `public class DifferenceArray {
-    public static int[] differenceArray(int[] arr) {
-        int n = arr.length;
-        int[] diff = new int[n];
-        diff[0] = arr[0];
-        for (let i = 1; i < n; i++) {
-            diff[i] = arr[i] - arr[i - 1];
-        }
-        return diff;
-    }
-}`,
-      cpp: `vector<int> differenceArray(const vector<int>& arr) {
-    int n = arr.size();
-    vector<int> diff(n, 0);
-    diff[0] = arr[0];
-    for (let i = 1; i < n; i++) {
-        diff[i] = arr[i] - arr[i - 1];
-    }
-    return diff;
-}`,
-    },
+    return diff`
+  },
   },
   "suffix-sum": {
     id: "suffix-sum",
@@ -981,44 +657,15 @@ public class SpiralMatrix {
   for i = n-2 down to 0:
     suffix[i] = suffix[i+1] + arr[i]
   return suffix`,
-    code: {
-      javascript: `function suffixSum(arr) {
-  const n = arr.length;
-  const suffix = new Array(n).fill(0);
-  suffix[n - 1] = arr[n - 1];
-  for (let i = n - 2; i >= 0; i--) {
-    suffix[i] = suffix[i + 1] + arr[i];
-  }
-  return suffix;
-}`,
-      python: `def suffix_sum(arr):
+    ccode: {
+    python: `def suffix_sum(arr):
     n = len(arr)
     suffix = [0] * n
     suffix[n-1] = arr[n-1]
     for i in range(n-2, -1, -1):
         suffix[i] = suffix[i+1] + arr[i]
-    return suffix`,
-      java: `public class SuffixSum {
-    public static int[] suffixSum(int[] arr) {
-        int n = arr.length;
-        int[] suffix = new int[n];
-        suffix[n - 1] = arr[n - 1];
-        for (int i = n - 2; i >= 0; i--) {
-            suffix[i] = suffix[i + 1] + arr[i];
-        }
-        return suffix;
-    }
-}`,
-      cpp: `vector<int> suffixSum(const vector<int>& arr) {
-    int n = arr.size();
-    vector<int> suffix(n, 0);
-    suffix[n - 1] = arr[n - 1];
-    for (int i = n - 2; i >= 0; i--) {
-        suffix[i] = suffix[i + 1] + arr[i];
-    }
-    return suffix;
-}`,
-    },
+    return suffix`
+  },
   },
   "splitting-arrays": {
     id: "splitting-arrays",
@@ -1043,30 +690,12 @@ public class SpiralMatrix {
   left = copy of arr from 0 to index - 1
   right = copy of arr from index to length(arr) - 1
   return left, right`,
-    code: {
-      javascript: `function splitArray(arr, index) {
-  const left = arr.slice(0, index);
-  const right = arr.slice(index);
-  return [left, right];
-}`,
-      python: `def split_array(arr, index):
+    ccode: {
+    python: `def split_array(arr, index):
     left = arr[:index]
     right = arr[index:]
-    return left, right`,
-      java: `import java.util.Arrays;
-public class ArraySplit {
-    public static int[][] splitArray(int[] arr, int index) {
-        int[] left = Arrays.copyOfRange(arr, 0, index);
-        int[] right = Arrays.copyOfRange(arr, index, arr.length);
-        return new int[][] { left, right };
-    }
-}`,
-      cpp: `pair<vector<int>, vector<int>> splitArray(const vector<int>& arr, int index) {
-    vector<int> left(arr.begin(), arr.begin() + index);
-    vector<int> right(arr.begin() + index, arr.end());
-    return {left, right};
-}`,
-    },
+    return left, right`
+  },
   },
   "array-insertion": {
     id: "array-insertion",
@@ -1100,43 +729,14 @@ public class ArraySplit {
     arr[i] = arr[i-1]
   arr[position] = element
   return arr`,
-    code: {
-      javascript: `function insertElement(arr, element, position) {
-  arr.push(0);
-  for (let i = arr.length - 1; i > position; i--) {
-    arr[i] = arr[i - 1];
-  }
-  arr[position] = element;
-  return arr;
-}`,
-      python: `def insert_element(arr, element, position):
+    ccode: {
+    python: `def insert_element(arr, element, position):
     arr.append(0)
     for i in range(len(arr) - 1, position, -1):
         arr[i] = arr[i - 1]
     arr[position] = element
-    return arr`,
-      java: `public class ArrayInsertion {
-    public static int[] insertElement(int[] arr, int element, int position) {
-        int[] newArr = new int[arr.length + 1];
-        for (int i = 0; i < position; i++) {
-            newArr[i] = arr[i];
-        }
-        newArr[position] = element;
-        for (int i = position; i < arr.length; i++) {
-            newArr[i + 1] = arr[i];
-        }
-        return newArr;
-    }
-}`,
-      cpp: `vector<int> insertElement(vector<int>& arr, int element, int position) {
-    arr.push_back(0);
-    for (int i = arr.size() - 1; i > position; i--) {
-        arr[i] = arr[i - 1];
-    }
-    arr[position] = element;
-    return arr;
-}`,
-    },
+    return arr`
+  },
   },
   "array-deletion": {
     id: "array-deletion",
@@ -1164,39 +764,13 @@ public class ArraySplit {
     arr[i] = arr[i+1]
   remove last element
   return arr`,
-    code: {
-      javascript: `function deleteElement(arr, position) {
-  for (let i = position; i < arr.length - 1; i++) {
-    arr[i] = arr[i + 1];
-  }
-  arr.pop();
-  return arr;
-}`,
-      python: `def delete_element(arr, position):
+    ccode: {
+    python: `def delete_element(arr, position):
     for i in range(position, len(arr) - 1):
         arr[i] = arr[i + 1]
     arr.pop()
-    return arr`,
-      java: `public class ArrayDeletion {
-    public static int[] deleteElement(int[] arr, int position) {
-        int[] newArr = new int[arr.length - 1];
-        for (int i = 0; i < position; i++) {
-            newArr[i] = arr[i];
-        }
-        for (int i = position + 1; i < arr.length; i++) {
-            newArr[i - 1] = arr[i];
-        }
-        return newArr;
-    }
-}`,
-      cpp: `vector<int> deleteElement(vector<int>& arr, int position) {
-    for (int i = position; i < arr.size() - 1; i++) {
-        arr[i] = arr[i + 1];
-    }
-    arr.pop_back();
-    return arr;
-}`,
-    },
+    return arr`
+  },
   },
   // --- SORTING ---
   "bubble-sort": {
@@ -1239,24 +813,8 @@ public class ArraySplit {
         swapped = true
     if not swapped:
       break`,
-    code: {
-      javascript: `function bubbleSort(arr) {
-  const n = arr.length;
-  for (let i = 0; i < n; i++) {
-    let swapped = false;
-    for (let j = 0; j < n - i - 1; j++) {
-      if (arr[j] > arr[j + 1]) {
-        let temp = arr[j];
-        arr[j] = arr[j + 1];
-        arr[j + 1] = temp;
-        swapped = true;
-      }
-    }
-    if (!swapped) break;
-  }
-  return arr;
-}`,
-      python: `def bubble_sort(arr):
+    ccode: {
+    python: `def bubble_sort(arr):
     n = len(arr)
     for i in range(n):
         swapped = False
@@ -1266,39 +824,8 @@ public class ArraySplit {
                 swapped = True
         if not swapped:
             break
-    return arr`,
-      java: `public class BubbleSort {
-    public static void bubbleSort(int[] arr) {
-        int n = arr.length;
-        boolean swapped;
-        for (int i = 0; i < n; i++) {
-            swapped = false;
-            for (int j = 0; j < n - i - 1; j++) {
-                if (arr[j] > arr[j + 1]) {
-                    int temp = arr[j];
-                    arr[j] = arr[j + 1];
-                    arr[j + 1] = temp;
-                    swapped = true;
-                }
-            }
-            if (!swapped) break;
-        }
-    }
-}`,
-      cpp: `void bubbleSort(vector<int>& arr) {
-    int n = arr.size();
-    for (int i = 0; i < n; i++) {
-        bool swapped = false;
-        for (int j = 0; j < n - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
-                swap(arr[j], arr[j + 1]);
-                swapped = true;
-            }
-        }
-        if (!swapped) break;
-    }
-}`,
-    },
+    return arr`
+  },
   },
 
   "selection-sort": {
@@ -1338,21 +865,8 @@ public class ArraySplit {
         minIndex = j
     if minIndex != i:
       swap(arr[i], arr[minIndex])`,
-    code: {
-      javascript: `function selectionSort(arr) {
-  const n = arr.length;
-  for (let i = 0; i < n - 1; i++) {
-    let minIdx = i;
-    for (let j = i + 1; j < n; j++) {
-      if (arr[j] < arr[minIdx]) minIdx = j;
-    }
-    let temp = arr[i];
-    arr[i] = arr[minIdx];
-    arr[minIdx] = temp;
-  }
-  return arr;
-}`,
-      python: `def selection_sort(arr):
+    ccode: {
+    python: `def selection_sort(arr):
     n = len(arr)
     for i in range(n - 1):
         min_idx = i
@@ -1360,32 +874,8 @@ public class ArraySplit {
             if arr[j] < arr[min_idx]:
                 min_idx = j
         arr[i], arr[min_idx] = arr[min_idx], arr[i]
-    return arr`,
-      java: `public class SelectionSort {
-    public static void selectionSort(int[] arr) {
-        int n = arr.length;
-        for (int i = 0; i < n - 1; i++) {
-            int minIdx = i;
-            for (int j = i + 1; j < n; j++) {
-                if (arr[j] < arr[minIdx]) minIdx = j;
-            }
-            int temp = arr[i];
-            arr[i] = arr[minIdx];
-            arr[minIdx] = temp;
-        }
-    }
-}`,
-      cpp: `void selectionSort(vector<int>& arr) {
-    int n = arr.size();
-    for (int i = 0; i < n - 1; i++) {
-        int minIdx = i;
-        for (int j = i + 1; j < n; j++) {
-            if (arr[j] < arr[minIdx]) minIdx = j;
-        }
-        swap(arr[i], arr[minIdx]);
-    }
-}`,
-    },
+    return arr`
+  },
   },
 
   "insertion-sort": {
@@ -1424,20 +914,8 @@ public class ArraySplit {
       arr[j+1] = arr[j]
       j = j - 1
     arr[j+1] = key`,
-    code: {
-      javascript: `function insertionSort(arr) {
-  for (let i = 1; i < arr.length; i++) {
-    let key = arr[i];
-    let j = i - 1;
-    while (j >= 0 && arr[j] > key) {
-      arr[j + 1] = arr[j];
-      j--;
-    }
-    arr[j + 1] = key;
-  }
-  return arr;
-}`,
-      python: `def insertion_sort(arr):
+    ccode: {
+    python: `def insertion_sort(arr):
     for i in range(1, len(arr)):
         key = arr[i]
         j = i - 1
@@ -1445,32 +923,8 @@ public class ArraySplit {
             arr[j + 1] = arr[j]
             j -= 1
         arr[j + 1] = key
-    return arr`,
-      java: `public class InsertionSort {
-    public static void insertionSort(int[] arr) {
-        for (int i = 1; i < arr.length; i++) {
-            int key = arr[i];
-            int j = i - 1;
-            while (j >= 0 && arr[j] > key) {
-                arr[j + 1] = arr[j];
-                j--;
-            }
-            arr[j + 1] = key;
-        }
-    }
-}`,
-      cpp: `void insertionSort(vector<int>& arr) {
-    for (int i = 1; i < arr.size(); i++) {
-        int key = arr[i];
-        int j = i - 1;
-        while (j >= 0 && arr[j] > key) {
-            arr[j + 1] = arr[j];
-            j--;
-        }
-        arr[j + 1] = key;
-    }
-}`,
-    },
+    return arr`
+  },
   },
 
   "merge-sort": {
@@ -1513,23 +967,8 @@ public class ArraySplit {
     mergeSort(arr, l, m)
     mergeSort(arr, m+1, r)
     merge(arr, l, m, r)`,
-    code: {
-      javascript: `function mergeSort(arr) {
-  if (arr.length <= 1) return arr;
-  const mid = Math.floor(arr.length / 2);
-  const left = mergeSort(arr.slice(0, mid));
-  const right = mergeSort(arr.slice(mid));
-  return merge(left, right);
-}
-function merge(left, right) {
-  let res = [], l = 0, r = 0;
-  while (l < left.length && r < right.length) {
-    if (left[l] < right[r]) res.push(left[l++]);
-    else res.push(right[r++]);
-  }
-  return res.concat(left.slice(l)).concat(right.slice(r));
-}`,
-      python: `def merge_sort(arr):
+    ccode: {
+    python: `def merge_sort(arr):
     if len(arr) <= 1:
         return arr
     mid = len(arr) // 2
@@ -1549,27 +988,8 @@ def merge(left, right):
             r += 1
     res.extend(left[l:])
     res.extend(right[r:])
-    return res`,
-      java: `public class MergeSort {
-    public static void mergeSort(int[] arr, int l, int r) {
-        if (l < r) {
-            int m = l + (r - l) / 2;
-            mergeSort(arr, l, m);
-            mergeSort(arr, m + 1, r);
-            merge(arr, l, m, r);
-        }
-    }
-    // merge helper implementation omitted for space...
-}`,
-      cpp: `void mergeSort(vector<int>& arr, int l, int r) {
-    if (l < r) {
-        int m = l + (r - l) / 2;
-        mergeSort(arr, l, m);
-        mergeSort(arr, m + 1, r);
-        merge(arr, l, m, r);
-    }
-}`,
-    },
+    return res`
+  },
   },
 
   "quick-sort": {
@@ -1610,32 +1030,8 @@ def merge(left, right):
     pIndex = partition(arr, low, high)
     quickSort(arr, low, pIndex - 1)
     quickSort(arr, pIndex + 1, high)`,
-    code: {
-      javascript: `function quickSort(arr, low = 0, high = arr.length - 1) {
-  if (low < high) {
-    let pIdx = partition(arr, low, high);
-    quickSort(arr, low, pIdx - 1);
-    quickSort(arr, pIdx + 1, high);
-  }
-  return arr;
-}
-function partition(arr, low, high) {
-  let pivot = arr[high];
-  let i = low - 1;
-  for (let j = low; j < high; j++) {
-    if (arr[j] < pivot) {
-      i++;
-      let temp = arr[i];
-      arr[i] = arr[j];
-      arr[j] = temp;
-    }
-  }
-  let temp = arr[i + 1];
-  arr[i + 1] = arr[high];
-  arr[high] = temp;
-  return i + 1;
-}`,
-      python: `def quick_sort(arr, low, high):
+    ccode: {
+    python: `def quick_sort(arr, low, high):
     if low < high:
         pi = partition(arr, low, high)
         quick_sort(arr, low, pi - 1)
@@ -1649,25 +1045,8 @@ def partition(arr, low, high):
             i += 1
             arr[i], arr[j] = arr[j], arr[i]
     arr[i + 1], arr[high] = arr[high], arr[i + 1]
-    return i + 1`,
-      java: `public class QuickSort {
-    public static void quickSort(int[] arr, int low, int high) {
-        if (low < high) {
-            int pi = partition(arr, low, high);
-            quickSort(arr, low, pi - 1);
-            quickSort(arr, pi + 1, high);
-        }
-    }
-    // partition helper implementation...
-}`,
-      cpp: `void quickSort(vector<int>& arr, int low, int high) {
-    if (low < high) {
-        int pi = partition(arr, low, high);
-        quickSort(arr, low, pi - 1);
-        quickSort(arr, pi + 1, high);
-    }
-}`,
-    },
+    return i + 1`
+  },
   },
 
   // --- SEARCHING ---
@@ -1698,33 +1077,13 @@ def partition(arr, low, high):
     if arr[i] == target:
       return i
   return -1`,
-    code: {
-      javascript: `function linearSearch(arr, target) {
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i] === target) return i;
-  }
-  return -1;
-}`,
-      python: `def linear_search(arr, target):
+    ccode: {
+    python: `def linear_search(arr, target):
     for i in range(len(arr)):
         if arr[i] == target:
             return i
-    return -1`,
-      java: `public class LinearSearch {
-    public static int linearSearch(int[] arr, int target) {
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] == target) return i;
-        }
-        return -1;
-    }
-}`,
-      cpp: `int linearSearch(const vector<int>& arr, int target) {
-    for (int i = 0; i < arr.size(); i++) {
-        if (arr[i] == target) return i;
-    }
-    return -1;
-}`,
-    },
+    return -1`
+  },
   },
 
   "binary-search": {
@@ -1763,18 +1122,8 @@ def partition(arr, low, high):
     else:
       high = mid - 1
   return -1`,
-    code: {
-      javascript: `function binarySearch(arr, target) {
-  let low = 0, high = arr.length - 1;
-  while (low <= high) {
-    let mid = Math.floor(low + (high - low) / 2);
-    if (arr[mid] === target) return mid;
-    else if (arr[mid] < target) low = mid + 1;
-    else high = mid - 1;
-  }
-  return -1;
-}`,
-      python: `def binary_search(arr, target):
+    ccode: {
+    python: `def binary_search(arr, target):
     low, high = 0, len(arr) - 1
     while low <= high:
         mid = low + (high - low) // 2
@@ -1784,30 +1133,8 @@ def partition(arr, low, high):
             low = mid + 1
         else:
             high = mid - 1
-    return -1`,
-      java: `public class BinarySearch {
-    public static int binarySearch(int[] arr, int target) {
-        int low = 0, high = arr.length - 1;
-        while (low <= high) {
-            int mid = low + (high - low) / 2;
-            if (arr[mid] == target) return mid;
-            else if (arr[mid] < target) low = mid + 1;
-            else high = mid - 1;
-        }
-        return -1;
-    }
-}`,
-      cpp: `int binarySearch(const vector<int>& arr, int target) {
-    int low = 0, high = arr.size() - 1;
-    while (low <= high) {
-        int mid = low + (high - low) / 2;
-        if (arr[mid] == target) return mid;
-        else if (arr[mid] < target) low = mid + 1;
-        else high = mid - 1;
-    }
-    return -1;
-}`,
-    },
+    return -1`
+  },
   },
 
   // --- KADANE ---
@@ -1842,42 +1169,14 @@ def partition(arr, low, high):
     currMax = max(arr[i], currMax + arr[i])
     maxSoFar = max(maxSoFar, currMax)
   return maxSoFar`,
-    code: {
-      javascript: `function kadane(arr) {
-  let maxSoFar = arr[0], currMax = arr[0];
-  for (let i = 1; i < arr.length; i++) {
-    currMax = Math.max(arr[i], currMax + arr[i]);
-    maxSoFar = Math.max(maxSoFar, currMax);
-  }
-  return maxSoFar;
-}`,
-      python: `def kadane(arr):
+    ccode: {
+    python: `def kadane(arr):
     max_so_far = curr_max = arr[0]
     for i in range(1, len(arr)):
         curr_max = max(arr[i], curr_max + arr[i])
         max_so_far = max(max_so_far, curr_max)
-    return max_so_far`,
-      java: `public class Kadane {
-    public static int maxSubArray(int[] arr) {
-        int maxSoFar = arr[0];
-        int currMax = arr[0];
-        for (int i = 1; i < arr.length; i++) {
-            currMax = Math.max(arr[i], currMax + arr[i]);
-            maxSoFar = Math.max(maxSoFar, currMax);
-        }
-        return maxSoFar;
-    }
-}`,
-      cpp: `int kadane(const vector<int>& arr) {
-    int maxSoFar = arr[0];
-    int currMax = arr[0];
-    for (size_t i = 1; i < arr.size(); i++) {
-        currMax = max(arr[i], currMax + arr[i]);
-        maxSoFar = max(maxSoFar, currMax);
-    }
-    return maxSoFar;
-}`,
-    },
+    return max_so_far`
+  },
   },
 
   // --- LINKED LIST ---
@@ -1907,36 +1206,13 @@ def partition(arr, low, high):
   while curr != null:
     process(curr.val)
     curr = curr.next`,
-    code: {
-      javascript: `function traverseDLL(head) {
-  let curr = head;
-  while (curr !== null) {
-    console.log(curr.val);
-    curr = curr.next;
-  }
-}`,
-      python: `def traverse_dll(head):
+    ccode: {
+    python: `def traverse_dll(head):
     curr = head
     while curr:
         print(curr.val)
-        curr = curr.next`,
-      java: `public class DLLTraversal {
-    public static void traverse(DLLNode head) {
-        DLLNode curr = head;
-        while (curr != null) {
-            System.out.println(curr.val);
-            curr = curr.next;
-        }
-    }
-}`,
-      cpp: `void traverse(DLLNode* head) {
-    DLLNode* curr = head;
-    while (curr != nullptr) {
-        cout << curr->val << " ";
-        curr = curr->next;
-    }
-}`,
-    },
+        curr = curr.next`
+  },
   },
   "doubly-linked-list-insertion": {
     id: "doubly-linked-list-insertion",
@@ -1960,40 +1236,15 @@ def partition(arr, low, high):
   prev_node.next = new_node
   if new_node.next != null:
     new_node.next.prev = new_node`,
-    code: {
-      javascript: `function insertAfter(prev_node, new_val) {
-  let new_node = { val: new_val, prev: prev_node, next: prev_node.next };
-  if (prev_node.next !== null) {
-    prev_node.next.prev = new_node;
-  }
-  prev_node.next = new_node;
-}`,
-      python: `def insert_after(prev_node, new_val):
+    ccode: {
+    python: `def insert_after(prev_node, new_val):
     new_node = DLLNode(new_val)
     new_node.next = prev_node.next
     new_node.prev = prev_node
     if prev_node.next:
         prev_node.next.prev = new_node
-    prev_node.next = new_node`,
-      java: `public void insertAfter(DLLNode prev_node, int new_val) {
-    DLLNode new_node = new DLLNode(new_val);
-    new_node.next = prev_node.next;
-    new_node.prev = prev_node;
-    if (prev_node.next != null) {
-        prev_node.next.prev = new_node;
-    }
-    prev_node.next = new_node;
-}`,
-      cpp: `void insertAfter(DLLNode* prev_node, int new_val) {
-    DLLNode* new_node = new DLLNode(new_val);
-    new_node->next = prev_node->next;
-    new_node->prev = prev_node;
-    if (prev_node->next != nullptr) {
-        prev_node->next->prev = new_node;
-    }
-    prev_node->next = new_node;
-}`,
-    },
+    prev_node.next = new_node`
+  },
   },
   "doubly-linked-list-deletion": {
     id: "doubly-linked-list-deletion",
@@ -2013,25 +1264,13 @@ def partition(arr, low, high):
     pseudocode: `deleteNode(head, del_node):
   if del_node.prev != null: del_node.prev.next = del_node.next
   if del_node.next != null: del_node.next.prev = del_node.prev`,
-    code: {
-      javascript: `function deleteNode(del_node) {
-  if (del_node.prev !== null) del_node.prev.next = del_node.next;
-  if (del_node.next !== null) del_node.next.prev = del_node.prev;
-}`,
-      python: `def delete_node(del_node):
+    ccode: {
+    python: `def delete_node(del_node):
     if del_node.prev:
         del_node.prev.next = del_node.next
     if del_node.next:
-        del_node.next.prev = del_node.prev`,
-      java: `public void deleteNode(DLLNode del_node) {
-    if (del_node.prev != null) del_node.prev.next = del_node.next;
-    if (del_node.next != null) del_node.next.prev = del_node.prev;
-}`,
-      cpp: `void deleteNode(DLLNode* del_node) {
-    if (del_node->prev != nullptr) del_node->prev->next = del_node->next;
-    if (del_node->next != nullptr) del_node->next->prev = del_node->prev;
-}`,
-    },
+        del_node.next.prev = del_node.prev`
+  },
   },
   "circular-linked-list-traversal": {
     id: "circular-linked-list-traversal",
@@ -2058,40 +1297,16 @@ def partition(arr, low, high):
       process(curr.val)
       curr = curr.next
     while curr != head`,
-    code: {
-      javascript: `function traverseCircular(head) {
-  if (head === null) return;
-  let curr = head;
-  do {
-    console.log(curr.val);
-    curr = curr.next;
-  } while (curr !== head);
-}`,
-      python: `def traverse_circular(head):
+    ccode: {
+    python: `def traverse_circular(head):
     if not head: return
     curr = head
     while True:
         print(curr.val)
         curr = curr.next
         if curr == head:
-            break`,
-      java: `public void traverse(CNode head) {
-    if (head == null) return;
-    CNode curr = head;
-    do {
-        System.out.println(curr.val);
-        curr = curr.next;
-    } while (curr != head);
-}`,
-      cpp: `void traverse(CNode* head) {
-    if (head == nullptr) return;
-    CNode* curr = head;
-    do {
-        cout << curr->val << " ";
-        curr = curr->next;
-    } while (curr != head);
-}`,
-    },
+            break`
+  },
   },
   "reverse-list": {
     id: "reverse-list",
@@ -2123,18 +1338,8 @@ def partition(arr, low, high):
     prev = curr
     curr = nextTemp
   return prev`,
-    code: {
-      javascript: `function reverseList(head) {
-  let prev = null, curr = head;
-  while (curr !== null) {
-    let nextTemp = curr.next;
-    curr.next = prev;
-    prev = curr;
-    curr = nextTemp;
-  }
-  return prev;
-}`,
-      python: `def reverse_list(head):
+    ccode: {
+    python: `def reverse_list(head):
     prev = None
     curr = head
     while curr:
@@ -2142,32 +1347,8 @@ def partition(arr, low, high):
         curr.next = prev
         prev = curr
         curr = next_temp
-    return prev`,
-      java: `public class ReverseList {
-    public static ListNode reverseList(ListNode head) {
-        ListNode prev = null;
-        ListNode curr = head;
-        while (curr != null) {
-            ListNode nextTemp = curr.next;
-            curr.next = prev;
-            prev = curr;
-            curr = nextTemp;
-        }
-        return prev;
-    }
-}`,
-      cpp: `ListNode* reverseList(ListNode* head) {
-    ListNode* prev = nullptr;
-    ListNode* curr = head;
-    while (curr != nullptr) {
-        ListNode* nextTemp = curr->next;
-        curr->next = prev;
-        prev = curr;
-        curr = nextTemp;
-    }
-    return prev;
-}`,
-    },
+    return prev`
+  },
   },
 
   // --- STACK ---
@@ -2204,22 +1385,8 @@ def partition(arr, low, high):
       top = stack.pop()
       if not matches(top, char): return false
   return stack.isEmpty()`,
-    code: {
-      javascript: `function isBalanced(s) {
-  let stack = [];
-  const map = { ')': '(', '}': '{', ']': '[' };
-  for (let char of s) {
-    if (['(', '{', '['].includes(char)) {
-      stack.push(char);
-    } else if (map[char]) {
-      if (stack.length === 0 || stack.pop() !== map[char]) {
-        return false;
-      }
-    }
-  }
-  return stack.length === 0;
-}`,
-      python: `def is_balanced(s):
+    ccode: {
+    python: `def is_balanced(s):
     stack = []
     mapping = {")": "(", "}": "{", "]": "["}
     for char in s:
@@ -2228,42 +1395,8 @@ def partition(arr, low, high):
         elif char in mapping:
             if not stack or stack.pop() != mapping[char]:
                 return False
-    return len(stack) == 0`,
-      java: `public class BalancedParentheses {
-    public static boolean isValid(String s) {
-        Stack<Character> stack = new Stack<>();
-        for (char c : s.toCharArray()) {
-            if (c == '(' || c == '{' || c == '[') {
-                stack.push(c);
-            } else if (c == ')' && !stack.isEmpty() && stack.peek() == '(') {
-                stack.pop();
-            } else if (c == '}' && !stack.isEmpty() && stack.peek() == '{') {
-                stack.pop();
-            } else if (c == ']' && !stack.isEmpty() && stack.peek() == '[') {
-                stack.pop();
-            } else if (c == ')' || c == '}' || c == ']') {
-                return false;
-            }
-        }
-        return stack.isEmpty();
-    }
-}`,
-      cpp: `bool isValid(string s) {
-    stack<char> st;
-    for (char c : s) {
-        if (c == '(' || c == '{' || c == '[') {
-            st.push(c);
-        } else {
-            if (st.empty()) return false;
-            if (c == ')' && st.top() != '(') return false;
-            if (c == '}' && st.top() != '{') return false;
-            if (c == ']' && st.top() != '[') return false;
-            st.pop();
-        }
-    }
-    return st.empty();
-}`,
-    },
+    return len(stack) == 0`
+  },
   },
 
   // --- QUEUE ---
@@ -2292,26 +1425,8 @@ dequeue():
   val = queue[front]
   front = front + 1
   return val`,
-    code: {
-      javascript: `class Queue {
-  constructor() {
-    this.items = [];
-  }
-  enqueue(element) {
-    this.items.push(element);
-  }
-  dequeue() {
-    if (this.isEmpty()) return "Underflow";
-    return this.items.shift();
-  }
-  front() {
-    return this.items[0];
-  }
-  isEmpty() {
-    return this.items.length === 0;
-  }
-}`,
-      python: `from collections import deque
+    ccode: {
+    python: `from collections import deque
 class Queue:
     def __init__(self):
         self.items = deque()
@@ -2319,23 +1434,8 @@ class Queue:
         self.items.append(val)
     def dequeue(self):
         if not self.items: return "Underflow"
-        return self.items.popleft()`,
-      java: `import java.util.LinkedList;
-import java.util.Queue;
-public class QueueSim {
-    public static void main(String[] args) {
-        Queue<Integer> q = new LinkedList<>();
-        q.add(10); // enqueue
-        int head = q.remove(); // dequeue
-    }
-}`,
-      cpp: `#include <queue>
-using namespace std;
-// Usage:
-// queue<int> q;
-// q.push(10);
-// q.pop();`,
-    },
+        return self.items.popleft()`
+  },
   },
 
   // --- TREES ---
@@ -2362,39 +1462,15 @@ using namespace std;
     inorder(root.left)
     visit(root.val)
     inorder(root.right)`,
-    code: {
-      javascript: `function inorder(root, visited = []) {
-  if (root !== null) {
-    inorder(root.left, visited);
-    visited.push(root.val);
-    inorder(root.right, visited);
-  }
-  return visited;
-}`,
-      python: `def inorder(root, visited=None):
+    ccode: {
+    python: `def inorder(root, visited=None):
     if visited is None: visited = []
     if root:
         inorder(root.left, visited)
         visited.append(root.val)
         inorder(root.right, visited)
-    return visited`,
-      java: `public class BSTTraversal {
-    public void inorder(TreeNode root) {
-        if (root != null) {
-            inorder(root.left);
-            System.out.print(root.val + " ");
-            inorder(root.right);
-        }
-    }
-}`,
-      cpp: `void inorder(TreeNode* root) {
-    if (root != nullptr) {
-        inorder(root->left);
-        cout << root->val << " ";
-        inorder(root->right);
-    }
-}`,
-    },
+    return visited`
+  },
   },
 
   // --- GRAPHS ---
@@ -2439,23 +1515,8 @@ using namespace std;
         dist[v] = alt
         pq.decreaseKey(v, alt)
   return dist`,
-    code: {
-      javascript: `function dijkstra(graph, source, V) {
-  let dist = Array(V).fill(Infinity);
-  let visited = Array(V).fill(false);
-  dist[source] = 0;
-  for (let count = 0; count < V - 1; count++) {
-    let u = minDistance(dist, visited, V);
-    visited[u] = true;
-    for (let v = 0; v < V; v++) {
-      if (!visited[v] && graph[u][v] !== 0 && dist[u] !== Infinity && dist[u] + graph[u][v] < dist[v]) {
-        dist[v] = dist[u] + graph[u][v];
-      }
-    }
-  }
-  return dist;
-}`,
-      python: `import heapq
+    ccode: {
+    python: `import heapq
 def dijkstra(graph, start, num_vertices):
     distances = {vertex: float('infinity') for vertex in range(num_vertices)}
     distances[start] = 0
@@ -2469,32 +1530,8 @@ def dijkstra(graph, start, num_vertices):
             if distance < distances[neighbor]:
                 distances[neighbor] = distance
                 heapq.heappush(priority_queue, (distance, neighbor))
-    return distances`,
-      java: `public class Dijkstra {
-    // Dijkstra implementation using Adjacency Matrix representation
-    // in O(V^2) or Adjacency List + PriorityQueue in O(E log V)
-}`,
-      cpp: `vector<int> dijkstra(int V, vector<vector<pair<int, int>>>& adj, int S) {
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
-    vector<int> dist(V, 1e9);
-    dist[S] = 0;
-    pq.push({0, S});
-    while (!pq.empty()) {
-        int d = pq.top().first;
-        int u = pq.top().second;
-        pq.pop();
-        if (d > dist[u]) continue;
-        for (auto edge : adj[u]) {
-            int v = edge.first, w = edge.second;
-            if (dist[u] + w < dist[v]) {
-                dist[v] = dist[u] + w;
-                pq.push({dist[v], v});
-            }
-        }
-    }
-    return dist;
-}`,
-    },
+    return distances`
+  },
   },
 
   // --- RECURSION ---
@@ -2528,45 +1565,15 @@ def dijkstra(graph, start, num_vertices):
   hanoi(n - 1, from_rod, aux_rod, to_rod)
   move disk n from from_rod to to_rod
   hanoi(n - 1, aux_rod, to_rod, from_rod)`,
-    code: {
-      javascript: `function towerOfHanoi(n, fromRod, toRod, auxRod, moves = []) {
-  if (n === 1) {
-    moves.push({ disk: 1, from: fromRod, to: toRod });
-    return moves;
-  }
-  towerOfHanoi(n - 1, fromRod, auxRod, toRod, moves);
-  moves.push({ disk: n, from: fromRod, to: toRod });
-  towerOfHanoi(n - 1, auxRod, toRod, fromRod, moves);
-  return moves;
-}`,
-      python: `def tower_of_hanoi(n, from_rod, to_rod, aux_rod):
+    ccode: {
+    python: `def tower_of_hanoi(n, from_rod, to_rod, aux_rod):
     if n == 1:
         print(f"Move disk 1 from {from_rod} to {to_rod}")
         return
     tower_of_hanoi(n - 1, from_rod, aux_rod, to_rod)
     print(f"Move disk {n} from {from_rod} to {to_rod}")
-    tower_of_hanoi(n - 1, aux_rod, to_rod, from_rod)`,
-      java: `public class Hanoi {
-    public static void shift(int n, char src, char dest, char aux) {
-        if (n == 1) {
-            System.out.println("Move disk 1 from " + src + " to " + dest);
-            return;
-        }
-        shift(n - 1, src, aux, dest);
-        System.out.println("Move disk " + n + " from " + src + " to " + dest);
-        shift(n - 1, aux, dest, src);
-    }
-}`,
-      cpp: `void towerOfHanoi(int n, char from_rod, char to_rod, char aux_rod) {
-    if (n == 1) {
-        cout << "Move disk 1 from " << from_rod << " to " << to_rod << endl;
-        return;
-    }
-    towerOfHanoi(n - 1, from_rod, aux_rod, to_rod);
-    cout << "Move disk " << n << " from " << from_rod << " to " << to_rod << endl;
-    towerOfHanoi(n - 1, aux_rod, to_rod, from_rod);
-}`,
-    },
+    tower_of_hanoi(n - 1, aux_rod, to_rod, from_rod)`
+  },
   },
 
   // --- DYNAMIC PROGRAMMING ---
@@ -2600,46 +1607,16 @@ def dijkstra(graph, start, num_vertices):
   for i = 3 to n:
     dp[i] = dp[i-1] + dp[i-2]
   return dp[n]`,
-    code: {
-      javascript: `function climbStairs(n) {
-  if (n <= 2) return n;
-  let dp = [0, 1, 2];
-  for (let i = 3; i <= n; i++) {
-    dp[i] = dp[i - 1] + dp[i - 2];
-  }
-  return dp[n];
-}`,
-      python: `def climb_stairs(n):
+    ccode: {
+    python: `def climb_stairs(n):
     if n <= 2: return n
     dp = [0] * (n + 1)
     dp[1] = 1
     dp[2] = 2
     for i in range(3, n + 1):
         dp[i] = dp[i-1] + dp[i-2]
-    return dp[n]`,
-      java: `public class ClimbStairs {
-    public int climbStairs(int n) {
-        if (n <= 2) return n;
-        int[] dp = new int[n + 1];
-        dp[1] = 1;
-        dp[2] = 2;
-        for (int i = 3; i <= n; i++) {
-            dp[i] = dp[i - 1] + dp[i - 2];
-        }
-        return dp[n];
-    }
-}`,
-      cpp: `int climbStairs(int n) {
-    if (n <= 2) return n;
-    vector<int> dp(n + 1);
-    dp[1] = 1;
-    dp[2] = 2;
-    for (int i = 3; i <= n; i++) {
-        dp[i] = dp[i - 1] + dp[i - 2];
-    }
-    return dp[n];
-}`,
-    },
+    return dp[n]`
+  },
   },
 
   // --- HASHING ---
@@ -2668,51 +1645,16 @@ def dijkstra(graph, start, num_vertices):
       return [map[complement], i]
     map[nums[i]] = i
   return []`,
-    code: {
-      javascript: `function twoSum(nums, target) {
-  let map = new Map();
-  for (let i = 0; i < nums.length; i++) {
-    let complement = target - nums[i];
-    if (map.has(complement)) {
-      return [map.get(complement), i];
-    }
-    map.set(nums[i], i);
-  }
-  return [];
-}`,
-      python: `def two_sum(nums, target):
+    ccode: {
+    python: `def two_sum(nums, target):
     num_map = {}
     for i, num in enumerate(nums):
         complement = target - num
         if complement in num_map:
             return [num_map[complement], i]
         num_map[num] = i
-    return []`,
-      java: `public class TwoSum {
-    public int[] twoSum(int[] nums, int target) {
-        Map<Integer, Integer> map = new HashMap<>();
-        for (int i = 0; i < nums.length; i++) {
-            int complement = target - nums[i];
-            if (map.containsKey(complement)) {
-                return new int[] { map.get(complement), i };
-            }
-            map.put(nums[i], i);
-        }
-        throw new IllegalArgumentException("No two sum solution");
-    }
-}`,
-      cpp: `vector<int> twoSum(vector<int>& nums, int target) {
-    unordered_map<int, int> m;
-    for (int i = 0; i < nums.size(); i++) {
-        int complement = target - nums[i];
-        if (m.count(complement)) {
-            return {m[complement], i};
-        }
-        m[nums[i]] = i;
-    }
-    return {};
-}`,
-    },
+    return []`
+  },
   },
   "heap-sort": {
     id: "heap-sort",
@@ -2750,23 +1692,15 @@ def dijkstra(graph, start, num_vertices):
   for i = n-1 down to 1:
     swap(arr[0], arr[i])
     heapify(arr, i, 0)`,
-    code: {
-      javascript: `function heapSort(arr) {
-  let n = arr.length;
-  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) heapify(arr, n, i);
-  for (let i = n - 1; i > 0; i--) {
-    [arr[0], arr[i]] = [arr[i], arr[0]];
-    heapify(arr, i, 0);
-  }
-}`,
-      python: `def heap_sort(arr):
+    ccode: {
+    python: `def heap_sort(arr):
     n = len(arr)
     for i in range(n // 2 - 1, -1, -1):
         heapify(arr, n, i)
     for i in range(n - 1, 0, -1):
         arr[i], arr[0] = arr[0], arr[i]
-        heapify(arr, i, 0)`,
-    },
+        heapify(arr, i, 0)`
+  },
   },
   "min-heap": {
     id: "min-heap",
@@ -2798,19 +1732,12 @@ def dijkstra(graph, start, num_vertices):
     pseudocode: `insert(val):
   heap.push(val)
   bubbleUp(heap.length - 1)`,
-    code: {
-      javascript: `class MinHeap {
-  constructor() { this.heap = []; }
-  insert(val) {
-    this.heap.push(val);
-    this.bubbleUp(this.heap.length - 1);
-  }
-}`,
-      python: `import heapq
+    ccode: {
+    python: `import heapq
 class MinHeap:
     def __init__(self): self.heap = []
-    def insert(self, val): heapq.heappush(self.heap, val)`,
-    },
+    def insert(self, val): heapq.heappush(self.heap, val)`
+  },
   },
   "max-heap": {
     id: "max-heap",
@@ -2842,20 +1769,13 @@ class MinHeap:
     pseudocode: `insert(val):
   heap.push(val)
   bubbleUpMax(heap.length - 1)`,
-    code: {
-      javascript: `class MaxHeap {
-  constructor() { this.heap = []; }
-  insert(val) {
-    this.heap.push(val);
-    this.bubbleUpMax(this.heap.length - 1);
-  }
-}`,
-      python: `class MaxHeap:
+    ccode: {
+    python: `class MaxHeap:
     def __init__(self): self.heap = []
     def insert(self, val):
         self.heap.append(val)
-        self.sift_up(len(self.heap) - 1)`,
-    },
+        self.sift_up(len(self.heap) - 1)`
+  },
   },
   "prefix-sum": {
     id: "prefix-sum",
@@ -2891,14 +1811,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "prefixSum(arr):\n  prefix = new Array(arr.length)\n  prefix[0] = arr[0]\n  for i = 1 to arr.length - 1:\n    prefix[i] = prefix[i-1] + arr[i]\n  return prefix",
-    code: {
-      javascript:
-        "function prefixSum(arr) {\n  const prefix = new Array(arr.length);\n  prefix[0] = arr[0];\n  for (let i = 1; i < arr.length; i++) {\n    prefix[i] = prefix[i - 1] + arr[i];\n  }\n  return prefix;\n}",
-      python:
-        "def prefix_sum(arr):\n    prefix = [0] * len(arr)\n    prefix[0] = arr[0]\n    for i in range(1, len(arr)):\n        prefix[i] = prefix[i-1] + arr[i]\n    return prefix",
-      java: "public class PrefixSum {\n    public static int[] getPrefixSum(int[] arr) {\n        int[] prefix = new int[arr.length];\n        prefix[0] = arr[0];\n        for (int i = 1; i < arr.length; i++) {\n            prefix[i] = prefix[i - 1] + arr[i];\n        }\n        return prefix;\n    }\n}",
-      cpp: "vector<int> prefixSum(const vector<int>& arr) {\n    vector<int> prefix(arr.size());\n    prefix[0] = arr[0];\n    for (size_t i = 1; i < arr.size(); ++i) {\n        prefix[i] = prefix[i - 1] + arr[i];\n    }\n    return prefix;\n}",
-    },
+    ccode: {
+    python:
+        "def prefix_sum(arr):\n    prefix = [0] * len(arr)\n    prefix[0] = arr[0]\n    for i in range(1, len(arr)):\n        prefix[i] = prefix[i-1] + arr[i]\n    return prefix"
+  },
   },
   "sliding-window": {
     id: "sliding-window",
@@ -2934,14 +1850,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "slidingWindow(arr, k):\n  windowSum = sum of first k elements\n  maxSum = windowSum\n  for i = k to arr.length - 1:\n    windowSum += arr[i] - arr[i - k]\n    maxSum = max(maxSum, windowSum)\n  return maxSum",
-    code: {
-      javascript:
-        "function maxSubarraySum(arr, k) {\n  let windowSum = 0;\n  for (let i = 0; i < k; i++) windowSum += arr[i];\n  let maxSum = windowSum;\n  for (let i = k; i < arr.length; i++) {\n    windowSum += arr[i] - arr[i - k];\n    maxSum = Math.max(maxSum, windowSum);\n  }\n  return maxSum;\n}",
-      python:
-        "def max_subarray_sum(arr, k):\n    window_sum = sum(arr[:k])\n    max_sum = window_sum\n    for i in range(k, len(arr)):\n        window_sum += arr[i] - arr[i - k]\n        max_sum = max(max_sum, window_sum)\n    return max_sum",
-      java: "public class SlidingWindow {\n    public static int maxSubarraySum(int[] arr, int k) {\n        int windowSum = 0;\n        for (int i = 0; i < k; i++) windowSum += arr[i];\n        int maxSum = windowSum;\n        for (int i = k; i < arr.length; i++) {\n            windowSum += arr[i] - arr[i - k];\n            maxSum = Math.max(maxSum, windowSum);\n        }\n        return maxSum;\n    }\n}",
-      cpp: "int maxSubarraySum(const vector<int>& arr, int k) {\n    int windowSum = 0;\n    for (int i = 0; i < k; ++i) windowSum += arr[i];\n    int maxSum = windowSum;\n    for (size_t i = k; i < arr.size(); ++i) {\n        windowSum += arr[i] - arr[i - k];\n        maxSum = max(maxSum, windowSum);\n    }\n    return maxSum;\n}",
-    },
+    ccode: {
+    python:
+        "def max_subarray_sum(arr, k):\n    window_sum = sum(arr[:k])\n    max_sum = window_sum\n    for i in range(k, len(arr)):\n        window_sum += arr[i] - arr[i - k]\n        max_sum = max(max_sum, window_sum)\n    return max_sum"
+  },
   },
   "two-pointer": {
     id: "two-pointer",
@@ -2977,14 +1889,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "hasPairWithSum(arr, target):\n  left = 0, right = arr.length - 1\n  while left < right:\n    curr = arr[left] + arr[right]\n    if curr == target: return true\n    else if curr < target: left++\n    else: right--\n  return false",
-    code: {
-      javascript:
-        "function hasPairWithSum(arr, target) {\n  let left = 0, right = arr.length - 1;\n  while (left < right) {\n    const sum = arr[left] + arr[right];\n    if (sum === target) return true;\n    else if (sum < target) left++;\n    else right--;\n  }\n  return false;\n}",
-      python:
-        "def has_pair_with_sum(arr, target):\n    left, right = 0, len(arr) - 1\n    while left < right:\n        curr_sum = arr[left] + arr[right]\n        if curr_sum == target:\n            return True\n        elif curr_sum < target:\n            left += 1\n        else:\n            right -= 1\n    return False",
-      java: "public class TwoPointer {\n    public static boolean hasPairWithSum(int[] arr, int target) {\n        int left = 0, right = arr.length - 1;\n        while (left < right) {\n            int sum = arr[left] + arr[right];\n            if (sum == target) return true;\n            else if (sum < target) left++;\n            else right--;\n        }\n        return false;\n    }\n}",
-      cpp: "bool hasPairWithSum(const vector<int>& arr, int target) {\n    int left = 0, right = arr.size() - 1;\n    while (left < right) {\n        int sum = arr[left] + arr[right];\n        if (sum == target) return true;\n        else if (sum < target) ++left;\n        else --right;\n    }\n    return false;\n}",
-    },
+    ccode: {
+    python:
+        "def has_pair_with_sum(arr, target):\n    left, right = 0, len(arr) - 1\n    while left < right:\n        curr_sum = arr[left] + arr[right]\n        if curr_sum == target:\n            return True\n        elif curr_sum < target:\n            left += 1\n        else:\n            right -= 1\n    return False"
+  },
   },
   "rotate-array": {
     id: "rotate-array",
@@ -3020,14 +1928,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "rotate(arr, k):\n  k = k % arr.length\n  reverse(arr, 0, arr.length - 1)\n  reverse(arr, 0, k - 1)\n  reverse(arr, k, arr.length - 1)",
-    code: {
-      javascript:
-        "function rotate(arr, k) {\n  k = k % arr.length;\n  const reverse = (s, e) => {\n    while (s < e) {\n      let tmp = arr[s]; arr[s] = arr[e]; arr[e] = tmp;\n      s++; e--;\n    }\n  };\n  reverse(0, arr.length - 1);\n  reverse(0, k - 1);\n  reverse(k, arr.length - 1);\n  return arr;\n}",
-      python:
-        "def rotate(arr, k):\n    n = len(arr)\n    k %= n\n    def reverse(start, end):\n        while start < end:\n            arr[start], arr[end] = arr[end], arr[start]\n            start += 1\n            end -= 1\n    reverse(0, n - 1)\n    reverse(0, k - 1)\n    reverse(k, n - 1)\n    return arr",
-      java: "public class RotateArray {\n    public static void rotate(int[] arr, int k) {\n        int n = arr.length;\n        k %= n;\n        reverse(arr, 0, n - 1);\n        reverse(arr, 0, k - 1);\n        reverse(arr, k, n - 1);\n    }\n    private static void reverse(int[] arr, int s, int e) {\n        while (s < e) {\n            int tmp = arr[s]; arr[s] = arr[e]; arr[e] = tmp;\n            s++; e--;\n        }\n    }\n}",
-      cpp: "void rotate(vector<int>& arr, int k) {\n    int n = arr.size();\n    k %= n;\n    reverse(arr.begin(), arr.end());\n    reverse(arr.begin(), arr.begin() + k);\n    reverse(arr.begin() + k, arr.end());\n}",
-    },
+    ccode: {
+    python:
+        "def rotate(arr, k):\n    n = len(arr)\n    k %= n\n    def reverse(start, end):\n        while start < end:\n            arr[start], arr[end] = arr[end], arr[start]\n            start += 1\n            end -= 1\n    reverse(0, n - 1)\n    reverse(0, k - 1)\n    reverse(k, n - 1)\n    return arr"
+  },
   },
   "merge-arrays": {
     id: "merge-arrays",
@@ -3057,14 +1961,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "merge(A, B):\n  i = 0, j = 0\n  res = []\n  while i < A.length and j < B.length:\n    if A[i] <= B[j]: res.push(A[i++])\n    else: res.push(B[j++])\n  append remaining items from A or B\n  return res",
-    code: {
-      javascript:
-        "function merge(arr1, arr2) {\n  let res = [], i = 0, j = 0;\n  while (i < arr1.length && j < arr2.length) {\n    if (arr1[i] <= arr2[j]) res.push(arr1[i++]);\n    else res.push(arr2[j++]);\n  }\n  while (i < arr1.length) res.push(arr1[i++]);\n  while (j < arr2.length) res.push(arr2[j++]);\n  return res;\n}",
-      python:
-        "def merge(arr1, arr2):\n    res, i, j = [], 0, 0\n    while i < len(arr1) and j < len(arr2):\n        if arr1[i] <= arr2[j]:\n            res.append(arr1[i])\n            i += 1\n        else:\n            res.append(arr2[j])\n            j += 1\n    res.extend(arr1[i:])\n    res.extend(arr2[j:])\n    return res",
-      java: "public class MergeArrays {\n    public static int[] merge(int[] A, int[] B) {\n        int[] res = new int[A.length + B.length];\n        int i = 0, j = 0, k = 0;\n        while (i < A.length && j < B.length) {\n            if (A[i] <= B[j]) res[k++] = A[i++];\n            else res[k++] = B[j++];\n        }\n        while (i < A.length) res[k++] = A[i++];\n        while (j < B.length) res[k++] = B[j++];\n        return res;\n    }\n}",
-      cpp: "vector<int> merge(const vector<int>& A, const vector<int>& B) {\n    vector<int> res;\n    size_t i = 0, j = 0;\n    while (i < A.size() && j < B.size()) {\n        if (A[i] <= B[j]) res.push_back(A[i++]);\n        else res.push_back(B[j++]);\n    }\n    while (i < A.size()) res.push_back(A[i++]);\n    while (j < B.size()) res.push_back(B[j++]);\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "def merge(arr1, arr2):\n    res, i, j = [], 0, 0\n    while i < len(arr1) and j < len(arr2):\n        if arr1[i] <= arr2[j]:\n            res.append(arr1[i])\n            i += 1\n        else:\n            res.append(arr2[j])\n            j += 1\n    res.extend(arr1[i:])\n    res.extend(arr2[j:])\n    return res"
+  },
   },
   "frequency-count": {
     id: "frequency-count",
@@ -3094,14 +1994,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "countFreq(arr):\n  freq = {}\n  for item in arr:\n    freq[item] = (freq[item] or 0) + 1\n  return freq",
-    code: {
-      javascript:
-        "function countFrequency(arr) {\n  const freq = {};\n  for (let val of arr) {\n    freq[val] = (freq[val] || 0) + 1;\n  }\n  return freq;\n}",
-      python:
-        "def count_frequency(arr):\n    freq = {}\n    for val in arr:\n        freq[val] = freq.get(val, 0) + 1\n    return freq",
-      java: "import java.util.HashMap;\npublic class Frequency {\n    public static HashMap<Integer, Integer> count(int[] arr) {\n        HashMap<Integer, Integer> map = new HashMap<>();\n        for (int x : arr) {\n            map.put(x, map.getOrDefault(x, 0) + 1);\n        }\n        return map;\n    }\n}",
-      cpp: "unordered_map<int, int> countFrequency(const vector<int>& arr) {\n    unordered_map<int, int> freq;\n    for (int x : arr) {\n        freq[x]++;\n    }\n    return freq;\n}",
-    },
+    ccode: {
+    python:
+        "def count_frequency(arr):\n    freq = {}\n    for val in arr:\n        freq[val] = freq.get(val, 0) + 1\n    return freq"
+  },
   },
   "linked-list-traversal": {
     id: "linked-list-traversal",
@@ -3134,14 +2030,10 @@ class MinHeap:
     inputType: "linked-list",
     pseudocode:
       "traverse(head):\n  curr = head\n  while curr != null:\n    process(curr.val)\n    curr = curr.next",
-    code: {
-      javascript:
-        "function traverse(head) {\n  let curr = head;\n  while (curr !== null) {\n    console.log(curr.val);\n    curr = curr.next;\n  }\n}",
-      python:
-        "def traverse(head):\n    curr = head\n    while curr:\n        print(curr.val)\n        curr = curr.next",
-      java: "public class LLTraversal {\n    public static void traverse(Node head) {\n        Node curr = head;\n        while (curr != null) {\n            System.out.println(curr.val);\n            curr = curr.next;\n        }\n    }\n}",
-      cpp: 'void traverse(Node* head) {\n    Node* curr = head;\n    while (curr != nullptr) {\n        cout << curr->val << " ";\n        curr = curr->next;\n    }\n}',
-    },
+    ccode: {
+    python:
+        "def traverse(head):\n    curr = head\n    while curr:\n        print(curr.val)\n        curr = curr.next"
+  },
   },
   "cycle-detection": {
     id: "cycle-detection",
@@ -3177,14 +2069,10 @@ class MinHeap:
     inputType: "linked-list",
     pseudocode:
       "hasCycle(head):\n  slow = head, fast = head\n  while fast != null and fast.next != null:\n    slow = slow.next\n    fast = fast.next.next\n    if slow == fast: return true\n  return false",
-    code: {
-      javascript:
-        "function hasCycle(head) {\n  let slow = head, fast = head;\n  while (fast && fast.next) {\n    slow = slow.next;\n    fast = fast.next.next;\n    if (slow === fast) return true;\n  }\n  return false;\n}",
-      python:
-        "def has_cycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow == fast:\n            return True\n    return False",
-      java: "public class CycleDetection {\n    public static boolean hasCycle(Node head) {\n        Node slow = head, fast = head;\n        while (fast != null && fast.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n            if (slow == fast) return true;\n        }\n        return false;\n    }\n}",
-      cpp: "bool hasCycle(Node* head) {\n    Node* slow = head; Node* fast = head;\n    while (fast != nullptr && fast->next != nullptr) {\n        slow = slow->next;\n        fast = fast->next->next;\n        if (slow == fast) return true;\n    }\n    return false;\n}",
-    },
+    ccode: {
+    python:
+        "def has_cycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow == fast:\n            return True\n    return False"
+  },
   },
   "middle-node": {
     id: "middle-node",
@@ -3214,14 +2102,10 @@ class MinHeap:
     inputType: "linked-list",
     pseudocode:
       "getMiddle(head):\n  slow = head, fast = head\n  while fast != null and fast.next != null:\n    slow = slow.next\n    fast = fast.next.next\n  return slow",
-    code: {
-      javascript:
-        "function getMiddle(head) {\n  let slow = head, fast = head;\n  while (fast && fast.next) {\n    slow = slow.next;\n    fast = fast.next.next;\n  }\n  return slow;\n}",
-      python:
-        "def get_middle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n    return slow",
-      java: "public class MiddleNode {\n    public static Node getMiddle(Node head) {\n        Node slow = head, fast = head;\n        while (fast != null && fast.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n        }\n        return slow;\n    }\n}",
-      cpp: "Node* getMiddle(Node* head) {\n    Node* slow = head;\n    Node* fast = head;\n    while (fast != nullptr && fast->next != nullptr) {\n        slow = slow->next;\n        fast = fast->next->next;\n    }\n    return slow;\n}",
-    },
+    ccode: {
+    python:
+        "def get_middle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n    return slow"
+  },
   },
   "stack-operations": {
     id: "stack-operations",
@@ -3248,14 +2132,10 @@ class MinHeap:
     inputType: "stack",
     pseudocode:
       "push(val):\n  stack.append(val)\npop():\n  return stack.removeLast()",
-    code: {
-      javascript:
-        "class Stack {\n  constructor() { this.items = []; }\n  push(x) { this.items.push(x); }\n  pop() { return this.items.pop(); }\n  peek() { return this.items[this.items.length - 1]; }\n}",
-      python:
-        "class Stack:\n    def __init__(self): self.items = []\n    def push(self, x): self.items.append(x)\n    def pop(self): return self.items.pop()\n    def peek(self): return self.items[-1]",
-      java: "import java.util.Stack;\n// standard java.util.Stack is used.",
-      cpp: "import <stack>;\n// std::stack is used.",
-    },
+    ccode: {
+    python:
+        "class Stack:\n    def __init__(self): self.items = []\n    def push(self, x): self.items.append(x)\n    def pop(self): return self.items.pop()\n    def peek(self): return self.items[-1]"
+  },
   },
   "next-greater-element": {
     id: "next-greater-element",
@@ -3287,14 +2167,10 @@ class MinHeap:
     inputType: "stack",
     pseudocode:
       "NGE(arr):\n  stack = [], res = new Array(arr.length, -1)\n  for i = 0 to arr.length - 1:\n    while stack not empty and arr[stack.top()] < arr[i]:\n      res[stack.pop()] = arr[i]\n    stack.push(i)\n  return res",
-    code: {
-      javascript:
-        "function nextGreaterElement(arr) {\n  const stack = [], res = new Array(arr.length).fill(-1);\n  for (let i = 0; i < arr.length; i++) {\n    while (stack.length > 0 && arr[stack[stack.length - 1]] < arr[i]) {\n      res[stack.pop()] = arr[i];\n    }\n    stack.push(i);\n  }\n  return res;\n}",
-      python:
-        "def next_greater_element(arr):\n    stack, res = [], [-1] * len(arr)\n    for i in range(len(arr)):\n        while stack and arr[stack[-1]] < arr[i]:\n            res[stack.pop()] = arr[i]\n        stack.append(i)\n    return res",
-      java: "import java.util.Stack;\npublic class NGE {\n    public static int[] find(int[] arr) {\n        int[] res = new int[arr.length];\n        Stack<Integer> stack = new Stack<>();\n        for (int i = 0; i < arr.length; i++) {\n            res[i] = -1;\n            while (!stack.isEmpty() && arr[stack.peek()] < arr[i]) {\n                res[stack.pop()] = arr[i];\n            }\n            stack.push(i);\n        }\n        return res;\n    }\n}",
-      cpp: "vector<int> nextGreaterElement(const vector<int>& arr) {\n    vector<int> res(arr.size(), -1);\n    stack<int> s;\n    for (size_t i = 0; i < arr.size(); ++i) {\n        while (!s.empty() && arr[s.top()] < arr[i]) {\n            res[s.top()] = arr[i];\n            s.pop();\n        }\n        s.push(i);\n    }\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "def next_greater_element(arr):\n    stack, res = [], [-1] * len(arr)\n    for i in range(len(arr)):\n        while stack and arr[stack[-1]] < arr[i]:\n            res[stack.pop()] = arr[i]\n        stack.append(i)\n    return res"
+  },
   },
   "circular-queue": {
     id: "circular-queue",
@@ -3327,14 +2203,10 @@ class MinHeap:
     inputType: "queue",
     pseudocode:
       "enqueue(val):\n  if (rear + 1) % size == front: Queue Full\n  else:\n    rear = (rear + 1) % size\n    items[rear] = val",
-    code: {
-      javascript:
-        "class CircularQueue {\n  constructor(k) {\n    this.size = k; this.queue = new Array(k);\n    this.front = -1; this.rear = -1;\n  }\n  enqueue(val) {\n    if ((this.rear + 1) % this.size === this.front) return false;\n    if (this.front === -1) this.front = 0;\n    this.rear = (this.rear + 1) % this.size;\n    this.queue[this.rear] = val;\n    return true;\n  }\n}",
-      python:
-        "class CircularQueue:\n    def __init__(self, k):\n        self.size = k\n        self.queue = [None] * k\n        self.front = self.rear = -1\n    def enqueue(self, val):\n        if (self.rear + 1) % self.size == self.front: return False\n        if self.front == -1: self.front = 0\n        self.rear = (self.rear + 1) % self.size\n        self.queue[self.rear] = val\n        return True",
-      java: "public class CircularQueue {\n    int[] q; int front = -1, rear = -1, size;\n    public CircularQueue(int k) { size = k; q = new int[k]; }\n    public boolean enqueue(int val) {\n        if ((rear + 1) % size == front) return false;\n        if (front == -1) front = 0;\n        rear = (rear + 1) % size;\n        q[rear] = val;\n        return true;\n    }\n}",
-      cpp: "class CircularQueue {\n    vector<int> q; int front = -1, rear = -1, size;\npublic:\n    CircularQueue(int k) { size = k; q.resize(k); }\n    bool enqueue(int val) {\n        if ((rear + 1) % size == front) return false;\n        if (front == -1) front = 0;\n        rear = (rear + 1) % size;\n        q[rear] = val;\n        return true;\n    }\n};",
-    },
+    ccode: {
+    python:
+        "class CircularQueue:\n    def __init__(self, k):\n        self.size = k\n        self.queue = [None] * k\n        self.front = self.rear = -1\n    def enqueue(self, val):\n        if (self.rear + 1) % self.size == self.front: return False\n        if self.front == -1: self.front = 0\n        self.rear = (self.rear + 1) % self.size\n        self.queue[self.rear] = val\n        return True"
+  },
   },
   "sliding-window-max": {
     id: "sliding-window-max",
@@ -3366,14 +2238,10 @@ class MinHeap:
     inputType: "queue",
     pseudocode:
       "maxSlidingWindow(arr, k):\n  deque = [] // stores indices\n  res = []\n  for i = 0 to arr.length - 1:\n    if deque.front() == i - k: deque.popFront()\n    while deque not empty and arr[deque.back()] < arr[i]: deque.popBack()\n    deque.pushBack(i)\n    if i >= k - 1: res.push(arr[deque.front()])\n  return res",
-    code: {
-      javascript:
-        "function maxSlidingWindow(arr, k) {\n  const deque = [], res = [];\n  for (let i = 0; i < arr.length; i++) {\n    if (deque.length > 0 && deque[0] === i - k) deque.shift();\n    while (deque.length > 0 && arr[deque[deque.length - 1]] < arr[i]) {\n      deque.pop();\n    }\n    deque.push(i);\n    if (i >= k - 1) res.push(arr[deque[0]]);\n  }\n  return res;\n}",
-      python:
-        "from collections import deque\ndef max_sliding_window(arr, k):\n    q, res = deque(), []\n    for i, x in enumerate(arr):\n        if q and q[0] == i - k: q.popleft()\n        while q and arr[q[-1]] < x: q.pop()\n        q.append(i)\n        if i >= k - 1: res.append(arr[q[0]])\n    return res",
-      java: "import java.util.Deque;\nimport java.util.LinkedList;\npublic class SlidingWindowMax {\n    public static int[] maxSlidingWindow(int[] arr, int k) {\n        if (arr.length == 0) return new int[0];\n        int[] res = new int[arr.length - k + 1];\n        Deque<Integer> q = new LinkedList<>();\n        int idx = 0;\n        for (int i = 0; i < arr.length; i++) {\n            if (!q.isEmpty() && q.peek() == i - k) q.poll();\n            while (!q.isEmpty() && arr[q.peekLast()] < arr[i]) q.pollLast();\n            q.offer(i);\n            if (i >= k - 1) res[idx++] = arr[q.peek()];\n        }\n        return res;\n    }\n}",
-      cpp: "vector<int> maxSlidingWindow(const vector<int>& arr, int k) {\n    vector<int> res; deque<int> q;\n    for (size_t i = 0; i < arr.size(); ++i) {\n        if (!q.empty() && q.front() == i - k) q.pop_front();\n        while (!q.empty() && arr[q.back()] < arr[i]) q.pop_back();\n        q.push_back(i);\n        if (i >= k - 1) res.push_back(arr[q.front()]);\n    }\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "from collections import deque\ndef max_sliding_window(arr, k):\n    q, res = deque(), []\n    for i, x in enumerate(arr):\n        if q and q[0] == i - k: q.popleft()\n        while q and arr[q[-1]] < x: q.pop()\n        q.append(i)\n        if i >= k - 1: res.append(arr[q[0]])\n    return res"
+  },
   },
   "topological-sort": {
     id: "topological-sort",
@@ -3408,14 +2276,10 @@ class MinHeap:
     inputType: "graph",
     pseudocode:
       "topoSort(graph):\n  visited = set()\n  stack = []\n  for node in graph:\n    if node not in visited:\n      dfs(node, visited, stack)\n  return stack.reverse()",
-    code: {
-      javascript:
-        "function topologicalSort(numNodes, adj) {\n  const visited = new Set(), stack = [];\n  function dfs(curr) {\n    visited.add(curr);\n    if (adj[curr]) {\n      for (let next of adj[curr]) {\n        if (!visited.has(next)) dfs(next);\n      }\n    }\n    stack.push(curr);\n  }\n  for (let i = 0; i < numNodes; i++) {\n    if (!visited.has(i)) dfs(i);\n  }\n  return stack.reverse();\n}",
-      python:
-        "def topological_sort(num_nodes, adj):\n    visited, stack = set(), []\n    def dfs(curr):\n        visited.add(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                dfs(neighbor)\n        stack.append(curr)\n    for i in range(num_nodes):\n        if i not in visited:\n            dfs(i)\n    return stack[::-1]",
-      java: "import java.util.ArrayList;\nimport java.util.Stack;\npublic class TopoSort {\n    public static void dfs(int curr, ArrayList<ArrayList<Integer>> adj, boolean[] visited, Stack<Integer> s) {\n        visited[curr] = true;\n        for (int next : adj.get(curr)) {\n            if (!visited[next]) dfs(next, adj, visited, s);\n        }\n        s.push(curr);\n    }\n}",
-      cpp: "void dfs(int curr, const vector<vector<int>>& adj, vector<bool>& visited, stack<int>& s) {\n    visited[curr] = true;\n    for (int next : adj[curr]) {\n        if (!visited[next]) dfs(next, adj, visited, s);\n    }\n    s.push(curr);\n}",
-    },
+    ccode: {
+    python:
+        "def topological_sort(num_nodes, adj):\n    visited, stack = set(), []\n    def dfs(curr):\n        visited.add(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                dfs(neighbor)\n        stack.append(curr)\n    for i in range(num_nodes):\n        if i not in visited:\n            dfs(i)\n    return stack[::-1]"
+  },
   },
   "hash-map": {
     id: "hash-map",
@@ -3453,14 +2317,10 @@ class MinHeap:
     inputType: "hash",
     pseudocode:
       "insert(key, value):\n  index = hash(key) % capacity\n  bucket = table[index]\n  update or append (key, value)",
-    code: {
-      javascript:
-        "class HashMap {\n  constructor() {\n    this.table = {};\n  }\n  put(key, value) {\n    this.table[key] = value;\n  }\n  get(key) {\n    return this.table[key];\n  }\n}",
-      python:
-        "class HashMap:\n    def __init__(self):\n        self.table = {}\n    def put(self, key, value):\n        self.table[key] = value\n    def get(self, key):\n        return self.table.get(key)",
-      java: "import java.util.HashMap;\n// Built-in java.util.HashMap is typically used.",
-      cpp: "import <unordered_map>;\n// std::unordered_map is typically used.",
-    },
+    ccode: {
+    python:
+        "class HashMap:\n    def __init__(self):\n        self.table = {}\n    def put(self, key, value):\n        self.table[key] = value\n    def get(self, key):\n        return self.table.get(key)"
+  },
   },
   "group-anagrams": {
     id: "group-anagrams",
@@ -3495,14 +2355,10 @@ class MinHeap:
     inputType: "strings",
     pseudocode:
       "groupAnagrams(strs):\n  map = {}\n  for s in strs:\n    key = sortChars(s)\n    map[key].append(s)\n  return map.values()",
-    code: {
-      javascript:
-        "function groupAnagrams(strs) {\n  const map = {};\n  for (let s of strs) {\n    const key = s.split('').sort().join('');\n    if (!map[key]) map[key] = [];\n    map[key].push(s);\n  }\n  return Object.values(map);\n}",
-      python:
-        'def group_anagrams(strs):\n    map_dict = {}\n    for s in strs:\n        key = "".join(sorted(s))\n        map_dict.setdefault(key, []).append(s)\n    return list(map_dict.values())',
-      java: "import java.util.*;\npublic class GroupAnagrams {\n    public static List<List<String>> group(String[] strs) {\n        Map<String, List<String>> map = new HashMap<>();\n        for (String s : strs) {\n            char[] arr = s.toCharArray();\n            Arrays.sort(arr);\n            String key = new String(arr);\n            map.putIfAbsent(key, new ArrayList<>());\n            map.get(key).add(s);\n        }\n        return new ArrayList<>(map.values());\n    }\n}",
-      cpp: "vector<vector<string>> groupAnagrams(const vector<string>& strs) {\n    unordered_map<string, vector<string>> map;\n    for (const string& s : strs) {\n        string key = s;\n        sort(key.begin(), key.end());\n        map[key].push_back(s);\n    }\n    vector<vector<string>> res;\n    for (auto& pair : map) res.push_back(pair.second);\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        'def group_anagrams(strs):\n    map_dict = {}\n    for s in strs:\n        key = "".join(sorted(s))\n        map_dict.setdefault(key, []).append(s)\n    return list(map_dict.values())'
+  },
   },
   "fibonacci-recursion": {
     id: "fibonacci-recursion",
@@ -3536,14 +2392,10 @@ class MinHeap:
     defaultInput: "5",
     inputType: "recursion",
     pseudocode: "fib(n):\n  if n <= 1: return n\n  return fib(n-1) + fib(n-2)",
-    code: {
-      javascript:
-        "function fib(n) {\n  if (n <= 1) return n;\n  return fib(n - 1) + fib(n - 2);\n}",
-      python:
-        "def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)",
-      java: "public class Fibonacci {\n    public static int fib(int n) {\n        if (n <= 1) return n;\n        return fib(n-1) + fib(n-2);\n    }\n}",
-      cpp: "int fib(int n) {\n    if (n <= 1) return n;\n    return fib(n - 1) + fib(n - 2);\n}",
-    },
+    ccode: {
+    python:
+        "def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)"
+  },
   },
   "n-queens": {
     id: "n-queens",
@@ -3578,14 +2430,10 @@ class MinHeap:
     inputType: "recursion",
     pseudocode:
       "solve(row, queens):\n  if row == N: return true\n  for col = 0 to N-1:\n    if isSafe(row, col, queens):\n      queens.push(row, col)\n      if solve(row + 1, queens): return true\n      queens.pop()\n  return false",
-    code: {
-      javascript:
-        "function solveNQueens(n) {\n  const board = Array.from({length: n}, () => Array(n).fill('.'));\n  const res = [];\n  function isSafe(r, c) {\n    for (let i = 0; i < r; i++) {\n      if (board[i][c] === 'Q') return false;\n      const diagL = c - (r - i), diagR = c + (r - i);\n      if (diagL >= 0 && board[i][diagL] === 'Q') return false;\n      if (diagR < n && board[i][diagR] === 'Q') return false;\n    }\n    return true;\n  }\n}",
-      python:
-        "def solve_n_queens(n):\n    res = []\n    board = [['.'] * n for _ in range(n)]\n    def is_safe(r, c):\n        for i in range(r):\n            if board[i][c] == 'Q': return False\n            if c - (r - i) >= 0 and board[i][c - (r - i)] == 'Q': return False\n            if c + (r - i) < n and board[i][c + (r - i)] == 'Q': return False\n        return True",
-      java: "// Backtracking search implementation for N-Queens.",
-      cpp: "// Backtracking search implementation for N-Queens.",
-    },
+    ccode: {
+    python:
+        "def solve_n_queens(n):\n    res = []\n    board = [['.'] * n for _ in range(n)]\n    def is_safe(r, c):\n        for i in range(r):\n            if board[i][c] == 'Q': return False\n            if c - (r - i) >= 0 and board[i][c - (r - i)] == 'Q': return False\n            if c + (r - i) < n and board[i][c + (r - i)] == 'Q': return False\n        return True"
+  },
   },
   "knapsack-dp": {
     id: "knapsack-dp",
@@ -3618,14 +2466,10 @@ class MinHeap:
     inputType: "dp",
     pseudocode:
       "knapsack(W, wt, val):\n  dp = 2D array size (N+1) x (W+1)\n  for i = 1 to N:\n    for w = 1 to W:\n      if wt[i-1] <= w:\n        dp[i][w] = max(val[i-1] + dp[i-1][w-wt[i-1]], dp[i-1][w])\n      else:\n        dp[i][w] = dp[i-1][w]\n  return dp[N][W]",
-    code: {
-      javascript:
-        "function knapsack(W, wt, val, n) {\n  const dp = Array.from({ length: n + 1 }, () => Array(W + 1).fill(0));\n  for (let i = 1; i <= n; i++) {\n    for (let w = 1; w <= W; w++) {\n      if (wt[i - 1] <= w) {\n        dp[i][w] = Math.max(val[i - 1] + dp[i - 1][w - wt[i - 1]], dp[i - 1][w]);\n      } else {\n        dp[i][w] = dp[i - 1][w];\n      }\n    }\n  }\n  return dp[n][W];\n}",
-      python:
-        "def knapsack(W, wt, val, n):\n    dp = [[0] * (W + 1) for _ in range(n + 1)]\n    for i in range(1, n + 1):\n        for w in range(1, W + 1):\n            if wt[i-1] <= w:\n                dp[i][w] = max(val[i-1] + dp[i-1][w - wt[i-1]], dp[i-1][w])\n            else:\n                dp[i][w] = dp[i-1][w]\n    return dp[n][W]",
-      java: "public class Knapsack {\n    public static int solve(int W, int[] wt, int[] val, int n) {\n        int[][] dp = new int[n + 1][W + 1];\n        for (int i = 1; i <= n; i++) {\n            for (int w = 1; w <= W; w++) {\n                if (wt[i - 1] <= w) {\n                    dp[i][w] = Math.max(val[i - 1] + dp[i - 1][w - wt[i - 1]], dp[i - 1][w]);\n                } else {\n                    dp[i][w] = dp[i - 1][w];\n                }\n            }\n        }\n        return dp[n][W];\n    }\n}",
-      cpp: "int knapsack(int W, const vector<int>& wt, const vector<int>& val, int n) {\n    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));\n    for (int i = 1; i <= n; ++i) {\n        for (int w = 1; w <= W; ++w) {\n            if (wt[i - 1] <= w) {\n                dp[i][w] = max(val[i - 1] + dp[i - 1][w - wt[i - 1]], dp[i - 1][w]);\n            } else {\n                dp[i][w] = dp[i - 1][w];\n            }\n        }\n    }\n    return dp[n][W];\n}",
-    },
+    ccode: {
+    python:
+        "def knapsack(W, wt, val, n):\n    dp = [[0] * (W + 1) for _ in range(n + 1)]\n    for i in range(1, n + 1):\n        for w in range(1, W + 1):\n            if wt[i-1] <= w:\n                dp[i][w] = max(val[i-1] + dp[i-1][w - wt[i-1]], dp[i-1][w])\n            else:\n                dp[i][w] = dp[i-1][w]\n    return dp[n][W]"
+  },
   },
   "coin-change-dp": {
     id: "coin-change-dp",
@@ -3658,14 +2502,10 @@ class MinHeap:
     inputType: "dp",
     pseudocode:
       "coinChange(coins, amount):\n  dp = array size amount + 1, fill infinity\n  dp[0] = 0\n  for coin in coins:\n    for i = coin to amount:\n      dp[i] = min(dp[i], dp[i - coin] + 1)\n  return dp[amount]",
-    code: {
-      javascript:
-        "function coinChange(coins, amount) {\n  const dp = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  for (let coin of coins) {\n    for (let i = coin; i <= amount; i++) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n  return dp[amount] === Infinity ? -1 : dp[amount];\n}",
-      python:
-        "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    for coin in coins:\n        for i in range(coin, amount + 1):\n            dp[i] = min(dp[i], dp[i - coin] + 1)\n    return dp[amount] if dp[amount] != float('inf') else -1",
-      java: "import java.util.Arrays;\npublic class CoinChange {\n    public static int solve(int[] coins, int amount) {\n        int[] dp = new int[amount + 1];\n        Arrays.fill(dp, amount + 1);\n        dp[0] = 0;\n        for (int coin : coins) {\n            for (int i = coin; i <= amount; i++) {\n                dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n            }\n        }\n        return dp[amount] > amount ? -1 : dp[amount];\n    }\n}",
-      cpp: "int coinChange(const vector<int>& coins, int amount) {\n    vector<int> dp(amount + 1, amount + 1);\n    dp[0] = 0;\n    for (int coin : coins) {\n        for (int i = coin; i <= amount; ++i) {\n            dp[i] = min(dp[i], dp[i - coin] + 1);\n        }\n    }\n    return dp[amount] > amount ? -1 : dp[amount];\n}",
-    },
+    ccode: {
+    python:
+        "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    for coin in coins:\n        for i in range(coin, amount + 1):\n            dp[i] = min(dp[i], dp[i - coin] + 1)\n    return dp[amount] if dp[amount] != float('inf') else -1"
+  },
   },
   "ternary-search": {
     id: "ternary-search",
@@ -3699,14 +2539,10 @@ class MinHeap:
     inputType: "search",
     pseudocode:
       "ternarySearch(arr, l, r, val):\n  if r >= l:\n    mid1 = l + (r - l) / 3\n    mid2 = r - (r - l) / 3\n    if arr[mid1] == val: return mid1\n    if arr[mid2] == val: return mid2\n    if val < arr[mid1]: return ternarySearch(arr, l, mid1 - 1, val)\n    else if val > arr[mid2]: return ternarySearch(arr, mid2 + 1, r, val)\n    else: return ternarySearch(arr, mid1 + 1, mid2 - 1, val)\n  return -1",
-    code: {
-      javascript:
-        "function ternarySearch(arr, target) {\n  let l = 0, r = arr.length - 1;\n  while (r >= l) {\n    const mid1 = l + Math.floor((r - l) / 3);\n    const mid2 = r - Math.floor((r - l) / 3);\n    if (arr[mid1] === target) return mid1;\n    if (arr[mid2] === target) return mid2;\n    if (target < arr[mid1]) r = mid1 - 1;\n    else if (target > arr[mid2]) l = mid2 + 1;\n    else { l = mid1 + 1; r = mid2 - 1; }\n  }\n  return -1;\n}",
-      python:
-        "def ternary_search(arr, target):\n    l, r = 0, len(arr) - 1\n    while r >= l:\n        mid1 = l + (r - l) // 3\n        mid2 = r - (r - l) // 3\n        if arr[mid1] == target: return mid1\n        if arr[mid2] == target: return mid2\n        if target < arr[mid1]: r = mid1 - 1\n        elif target > arr[mid2]: l = mid2 + 1\n        else:\n            l = mid1 + 1\n            r = mid2 - 1\n    return -1",
-      java: "public class TernarySearch {\n    public static int search(int[] arr, int target) {\n        int l = 0, r = arr.length - 1;\n        while (r >= l) {\n            int mid1 = l + (r - l) / 3;\n            int mid2 = r - (r - l) / 3;\n            if (arr[mid1] == target) return mid1;\n            if (arr[mid2] == target) return mid2;\n            if (target < arr[mid1]) r = mid1 - 1;\n            else if (target > arr[mid2]) l = mid2 + 1;\n            else { l = mid1 + 1; r = mid2 - 1; }\n        }\n        return -1;\n    }\n}",
-      cpp: "int ternarySearch(const vector<int>& arr, int target) {\n    int l = 0, r = arr.size() - 1;\n    while (r >= l) {\n        int mid1 = l + (r - l) / 3;\n        int mid2 = r - (r - l) / 3;\n        if (arr[mid1] == target) return mid1;\n        if (arr[mid2] == target) return mid2;\n        if (target < arr[mid1]) r = mid1 - 1;\n        else if (target > arr[mid2]) l = mid2 + 1;\n        else { l = mid1 + 1; r = mid2 - 1; }\n    }\n    return -1;\n}",
-    },
+    ccode: {
+    python:
+        "def ternary_search(arr, target):\n    l, r = 0, len(arr) - 1\n    while r >= l:\n        mid1 = l + (r - l) // 3\n        mid2 = r - (r - l) // 3\n        if arr[mid1] == target: return mid1\n        if arr[mid2] == target: return mid2\n        if target < arr[mid1]: r = mid1 - 1\n        elif target > arr[mid2]: l = mid2 + 1\n        else:\n            l = mid1 + 1\n            r = mid2 - 1\n    return -1"
+  },
   },
   bfs: {
     id: "bfs",
@@ -3740,14 +2576,10 @@ class MinHeap:
     inputType: "graph",
     pseudocode:
       "bfs(start, adj):\n  visited = set(start)\n  queue = [start]\n  while queue not empty:\n    curr = queue.popFront()\n    process(curr)\n    for next in adj[curr]:\n      if next not in visited:\n        visited.add(next)\n        queue.push(next)",
-    code: {
-      javascript:
-        "function bfs(start, adj, numNodes) {\n  const visited = new Set([start]), queue = [start], res = [];\n  while (queue.length > 0) {\n    const curr = queue.shift();\n    res.push(curr);\n    for (let neighbor of adj[curr] || []) {\n      if (!visited.has(neighbor)) {\n        visited.add(neighbor);\n        queue.push(neighbor);\n      }\n    }\n  }\n  return res;\n}",
-      python:
-        "from collections import deque\ndef bfs(start, adj):\n    visited, q = {start}, deque([start])\n    res = []\n    while q:\n        curr = q.popleft()\n        res.append(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                q.append(neighbor)\n    return res",
-      java: "import java.util.*;\npublic class BFS {\n    public static List<Integer> traverse(int start, List<List<Integer>> adj) {\n        List<Integer> res = new ArrayList<>();\n        boolean[] visited = new boolean[adj.size()];\n        Queue<Integer> q = new LinkedList<>();\n        q.add(start); visited[start] = true;\n        while (!q.isEmpty()) {\n            int curr = q.poll(); res.add(curr);\n            for (int neighbor : adj.get(curr)) {\n                if (!visited[neighbor]) {\n                    visited[neighbor] = true; q.add(neighbor);\n                }\n            }\n        }\n        return res;\n    }\n}",
-      cpp: "vector<int> bfs(int start, const vector<vector<int>>& adj) {\n    vector<int> res; vector<bool> visited(adj.size(), false);\n    queue<int> q; q.push(start); visited[start] = true;\n    while (!q.empty()) {\n        int curr = q.front(); q.pop(); res.push_back(curr);\n        for (int neighbor : adj[curr]) {\n            if (!visited[neighbor]) {\n                visited[neighbor] = true; q.push(neighbor);\n            }\n        }\n    }\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "from collections import deque\ndef bfs(start, adj):\n    visited, q = {start}, deque([start])\n    res = []\n    while q:\n        curr = q.popleft()\n        res.append(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                q.append(neighbor)\n    return res"
+  },
   },
   dfs: {
     id: "dfs",
@@ -3781,14 +2613,10 @@ class MinHeap:
     inputType: "graph",
     pseudocode:
       "dfs(curr, visited, adj):\n  visited.add(curr)\n  process(curr)\n  for neighbor in adj[curr]:\n    if neighbor not in visited:\n      dfs(neighbor, visited, adj)",
-    code: {
-      javascript:
-        "function dfs(start, adj) {\n  const visited = new Set(), res = [];\n  function traverse(curr) {\n    visited.add(curr);\n    res.push(curr);\n    for (let neighbor of adj[curr] || []) {\n      if (!visited.has(neighbor)) traverse(neighbor);\n    }\n  }\n  traverse(start);\n  return res;\n}",
-      python:
-        "def dfs(start, adj):\n    visited, res = set(), []\n    def traverse(curr):\n        visited.add(curr)\n        res.append(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                traverse(neighbor)\n    traverse(start)\n    return res",
-      java: "import java.util.*;\npublic class DFS {\n    public static void traverse(int curr, List<List<Integer>> adj, boolean[] visited, List<Integer> res) {\n        visited[curr] = true; res.add(curr);\n        for (int neighbor : adj.get(curr)) {\n            if (!visited[neighbor]) traverse(neighbor, adj, visited, res);\n        }\n    }\n}",
-      cpp: "void dfs(int curr, const vector<vector<int>>& adj, vector<bool>& visited, vector<int>& res) {\n    visited[curr] = true; res.push_back(curr);\n    for (int neighbor : adj[curr]) {\n        if (!visited[neighbor]) dfs(neighbor, adj, visited, res);\n    }\n}",
-    },
+    ccode: {
+    python:
+        "def dfs(start, adj):\n    visited, res = set(), []\n    def traverse(curr):\n        visited.add(curr)\n        res.append(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                traverse(neighbor)\n    traverse(start)\n    return res"
+  },
   },
   "bst-search": {
     id: "bst-search",
@@ -3822,14 +2650,10 @@ class MinHeap:
     inputType: "tree",
     pseudocode:
       "search(root, target):\n  if root == null or root.val == target: return root\n  if target < root.val: return search(root.left, target)\n  return search(root.right, target)",
-    code: {
-      javascript:
-        "function searchBST(root, target) {\n  if (!root || root.val === target) return root;\n  if (target < root.val) return searchBST(root.left, target);\n  return searchBST(root.right, target);\n}",
-      python:
-        "def search_bst(root, target):\n    if not root or root.val == target: return root\n    if target < root.val: return search_bst(root.left, target)\n    return search_bst(root.right, target)",
-      java: "public class BSTSearch {\n    public static Node search(Node root, int target) {\n        if (root == null || root.val == target) return root;\n        if (target < root.val) return search(root.left, target);\n        return search(root.right, target);\n    }\n}",
-      cpp: "Node* search(Node* root, int target) {\n    if (root == nullptr || root->val == target) return root;\n    if (target < root->val) return search(root->left, target);\n    return search(root->right, target);\n}",
-    },
+    ccode: {
+    python:
+        "def search_bst(root, target):\n    if not root or root.val == target: return root\n    if target < root.val: return search_bst(root.left, target)\n    return search_bst(root.right, target)"
+  },
   },
   "tree-height": {
     id: "tree-height",
@@ -3862,14 +2686,10 @@ class MinHeap:
     inputType: "tree",
     pseudocode:
       "getHeight(root):\n  if root == null: return 0\n  return 1 + max(getHeight(root.left), getHeight(root.right))",
-    code: {
-      javascript:
-        "function getHeight(root) {\n  if (!root) return 0;\n  return 1 + Math.max(getHeight(root.left), getHeight(root.right));\n}",
-      python:
-        "def get_height(root):\n    if not root: return 0\n    return 1 + max(get_height(root.left), get_height(root.right))",
-      java: "public class TreeHeight {\n    public static int getHeight(Node root) {\n        if (root == null) return 0;\n        return 1 + Math.max(getHeight(root.left), getHeight(root.right));\n    }\n}",
-      cpp: "int getHeight(Node* root) {\n    if (root == nullptr) return 0;\n    return 1 + max(getHeight(root->left), getHeight(root->right));\n}",
-    },
+    ccode: {
+    python:
+        "def get_height(root):\n    if not root: return 0\n    return 1 + max(get_height(root.left), get_height(root.right))"
+  },
   },
   lca: {
     id: "lca",
@@ -3904,14 +2724,10 @@ class MinHeap:
     inputType: "tree",
     pseudocode:
       "LCA(root, p, q):\n  if root == null or root == p or root == q: return root\n  left = LCA(root.left, p, q)\n  right = LCA(root.right, p, q)\n  if left and right: return root\n  return left ? left : right",
-    code: {
-      javascript:
-        "function lowestCommonAncestor(root, p, q) {\n  if (!root || root === p || root === q) return root;\n  const left = lowestCommonAncestor(root.left, p, q);\n  const right = lowestCommonAncestor(root.right, p, q);\n  if (left && right) return root;\n  return left ? left : right;\n}",
-      python:
-        "def lowest_common_ancestor(root, p, q):\n    if not root or root == p or root == q: return root\n    left = lowest_common_ancestor(root.left, p, q)\n    right = lowest_common_ancestor(root.right, p, q)\n    if left and right: return root\n    return left if left else right",
-      java: "public class LCA {\n    public static Node lowestCommonAncestor(Node root, Node p, Node q) {\n        if (root == null || root == p || root == q) return root;\n        Node left = lowestCommonAncestor(root.left, p, q);\n        Node right = lowestCommonAncestor(root.right, p, q);\n        if (left != null && right != null) return root;\n        return left != null ? left : right;\n    }\n}",
-      cpp: "Node* lowestCommonAncestor(Node* root, Node* p, Node* q) {\n    if (root == nullptr || root == p || root == q) return root;\n    Node* left = lowestCommonAncestor(root->left, p, q);\n    Node* right = lowestCommonAncestor(root->right, p, q);\n    if (left != nullptr && right != nullptr) return root;\n    return left != nullptr ? left : right;\n}",
-    },
+    ccode: {
+    python:
+        "def lowest_common_ancestor(root, p, q):\n    if not root or root == p or root == q: return root\n    left = lowest_common_ancestor(root.left, p, q)\n    right = lowest_common_ancestor(root.right, p, q)\n    if left and right: return root\n    return left if left else right"
+  },
   },
   "rat-in-a-maze": {
     id: "rat-in-a-maze",
@@ -3947,14 +2763,10 @@ class MinHeap:
     inputType: "grid",
     pseudocode:
       "solveMaze(maze, x, y, sol):\n  if x == N-1 and y == N-1: sol[x][y] = 1; return true\n  if isSafe(maze, x, y):\n    sol[x][y] = 1\n    if solveMaze(maze, x+1, y, sol): return true\n    if solveMaze(maze, x, y+1, sol): return true\n    sol[x][y] = 0 // backtrack\n  return false",
-    code: {
-      javascript:
-        "function solveMaze(maze) {\n  const n = maze.length;\n  const sol = Array.from({ length: n }, () => Array(n).fill(0));\n  function solve(x, y) {\n    if (x === n - 1 && y === n - 1) { sol[x][y] = 1; return true; }\n    if (x >= 0 && x < n && y >= 0 && y < n && maze[x][y] === 0) {\n      sol[x][y] = 1;\n      if (solve(x + 1, y)) return true;\n      if (solve(x, y + 1)) return true;\n      sol[x][y] = 0;\n    }\n    return false;\n  }\n  solve(0, 0);\n  return sol;\n}",
-      python:
-        "def solve_maze(maze):\n    n = len(maze)\n    sol = [[0]*n for _ in range(n)]\n    def solve(x, y):\n        if x == n - 1 and y == n - 1:\n            sol[x][y] = 1\n            return True\n        if 0 <= x < n and 0 <= y < n and maze[x][y] == 0:\n            sol[x][y] = 1\n            if solve(x + 1, y) or solve(x, y + 1):\n                return True\n            sol[x][y] = 0\n        return False\n    solve(0, 0)\n    return sol",
-      java: "public class Maze {\n    public static boolean solve(int[][] maze, int x, int y, int[][] sol, int n) {\n        if (x == n - 1 && y == n - 1) { sol[x][y] = 1; return true; }\n        if (x >= 0 && x < n && y >= 0 && y < n && maze[x][y] == 0) {\n            sol[x][y] = 1;\n            if (solve(maze, x + 1, y, sol, n)) return true;\n            if (solve(maze, x, y + 1, sol, n)) return true;\n            sol[x][y] = 0;\n        }\n        return false;\n    }\n}",
-      cpp: "bool solve(vector<vector<int>>& maze, int x, int y, vector<vector<int>>& sol, int n) {\n    if (x == n - 1 && y == n - 1) { sol[x][y] = 1; return true; }\n    if (x >= 0 && x < n && y >= 0 && y < n && maze[x][y] == 0) {\n        sol[x][y] = 1;\n        if (solve(maze, x + 1, y, sol, n)) return true;\n        if (solve(maze, x, y + 1, sol, n)) return true;\n        sol[x][y] = 0;\n    }\n    return false;\n}",
-    },
+    ccode: {
+    python:
+        "def solve_maze(maze):\n    n = len(maze)\n    sol = [[0]*n for _ in range(n)]\n    def solve(x, y):\n        if x == n - 1 and y == n - 1:\n            sol[x][y] = 1\n            return True\n        if 0 <= x < n and 0 <= y < n and maze[x][y] == 0:\n            sol[x][y] = 1\n            if solve(x + 1, y) or solve(x, y + 1):\n                return True\n            sol[x][y] = 0\n        return False\n    solve(0, 0)\n    return sol"
+  },
   },
   "sudoku-solver": {
     id: "sudoku-solver",
@@ -3990,14 +2802,10 @@ class MinHeap:
     inputType: "grid",
     pseudocode:
       "solveSudoku(board):\n  find empty cell (r, c)\n  if none: return true\n  for val = 1 to 4:\n    if isSafe(board, r, c, val):\n      board[r][c] = val\n      if solveSudoku(board): return true\n      board[r][c] = 0\n  return false",
-    code: {
-      javascript:
-        "function solveSudoku(board) {\n  const n = board.length;\n  function solve() {\n    for (let r = 0; r < n; r++) {\n      for (let c = 0; c < n; c++) {\n        if (board[r][c] === 0) {\n          for (let val = 1; val <= n; val++) {\n            if (isSafe(board, r, c, val)) {\n              board[r][c] = val;\n              if (solve()) return true;\n              board[r][c] = 0;\n            }\n          }\n          return false;\n        }\n      }\n    }\n    return true;\n  }\n  solve();\n  return board;\n}",
-      python:
-        "def solve_sudoku(board):\n    n = len(board)\n    def solve():\n        for r in range(n):\n            for c in range(n):\n                if board[r][c] == 0:\n                    for val in range(1, n + 1):\n                        if is_safe(board, r, c, val):\n                            board[r][c] = val\n                            if solve(): return True\n                            board[r][c] = 0\n                    return False\n        return True\n    solve()\n    return board",
-      java: "public class Sudoku {\n    public static boolean solve(int[][] board, int n) {\n        for (int r = 0; r < n; r++) {\n            for (int c = 0; c < n; c++) {\n                if (board[r][c] == 0) {\n                    for (int val = 1; val <= n; val++) {\n                        if (isSafe(board, r, c, val)) {\n                            board[r][c] = val;\n                            if (solve(board, n)) return true;\n                            board[r][c] = 0;\n                        }\n                    }\n                    return false;\n                }\n            }\n        }\n        return true;\n    }\n}",
-      cpp: "bool solve(vector<vector<int>>& board, int n) {\n    for (int r = 0; r < n; r++) {\n        for (int c = 0; c < n; c++) {\n            if (board[r][c] == 0) {\n                for (int val = 1; val <= n; val++) {\n                    if (isSafe(board, r, c, val)) {\n                        board[r][c] = val;\n                        if (solve(board, n)) return true;\n                        board[r][c] = 0;\n                    }\n                }\n                return false;\n            }\n        }\n    }\n    return true;\n}",
-    },
+    ccode: {
+    python:
+        "def solve_sudoku(board):\n    n = len(board)\n    def solve():\n        for r in range(n):\n            for c in range(n):\n                if board[r][c] == 0:\n                    for val in range(1, n + 1):\n                        if is_safe(board, r, c, val):\n                            board[r][c] = val\n                            if solve(): return True\n                            board[r][c] = 0\n                    return False\n        return True\n    solve()\n    return board"
+  },
   },
   "kmp-search": {
     id: "kmp-search",
@@ -4030,14 +2838,10 @@ class MinHeap:
     inputType: "string-pattern",
     pseudocode:
       "kmpSearch(txt, pat):\n  lps = computeLPS(pat)\n  i = 0, j = 0\n  while i < txt.length:\n    if txt[i] == pat[j]: i++; j++\n    if j == pat.length: report match; j = lps[j-1]\n    else if i < txt.length and txt[i] != pat[j]:\n      if j != 0: j = lps[j-1]\n      else: i++",
-    code: {
-      javascript:
-        "function kmpSearch(txt, pat) {\n  const lps = computeLPS(pat);\n  let i = 0, j = 0;\n  const indices = [];\n  while (i < txt.length) {\n    if (txt[i] === pat[j]) { i++; j++; }\n    if (j === pat.length) {\n      indices.push(i - j);\n      j = lps[j - 1];\n    } else if (i < txt.length && txt[i] !== pat[j]) {\n      if (j !== 0) j = lps[j - 1];\n      else i++;\n    }\n  }\n  return indices;\n}",
-      python:
-        "def kmp_search(txt, pat):\n    lps = compute_lps(pat)\n    i = j = 0\n    indices = []\n    while i < len(txt):\n        if txt[i] == pat[j]:\n            i += 1\n            j += 1\n        if j == len(pat):\n            indices.append(i - j)\n            j = lps[j - 1]\n        elif i < len(txt) and txt[i] != pat[j]:\n            if j != 0: j = lps[j - 1]\n            else: i += 1\n    return indices",
-      java: "public class KMP {\n    public static List<Integer> search(String txt, String pat) {\n        int[] lps = computeLPS(pat);\n        List<Integer> indices = new ArrayList<>();\n        int i = 0, j = 0;\n        while (i < txt.length()) {\n            if (txt.charAt(i) == pat.charAt(j)) { i++; j++; }\n            if (j == pat.length()) {\n                indices.add(i - j);\n                j = lps[j - 1];\n            } else if (i < txt.length() && txt.charAt(i) != pat.charAt(j)) {\n                if (j != 0) j = lps[j - 1];\n                else i++;\n            }\n        }\n        return indices;\n    }\n}",
-      cpp: "vector<int> search(string txt, string pat) {\n    vector<int> lps = computeLPS(pat);\n    vector<int> indices;\n    int i = 0, j = 0;\n    while (i < txt.length()) {\n        if (txt[i] == pat[j]) { i++; j++; }\n        if (j == pat.length()) {\n            indices.push_back(i - j);\n            j = lps[j - 1];\n        } else if (i < txt.length() && txt[i] != pat[j]) {\n            if (j != 0) j = lps[j - 1];\n            else i++;\n        }\n    }\n    return indices;\n}",
-    },
+    ccode: {
+    python:
+        "def kmp_search(txt, pat):\n    lps = compute_lps(pat)\n    i = j = 0\n    indices = []\n    while i < len(txt):\n        if txt[i] == pat[j]:\n            i += 1\n            j += 1\n        if j == len(pat):\n            indices.append(i - j)\n            j = lps[j - 1]\n        elif i < len(txt) and txt[i] != pat[j]:\n            if j != 0: j = lps[j - 1]\n            else: i += 1\n    return indices"
+  },
   },
   "longest-common-prefix": {
     id: "longest-common-prefix",
@@ -4069,14 +2873,10 @@ class MinHeap:
     inputType: "strings-list",
     pseudocode:
       'longestCommonPrefix(strs):\n  if strs empty: return ""\n  prefix = strs[0]\n  for i = 1 to strs.length - 1:\n    while strs[i] does not start with prefix:\n      prefix = prefix[0 to prefix.length - 2]\n  return prefix',
-    code: {
-      javascript:
-        'function longestCommonPrefix(strs) {\n  if (!strs.length) return "";\n  let prefix = strs[0];\n  for (let i = 1; i < strs.length; i++) {\n    while (strs[i].indexOf(prefix) !== 0) {\n      prefix = prefix.substring(0, prefix.length - 1);\n      if (!prefix) return "";\n    }\n  }\n  return prefix;\n}',
-      python:
-        'def longest_common_prefix(strs):\n    if not strs: return ""\n    prefix = strs[0]\n    for s in strs[1:]:\n        while not s.startswith(prefix):\n            prefix = prefix[:-1]\n            if not prefix: return ""\n    return prefix',
-      java: 'public class LCP {\n    public static String getLCP(String[] strs) {\n        if (strs.length == 0) return "";\n        String prefix = strs[0];\n        for (int i = 1; i < strs.length; i++) {\n            while (strs[i].indexOf(prefix) != 0) {\n                prefix = prefix.substring(0, prefix.length() - 1);\n                if (prefix.isEmpty()) return "";\n            }\n        }\n        return prefix;\n    }\n}',
-      cpp: 'string longestCommonPrefix(vector<string>& strs) {\n    if (strs.empty()) return "";\n    string prefix = strs[0];\n    for (size_t i = 1; i < strs.size(); ++i) {\n        while (strs[i].find(prefix) != 0) {\n            prefix = prefix.substr(0, prefix.length() - 1);\n            if (prefix.empty()) return "";\n        }\n    }\n    return prefix;\n}',
-    },
+    ccode: {
+    python:
+        'def longest_common_prefix(strs):\n    if not strs: return ""\n    prefix = strs[0]\n    for s in strs[1:]:\n        while not s.startswith(prefix):\n            prefix = prefix[:-1]\n            if not prefix: return ""\n    return prefix'
+  },
   },
   "prefix-sum": {
     id: "prefix-sum",
@@ -4112,14 +2912,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "prefixSum(arr):\n  prefix = new Array(arr.length)\n  prefix[0] = arr[0]\n  for i = 1 to arr.length - 1:\n    prefix[i] = prefix[i-1] + arr[i]\n  return prefix",
-    code: {
-      javascript:
-        "function prefixSum(arr) {\n  const prefix = new Array(arr.length);\n  prefix[0] = arr[0];\n  for (let i = 1; i < arr.length; i++) {\n    prefix[i] = prefix[i - 1] + arr[i];\n  }\n  return prefix;\n}",
-      python:
-        "def prefix_sum(arr):\n    prefix = [0] * len(arr)\n    prefix[0] = arr[0]\n    for i in range(1, len(arr)):\n        prefix[i] = prefix[i-1] + arr[i]\n    return prefix",
-      java: "public class PrefixSum {\n    public static int[] getPrefixSum(int[] arr) {\n        int[] prefix = new int[arr.length];\n        prefix[0] = arr[0];\n        for (int i = 1; i < arr.length; i++) {\n            prefix[i] = prefix[i - 1] + arr[i];\n        }\n        return prefix;\n    }\n}",
-      cpp: "vector<int> prefixSum(const vector<int>& arr) {\n    vector<int> prefix(arr.size());\n    prefix[0] = arr[0];\n    for (size_t i = 1; i < arr.size(); ++i) {\n        prefix[i] = prefix[i - 1] + arr[i];\n    }\n    return prefix;\n}",
-    },
+    ccode: {
+    python:
+        "def prefix_sum(arr):\n    prefix = [0] * len(arr)\n    prefix[0] = arr[0]\n    for i in range(1, len(arr)):\n        prefix[i] = prefix[i-1] + arr[i]\n    return prefix"
+  },
   },
   "sliding-window": {
     id: "sliding-window",
@@ -4155,14 +2951,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "slidingWindow(arr, k):\n  windowSum = sum of first k elements\n  maxSum = windowSum\n  for i = k to arr.length - 1:\n    windowSum += arr[i] - arr[i - k]\n    maxSum = max(maxSum, windowSum)\n  return maxSum",
-    code: {
-      javascript:
-        "function maxSubarraySum(arr, k) {\n  let windowSum = 0;\n  for (let i = 0; i < k; i++) windowSum += arr[i];\n  let maxSum = windowSum;\n  for (let i = k; i < arr.length; i++) {\n    windowSum += arr[i] - arr[i - k];\n    maxSum = Math.max(maxSum, windowSum);\n  }\n  return maxSum;\n}",
-      python:
-        "def max_subarray_sum(arr, k):\n    window_sum = sum(arr[:k])\n    max_sum = window_sum\n    for i in range(k, len(arr)):\n        window_sum += arr[i] - arr[i - k]\n        max_sum = max(max_sum, window_sum)\n    return max_sum",
-      java: "public class SlidingWindow {\n    public static int maxSubarraySum(int[] arr, int k) {\n        int windowSum = 0;\n        for (int i = 0; i < k; i++) windowSum += arr[i];\n        int maxSum = windowSum;\n        for (int i = k; i < arr.length; i++) {\n            windowSum += arr[i] - arr[i - k];\n            maxSum = Math.max(maxSum, windowSum);\n        }\n        return maxSum;\n    }\n}",
-      cpp: "int maxSubarraySum(const vector<int>& arr, int k) {\n    int windowSum = 0;\n    for (int i = 0; i < k; ++i) windowSum += arr[i];\n    int maxSum = windowSum;\n    for (size_t i = k; i < arr.size(); ++i) {\n        windowSum += arr[i] - arr[i - k];\n        maxSum = max(maxSum, windowSum);\n    }\n    return maxSum;\n}",
-    },
+    ccode: {
+    python:
+        "def max_subarray_sum(arr, k):\n    window_sum = sum(arr[:k])\n    max_sum = window_sum\n    for i in range(k, len(arr)):\n        window_sum += arr[i] - arr[i - k]\n        max_sum = max(max_sum, window_sum)\n    return max_sum"
+  },
   },
   "two-pointer": {
     id: "two-pointer",
@@ -4198,14 +2990,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "hasPairWithSum(arr, target):\n  left = 0, right = arr.length - 1\n  while left < right:\n    curr = arr[left] + arr[right]\n    if curr == target: return true\n    else if curr < target: left++\n    else: right--\n  return false",
-    code: {
-      javascript:
-        "function hasPairWithSum(arr, target) {\n  let left = 0, right = arr.length - 1;\n  while (left < right) {\n    const sum = arr[left] + arr[right];\n    if (sum === target) return true;\n    else if (sum < target) left++;\n    else right--;\n  }\n  return false;\n}",
-      python:
-        "def has_pair_with_sum(arr, target):\n    left, right = 0, len(arr) - 1\n    while left < right:\n        curr_sum = arr[left] + arr[right]\n        if curr_sum == target:\n            return True\n        elif curr_sum < target:\n            left += 1\n        else:\n            right -= 1\n    return False",
-      java: "public class TwoPointer {\n    public static boolean hasPairWithSum(int[] arr, int target) {\n        int left = 0, right = arr.length - 1;\n        while (left < right) {\n            int sum = arr[left] + arr[right];\n            if (sum == target) return true;\n            else if (sum < target) left++;\n            else right--;\n        }\n        return false;\n    }\n}",
-      cpp: "bool hasPairWithSum(const vector<int>& arr, int target) {\n    int left = 0, right = arr.size() - 1;\n    while (left < right) {\n        int sum = arr[left] + arr[right];\n        if (sum == target) return true;\n        else if (sum < target) ++left;\n        else --right;\n    }\n    return false;\n}",
-    },
+    ccode: {
+    python:
+        "def has_pair_with_sum(arr, target):\n    left, right = 0, len(arr) - 1\n    while left < right:\n        curr_sum = arr[left] + arr[right]\n        if curr_sum == target:\n            return True\n        elif curr_sum < target:\n            left += 1\n        else:\n            right -= 1\n    return False"
+  },
   },
   "rotate-array": {
     id: "rotate-array",
@@ -4241,14 +3029,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "rotate(arr, k):\n  k = k % arr.length\n  reverse(arr, 0, arr.length - 1)\n  reverse(arr, 0, k - 1)\n  reverse(arr, k, arr.length - 1)",
-    code: {
-      javascript:
-        "function rotate(arr, k) {\n  k = k % arr.length;\n  const reverse = (s, e) => {\n    while (s < e) {\n      let tmp = arr[s]; arr[s] = arr[e]; arr[e] = tmp;\n      s++; e--;\n    }\n  };\n  reverse(0, arr.length - 1);\n  reverse(0, k - 1);\n  reverse(k, arr.length - 1);\n  return arr;\n}",
-      python:
-        "def rotate(arr, k):\n    n = len(arr)\n    k %= n\n    def reverse(start, end):\n        while start < end:\n            arr[start], arr[end] = arr[end], arr[start]\n            start += 1\n            end -= 1\n    reverse(0, n - 1)\n    reverse(0, k - 1)\n    reverse(k, n - 1)\n    return arr",
-      java: "public class RotateArray {\n    public static void rotate(int[] arr, int k) {\n        int n = arr.length;\n        k %= n;\n        reverse(arr, 0, n - 1);\n        reverse(arr, 0, k - 1);\n        reverse(arr, k, n - 1);\n    }\n    private static void reverse(int[] arr, int s, int e) {\n        while (s < e) {\n            int tmp = arr[s]; arr[s] = arr[e]; arr[e] = tmp;\n            s++; e--;\n        }\n    }\n}",
-      cpp: "void rotate(vector<int>& arr, int k) {\n    int n = arr.size();\n    k %= n;\n    reverse(arr.begin(), arr.end());\n    reverse(arr.begin(), arr.begin() + k);\n    reverse(arr.begin() + k, arr.end());\n}",
-    },
+    ccode: {
+    python:
+        "def rotate(arr, k):\n    n = len(arr)\n    k %= n\n    def reverse(start, end):\n        while start < end:\n            arr[start], arr[end] = arr[end], arr[start]\n            start += 1\n            end -= 1\n    reverse(0, n - 1)\n    reverse(0, k - 1)\n    reverse(k, n - 1)\n    return arr"
+  },
   },
   "merge-arrays": {
     id: "merge-arrays",
@@ -4278,14 +3062,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "merge(A, B):\n  i = 0, j = 0\n  res = []\n  while i < A.length and j < B.length:\n    if A[i] <= B[j]: res.push(A[i++])\n    else: res.push(B[j++])\n  append remaining items from A or B\n  return res",
-    code: {
-      javascript:
-        "function merge(arr1, arr2) {\n  let res = [], i = 0, j = 0;\n  while (i < arr1.length && j < arr2.length) {\n    if (arr1[i] <= arr2[j]) res.push(arr1[i++]);\n    else res.push(arr2[j++]);\n  }\n  while (i < arr1.length) res.push(arr1[i++]);\n  while (j < arr2.length) res.push(arr2[j++]);\n  return res;\n}",
-      python:
-        "def merge(arr1, arr2):\n    res, i, j = [], 0, 0\n    while i < len(arr1) and j < len(arr2):\n        if arr1[i] <= arr2[j]:\n            res.append(arr1[i])\n            i += 1\n        else:\n            res.append(arr2[j])\n            j += 1\n    res.extend(arr1[i:])\n    res.extend(arr2[j:])\n    return res",
-      java: "public class MergeArrays {\n    public static int[] merge(int[] A, int[] B) {\n        int[] res = new int[A.length + B.length];\n        int i = 0, j = 0, k = 0;\n        while (i < A.length && j < B.length) {\n            if (A[i] <= B[j]) res[k++] = A[i++];\n            else res[k++] = B[j++];\n        }\n        while (i < A.length) res[k++] = A[i++];\n        while (j < B.length) res[k++] = B[j++];\n        return res;\n    }\n}",
-      cpp: "vector<int> merge(const vector<int>& A, const vector<int>& B) {\n    vector<int> res;\n    size_t i = 0, j = 0;\n    while (i < A.size() && j < B.size()) {\n        if (A[i] <= B[j]) res.push_back(A[i++]);\n        else res.push_back(B[j++]);\n    }\n    while (i < A.size()) res.push_back(A[i++]);\n    while (j < B.size()) res.push_back(B[j++]);\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "def merge(arr1, arr2):\n    res, i, j = [], 0, 0\n    while i < len(arr1) and j < len(arr2):\n        if arr1[i] <= arr2[j]:\n            res.append(arr1[i])\n            i += 1\n        else:\n            res.append(arr2[j])\n            j += 1\n    res.extend(arr1[i:])\n    res.extend(arr2[j:])\n    return res"
+  },
   },
   "frequency-count": {
     id: "frequency-count",
@@ -4315,14 +3095,10 @@ class MinHeap:
     inputType: "array",
     pseudocode:
       "countFreq(arr):\n  freq = {}\n  for item in arr:\n    freq[item] = (freq[item] or 0) + 1\n  return freq",
-    code: {
-      javascript:
-        "function countFrequency(arr) {\n  const freq = {};\n  for (let val of arr) {\n    freq[val] = (freq[val] || 0) + 1;\n  }\n  return freq;\n}",
-      python:
-        "def count_frequency(arr):\n    freq = {}\n    for val in arr:\n        freq[val] = freq.get(val, 0) + 1\n    return freq",
-      java: "import java.util.HashMap;\npublic class Frequency {\n    public static HashMap<Integer, Integer> count(int[] arr) {\n        HashMap<Integer, Integer> map = new HashMap<>();\n        for (int x : arr) {\n            map.put(x, map.getOrDefault(x, 0) + 1);\n        }\n        return map;\n    }\n}",
-      cpp: "unordered_map<int, int> countFrequency(const vector<int>& arr) {\n    unordered_map<int, int> freq;\n    for (int x : arr) {\n        freq[x]++;\n    }\n    return freq;\n}",
-    },
+    ccode: {
+    python:
+        "def count_frequency(arr):\n    freq = {}\n    for val in arr:\n        freq[val] = freq.get(val, 0) + 1\n    return freq"
+  },
   },
   "linked-list-traversal": {
     id: "linked-list-traversal",
@@ -4355,14 +3131,10 @@ class MinHeap:
     inputType: "linked-list",
     pseudocode:
       "traverse(head):\n  curr = head\n  while curr != null:\n    process(curr.val)\n    curr = curr.next",
-    code: {
-      javascript:
-        "function traverse(head) {\n  let curr = head;\n  while (curr !== null) {\n    console.log(curr.val);\n    curr = curr.next;\n  }\n}",
-      python:
-        "def traverse(head):\n    curr = head\n    while curr:\n        print(curr.val)\n        curr = curr.next",
-      java: "public class LLTraversal {\n    public static void traverse(Node head) {\n        Node curr = head;\n        while (curr != null) {\n            System.out.println(curr.val);\n            curr = curr.next;\n        }\n    }\n}",
-      cpp: 'void traverse(Node* head) {\n    Node* curr = head;\n    while (curr != nullptr) {\n        cout << curr->val << " ";\n        curr = curr->next;\n    }\n}',
-    },
+    ccode: {
+    python:
+        "def traverse(head):\n    curr = head\n    while curr:\n        print(curr.val)\n        curr = curr.next"
+  },
   },
   "cycle-detection": {
     id: "cycle-detection",
@@ -4398,14 +3170,10 @@ class MinHeap:
     inputType: "linked-list",
     pseudocode:
       "hasCycle(head):\n  slow = head, fast = head\n  while fast != null and fast.next != null:\n    slow = slow.next\n    fast = fast.next.next\n    if slow == fast: return true\n  return false",
-    code: {
-      javascript:
-        "function hasCycle(head) {\n  let slow = head, fast = head;\n  while (fast && fast.next) {\n    slow = slow.next;\n    fast = fast.next.next;\n    if (slow === fast) return true;\n  }\n  return false;\n}",
-      python:
-        "def has_cycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow == fast:\n            return True\n    return False",
-      java: "public class CycleDetection {\n    public static boolean hasCycle(Node head) {\n        Node slow = head, fast = head;\n        while (fast != null && fast.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n            if (slow == fast) return true;\n        }\n        return false;\n    }\n}",
-      cpp: "bool hasCycle(Node* head) {\n    Node* slow = head; Node* fast = head;\n    while (fast != nullptr && fast->next != nullptr) {\n        slow = slow->next;\n        fast = fast->next->next;\n        if (slow == fast) return true;\n    }\n    return false;\n}",
-    },
+    ccode: {
+    python:
+        "def has_cycle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        if slow == fast:\n            return True\n    return False"
+  },
   },
   "middle-node": {
     id: "middle-node",
@@ -4435,14 +3203,10 @@ class MinHeap:
     inputType: "linked-list",
     pseudocode:
       "getMiddle(head):\n  slow = head, fast = head\n  while fast != null and fast.next != null:\n    slow = slow.next\n    fast = fast.next.next\n  return slow",
-    code: {
-      javascript:
-        "function getMiddle(head) {\n  let slow = head, fast = head;\n  while (fast && fast.next) {\n    slow = slow.next;\n    fast = fast.next.next;\n  }\n  return slow;\n}",
-      python:
-        "def get_middle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n    return slow",
-      java: "public class MiddleNode {\n    public static Node getMiddle(Node head) {\n        Node slow = head, fast = head;\n        while (fast != null && fast.next != null) {\n            slow = slow.next;\n            fast = fast.next.next;\n        }\n        return slow;\n    }\n}",
-      cpp: "Node* getMiddle(Node* head) {\n    Node* slow = head;\n    Node* fast = head;\n    while (fast != nullptr && fast->next != nullptr) {\n        slow = slow->next;\n        fast = fast->next->next;\n    }\n    return slow;\n}",
-    },
+    ccode: {
+    python:
+        "def get_middle(head):\n    slow = fast = head\n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n    return slow"
+  },
   },
   "stack-operations": {
     id: "stack-operations",
@@ -4469,14 +3233,10 @@ class MinHeap:
     inputType: "stack",
     pseudocode:
       "push(val):\n  stack.append(val)\npop():\n  return stack.removeLast()",
-    code: {
-      javascript:
-        "class Stack {\n  constructor() { this.items = []; }\n  push(x) { this.items.push(x); }\n  pop() { return this.items.pop(); }\n  peek() { return this.items[this.items.length - 1]; }\n}",
-      python:
-        "class Stack:\n    def __init__(self): self.items = []\n    def push(self, x): self.items.append(x)\n    def pop(self): return self.items.pop()\n    def peek(self): return self.items[-1]",
-      java: "import java.util.Stack;\n// standard java.util.Stack is used.",
-      cpp: "import <stack>;\n// std::stack is used.",
-    },
+    ccode: {
+    python:
+        "class Stack:\n    def __init__(self): self.items = []\n    def push(self, x): self.items.append(x)\n    def pop(self): return self.items.pop()\n    def peek(self): return self.items[-1]"
+  },
   },
   "next-greater-element": {
     id: "next-greater-element",
@@ -4508,14 +3268,10 @@ class MinHeap:
     inputType: "stack",
     pseudocode:
       "NGE(arr):\n  stack = [], res = new Array(arr.length, -1)\n  for i = 0 to arr.length - 1:\n    while stack not empty and arr[stack.top()] < arr[i]:\n      res[stack.pop()] = arr[i]\n    stack.push(i)\n  return res",
-    code: {
-      javascript:
-        "function nextGreaterElement(arr) {\n  const stack = [], res = new Array(arr.length).fill(-1);\n  for (let i = 0; i < arr.length; i++) {\n    while (stack.length > 0 && arr[stack[stack.length - 1]] < arr[i]) {\n      res[stack.pop()] = arr[i];\n    }\n    stack.push(i);\n  }\n  return res;\n}",
-      python:
-        "def next_greater_element(arr):\n    stack, res = [], [-1] * len(arr)\n    for i in range(len(arr)):\n        while stack and arr[stack[-1]] < arr[i]:\n            res[stack.pop()] = arr[i]\n        stack.append(i)\n    return res",
-      java: "import java.util.Stack;\npublic class NGE {\n    public static int[] find(int[] arr) {\n        int[] res = new int[arr.length];\n        Stack<Integer> stack = new Stack<>();\n        for (int i = 0; i < arr.length; i++) {\n            res[i] = -1;\n            while (!stack.isEmpty() && arr[stack.peek()] < arr[i]) {\n                res[stack.pop()] = arr[i];\n            }\n            stack.push(i);\n        }\n        return res;\n    }\n}",
-      cpp: "vector<int> nextGreaterElement(const vector<int>& arr) {\n    vector<int> res(arr.size(), -1);\n    stack<int> s;\n    for (size_t i = 0; i < arr.size(); ++i) {\n        while (!s.empty() && arr[s.top()] < arr[i]) {\n            res[s.top()] = arr[i];\n            s.pop();\n        }\n        s.push(i);\n    }\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "def next_greater_element(arr):\n    stack, res = [], [-1] * len(arr)\n    for i in range(len(arr)):\n        while stack and arr[stack[-1]] < arr[i]:\n            res[stack.pop()] = arr[i]\n        stack.append(i)\n    return res"
+  },
   },
   "circular-queue": {
     id: "circular-queue",
@@ -4548,14 +3304,10 @@ class MinHeap:
     inputType: "queue",
     pseudocode:
       "enqueue(val):\n  if (rear + 1) % size == front: Queue Full\n  else:\n    rear = (rear + 1) % size\n    items[rear] = val",
-    code: {
-      javascript:
-        "class CircularQueue {\n  constructor(k) {\n    this.size = k; this.queue = new Array(k);\n    this.front = -1; this.rear = -1;\n  }\n  enqueue(val) {\n    if ((this.rear + 1) % this.size === this.front) return false;\n    if (this.front === -1) this.front = 0;\n    this.rear = (this.rear + 1) % this.size;\n    this.queue[this.rear] = val;\n    return true;\n  }\n}",
-      python:
-        "class CircularQueue:\n    def __init__(self, k):\n        self.size = k\n        self.queue = [None] * k\n        self.front = self.rear = -1\n    def enqueue(self, val):\n        if (self.rear + 1) % self.size == self.front: return False\n        if self.front == -1: self.front = 0\n        self.rear = (self.rear + 1) % self.size\n        self.queue[self.rear] = val\n        return True",
-      java: "public class CircularQueue {\n    int[] q; int front = -1, rear = -1, size;\n    public CircularQueue(int k) { size = k; q = new int[k]; }\n    public boolean enqueue(int val) {\n        if ((rear + 1) % size == front) return false;\n        if (front == -1) front = 0;\n        rear = (rear + 1) % size;\n        q[rear] = val;\n        return true;\n    }\n}",
-      cpp: "class CircularQueue {\n    vector<int> q; int front = -1, rear = -1, size;\npublic:\n    CircularQueue(int k) { size = k; q.resize(k); }\n    bool enqueue(int val) {\n        if ((rear + 1) % size == front) return false;\n        if (front == -1) front = 0;\n        rear = (rear + 1) % size;\n        q[rear] = val;\n        return true;\n    }\n};",
-    },
+    ccode: {
+    python:
+        "class CircularQueue:\n    def __init__(self, k):\n        self.size = k\n        self.queue = [None] * k\n        self.front = self.rear = -1\n    def enqueue(self, val):\n        if (self.rear + 1) % self.size == self.front: return False\n        if self.front == -1: self.front = 0\n        self.rear = (self.rear + 1) % self.size\n        self.queue[self.rear] = val\n        return True"
+  },
   },
   "sliding-window-max": {
     id: "sliding-window-max",
@@ -4587,14 +3339,10 @@ class MinHeap:
     inputType: "queue",
     pseudocode:
       "maxSlidingWindow(arr, k):\n  deque = [] // stores indices\n  res = []\n  for i = 0 to arr.length - 1:\n    if deque.front() == i - k: deque.popFront()\n    while deque not empty and arr[deque.back()] < arr[i]: deque.popBack()\n    deque.pushBack(i)\n    if i >= k - 1: res.push(arr[deque.front()])\n  return res",
-    code: {
-      javascript:
-        "function maxSlidingWindow(arr, k) {\n  const deque = [], res = [];\n  for (let i = 0; i < arr.length; i++) {\n    if (deque.length > 0 && deque[0] === i - k) deque.shift();\n    while (deque.length > 0 && arr[deque[deque.length - 1]] < arr[i]) {\n      deque.pop();\n    }\n    deque.push(i);\n    if (i >= k - 1) res.push(arr[deque[0]]);\n  }\n  return res;\n}",
-      python:
-        "from collections import deque\ndef max_sliding_window(arr, k):\n    q, res = deque(), []\n    for i, x in enumerate(arr):\n        if q and q[0] == i - k: q.popleft()\n        while q and arr[q[-1]] < x: q.pop()\n        q.append(i)\n        if i >= k - 1: res.append(arr[q[0]])\n    return res",
-      java: "import java.util.Deque;\nimport java.util.LinkedList;\npublic class SlidingWindowMax {\n    public static int[] maxSlidingWindow(int[] arr, int k) {\n        if (arr.length == 0) return new int[0];\n        int[] res = new int[arr.length - k + 1];\n        Deque<Integer> q = new LinkedList<>();\n        int idx = 0;\n        for (int i = 0; i < arr.length; i++) {\n            if (!q.isEmpty() && q.peek() == i - k) q.poll();\n            while (!q.isEmpty() && arr[q.peekLast()] < arr[i]) q.pollLast();\n            q.offer(i);\n            if (i >= k - 1) res[idx++] = arr[q.peek()];\n        }\n        return res;\n    }\n}",
-      cpp: "vector<int> maxSlidingWindow(const vector<int>& arr, int k) {\n    vector<int> res; deque<int> q;\n    for (size_t i = 0; i < arr.size(); ++i) {\n        if (!q.empty() && q.front() == i - k) q.pop_front();\n        while (!q.empty() && arr[q.back()] < arr[i]) q.pop_back();\n        q.push_back(i);\n        if (i >= k - 1) res.push_back(arr[q.front()]);\n    }\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "from collections import deque\ndef max_sliding_window(arr, k):\n    q, res = deque(), []\n    for i, x in enumerate(arr):\n        if q and q[0] == i - k: q.popleft()\n        while q and arr[q[-1]] < x: q.pop()\n        q.append(i)\n        if i >= k - 1: res.append(arr[q[0]])\n    return res"
+  },
   },
   "topological-sort": {
     id: "topological-sort",
@@ -4629,14 +3377,10 @@ class MinHeap:
     inputType: "graph",
     pseudocode:
       "topoSort(graph):\n  visited = set()\n  stack = []\n  for node in graph:\n    if node not in visited:\n      dfs(node, visited, stack)\n  return stack.reverse()",
-    code: {
-      javascript:
-        "function topologicalSort(numNodes, adj) {\n  const visited = new Set(), stack = [];\n  function dfs(curr) {\n    visited.add(curr);\n    if (adj[curr]) {\n      for (let next of adj[curr]) {\n        if (!visited.has(next)) dfs(next);\n      }\n    }\n    stack.push(curr);\n  }\n  for (let i = 0; i < numNodes; i++) {\n    if (!visited.has(i)) dfs(i);\n  }\n  return stack.reverse();\n}",
-      python:
-        "def topological_sort(num_nodes, adj):\n    visited, stack = set(), []\n    def dfs(curr):\n        visited.add(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                dfs(neighbor)\n        stack.append(curr)\n    for i in range(num_nodes):\n        if i not in visited:\n            dfs(i)\n    return stack[::-1]",
-      java: "import java.util.ArrayList;\nimport java.util.Stack;\npublic class TopoSort {\n    public static void dfs(int curr, ArrayList<ArrayList<Integer>> adj, boolean[] visited, Stack<Integer> s) {\n        visited[curr] = true;\n        for (int next : adj.get(curr)) {\n            if (!visited[next]) dfs(next, adj, visited, s);\n        }\n        s.push(curr);\n    }\n}",
-      cpp: "void dfs(int curr, const vector<vector<int>>& adj, vector<bool>& visited, stack<int>& s) {\n    visited[curr] = true;\n    for (int next : adj[curr]) {\n        if (!visited[next]) dfs(next, adj, visited, s);\n    }\n    s.push(curr);\n}",
-    },
+    ccode: {
+    python:
+        "def topological_sort(num_nodes, adj):\n    visited, stack = set(), []\n    def dfs(curr):\n        visited.add(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                dfs(neighbor)\n        stack.append(curr)\n    for i in range(num_nodes):\n        if i not in visited:\n            dfs(i)\n    return stack[::-1]"
+  },
   },
   "hash-map": {
     id: "hash-map",
@@ -4674,14 +3418,10 @@ class MinHeap:
     inputType: "hash",
     pseudocode:
       "insert(key, value):\n  index = hash(key) % capacity\n  bucket = table[index]\n  update or append (key, value)",
-    code: {
-      javascript:
-        "class HashMap {\n  constructor() {\n    this.table = {};\n  }\n  put(key, value) {\n    this.table[key] = value;\n  }\n  get(key) {\n    return this.table[key];\n  }\n}",
-      python:
-        "class HashMap:\n    def __init__(self):\n        self.table = {}\n    def put(self, key, value):\n        self.table[key] = value\n    def get(self, key):\n        return self.table.get(key)",
-      java: "import java.util.HashMap;\n// Built-in java.util.HashMap is typically used.",
-      cpp: "import <unordered_map>;\n// std::unordered_map is typically used.",
-    },
+    ccode: {
+    python:
+        "class HashMap:\n    def __init__(self):\n        self.table = {}\n    def put(self, key, value):\n        self.table[key] = value\n    def get(self, key):\n        return self.table.get(key)"
+  },
   },
   "longest-palindromic-substring": {
     id: "longest-palindromic-substring",
@@ -4718,31 +3458,8 @@ class MinHeap:
       start = i - (max_len - 1) / 2
       end = i + max_len / 2
   return s[start .. end]`,
-    code: {
-      javascript: `function longestPalindrome(s) {
-  if (!s) return "";
-  let start = 0, end = 0;
-  
-  function expand(l, r) {
-    while (l >= 0 && r < s.length && s[l] === s[r]) {
-      l--;
-      r++;
-    }
-    return r - l - 1;
-  }
-  
-  for (let i = 0; i < s.length; i++) {
-    let len1 = expand(i, i);
-    let len2 = expand(i, i + 1);
-    let maxLen = Math.max(len1, len2);
-    if (maxLen > end - start + 1) {
-      start = i - Math.floor((maxLen - 1) / 2);
-      end = i + Math.floor(maxLen / 2);
-    }
-  }
-  return s.slice(start, end + 1);
-}`,
-      python: `def longest_palindrome(s):
+    ccode: {
+    python: `def longest_palindrome(s):
     if not s: return ""
     start, end = 0, 0
     
@@ -4759,53 +3476,8 @@ class MinHeap:
             start = i - (max_len - 1) // 2
             end = i + max_len // 2
             
-    return s[start : end + 1]`,
-      java: `public class LongestPalindrome {
-    public static String longestPalindrome(String s) {
-        if (s == null || s.length() < 1) return "";
-        int start = 0, end = 0;
-        for (int i = 0; i < s.length(); i++) {
-            int len1 = expand(s, i, i);
-            int len2 = expand(s, i, i + 1);
-            int maxLen = Math.max(len1, len2);
-            if (maxLen > end - start + 1) {
-                start = i - (maxLen - 1) / 2;
-                end = i + maxLen / 2;
-            }
-        }
-        return s.substring(start, end + 1);
-    }
-    private static int expand(String s, int l, int r) {
-        while (l >= 0 && r < s.length() && s.charAt(l) == s.charAt(r)) {
-            l--; r++;
-        }
-        return r - l - 1;
-    }
-}`,
-      cpp: `#include <string>
-#include <algorithm>
-using namespace std;
-int expandAroundCenter(const string& s, int l, int r) {
-    while (l >= 0 && r < s.length() && s[l] == s[r]) {
-        l--; r++;
-    }
-    return r - l - 1;
-}
-string longestPalindrome(string s) {
-    if (s.empty()) return "";
-    int start = 0, end = 0;
-    for (int i = 0; i < s.length(); ++i) {
-        int len1 = expandAroundCenter(s, i, i);
-        int len2 = expandAroundCenter(s, i, i + 1);
-        int maxLen = max(len1, len2);
-        if (maxLen > (end - start + 1)) {
-            start = i - (maxLen - 1) / 2;
-            end = i + maxLen / 2;
-        }
-    }
-    return s.substr(start, end - start + 1);
-}`,
-    },
+    return s[start : end + 1]`
+  },
   },
   "string-concatenation": {
     id: "string-concatenation",
@@ -4840,34 +3512,15 @@ string longestPalindrome(string s) {
   for char in s2:
     res += char
   return res`,
-    code: {
-      javascript: `function concatenate(s1, s2) {
-  return s1 + s2;
-}`,
-      python: `def concatenate(s1, s2):
+    ccode: {
+    python: `def concatenate(s1, s2):
     res = ""
     for char in s1:
         res += char
     for char in s2:
         res += char
-    return res`,
-      java: `public class StringConcatenation {
-    public static String concatenate(String s1, String s2) {
-        StringBuilder sb = new StringBuilder();
-        for (char c : s1.toCharArray()) sb.append(c);
-        for (char c : s2.toCharArray()) sb.append(c);
-        return sb.toString();
-    }
-}`,
-      cpp: `#include <string>
-using namespace std;
-string concatenate(const string& s1, const string& s2) {
-    string res = "";
-    for (char c : s1) res += c;
-    for (char c : s2) res += c;
-    return res;
-}`,
-    },
+    return res`
+  },
   },
   "string-traversal": {
     id: "string-traversal",
@@ -4895,36 +3548,13 @@ string concatenate(const string& s1, const string& s2) {
   for i = 0 to length(s) - 1:
     char = s[i]
     process(char)`,
-    code: {
-      javascript: `function traverseString(s) {
-  for (let i = 0; i < s.length; i++) {
-    let char = s[i];
-    console.log(char);
-  }
-}`,
-      python: `def traverse_string(s):
+    ccode: {
+    python: `def traverse_string(s):
     n = len(s)
     for i in range(n):
         char = s[i]
-        # Process char`,
-      java: `public class StringTraversal {
-    public static void traverse(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            System.out.println(c);
-        }
-    }
-}`,
-      cpp: `#include <string>
-#include <iostream>
-using namespace std;
-void traverseString(const string& s) {
-    for (int i = 0; i < s.length(); ++i) {
-        char c = s[i];
-        cout << c << endl;
-    }
-}`,
-    },
+        # Process char`
+  },
   },
   "group-anagrams": {
     id: "group-anagrams",
@@ -4959,14 +3589,10 @@ void traverseString(const string& s) {
     inputType: "strings",
     pseudocode:
       "groupAnagrams(strs):\n  map = {}\n  for s in strs:\n    key = sortChars(s)\n    map[key].append(s)\n  return map.values()",
-    code: {
-      javascript:
-        "function groupAnagrams(strs) {\n  const map = {};\n  for (let s of strs) {\n    const key = s.split('').sort().join('');\n    if (!map[key]) map[key] = [];\n    map[key].push(s);\n  }\n  return Object.values(map);\n}",
-      python:
-        'def group_anagrams(strs):\n    map_dict = {}\n    for s in strs:\n        key = "".join(sorted(s))\n        map_dict.setdefault(key, []).append(s)\n    return list(map_dict.values())',
-      java: "import java.util.*;\npublic class GroupAnagrams {\n    public static List<List<String>> group(String[] strs) {\n        Map<String, List<String>> map = new HashMap<>();\n        for (String s : strs) {\n            char[] arr = s.toCharArray();\n            Arrays.sort(arr);\n            String key = new String(arr);\n            map.putIfAbsent(key, new ArrayList<>());\n            map.get(key).add(s);\n        }\n        return new ArrayList<>(map.values());\n    }\n}",
-      cpp: "vector<vector<string>> groupAnagrams(const vector<string>& strs) {\n    unordered_map<string, vector<string>> map;\n    for (const string& s : strs) {\n        string key = s;\n        sort(key.begin(), key.end());\n        map[key].push_back(s);\n    }\n    vector<vector<string>> res;\n    for (auto& pair : map) res.push_back(pair.second);\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        'def group_anagrams(strs):\n    map_dict = {}\n    for s in strs:\n        key = "".join(sorted(s))\n        map_dict.setdefault(key, []).append(s)\n    return list(map_dict.values())'
+  },
   },
   "fibonacci-recursion": {
     id: "fibonacci-recursion",
@@ -5000,14 +3626,10 @@ void traverseString(const string& s) {
     defaultInput: "5",
     inputType: "recursion",
     pseudocode: "fib(n):\n  if n <= 1: return n\n  return fib(n-1) + fib(n-2)",
-    code: {
-      javascript:
-        "function fib(n) {\n  if (n <= 1) return n;\n  return fib(n - 1) + fib(n - 2);\n}",
-      python:
-        "def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)",
-      java: "public class Fibonacci {\n    public static int fib(int n) {\n        if (n <= 1) return n;\n        return fib(n-1) + fib(n-2);\n    }\n}",
-      cpp: "int fib(int n) {\n    if (n <= 1) return n;\n    return fib(n - 1) + fib(n - 2);\n}",
-    },
+    ccode: {
+    python:
+        "def fib(n):\n    if n <= 1: return n\n    return fib(n-1) + fib(n-2)"
+  },
   },
   "n-queens": {
     id: "n-queens",
@@ -5042,14 +3664,10 @@ void traverseString(const string& s) {
     inputType: "recursion",
     pseudocode:
       "solve(row, queens):\n  if row == N: return true\n  for col = 0 to N-1:\n    if isSafe(row, col, queens):\n      queens.push(row, col)\n      if solve(row + 1, queens): return true\n      queens.pop()\n  return false",
-    code: {
-      javascript:
-        "function solveNQueens(n) {\n  const board = Array.from({length: n}, () => Array(n).fill('.'));\n  const res = [];\n  function isSafe(r, c) {\n    for (let i = 0; i < r; i++) {\n      if (board[i][c] === 'Q') return false;\n      const diagL = c - (r - i), diagR = c + (r - i);\n      if (diagL >= 0 && board[i][diagL] === 'Q') return false;\n      if (diagR < n && board[i][diagR] === 'Q') return false;\n    }\n    return true;\n  }\n}",
-      python:
-        "def solve_n_queens(n):\n    res = []\n    board = [['.'] * n for _ in range(n)]\n    def is_safe(r, c):\n        for i in range(r):\n            if board[i][c] == 'Q': return False\n            if c - (r - i) >= 0 and board[i][c - (r - i)] == 'Q': return False\n            if c + (r - i) < n and board[i][c + (r - i)] == 'Q': return False\n        return True",
-      java: "// Backtracking search implementation for N-Queens.",
-      cpp: "// Backtracking search implementation for N-Queens.",
-    },
+    ccode: {
+    python:
+        "def solve_n_queens(n):\n    res = []\n    board = [['.'] * n for _ in range(n)]\n    def is_safe(r, c):\n        for i in range(r):\n            if board[i][c] == 'Q': return False\n            if c - (r - i) >= 0 and board[i][c - (r - i)] == 'Q': return False\n            if c + (r - i) < n and board[i][c + (r - i)] == 'Q': return False\n        return True"
+  },
   },
   "knapsack-dp": {
     id: "knapsack-dp",
@@ -5082,14 +3700,10 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "knapsack(W, wt, val):\n  dp = 2D array size (N+1) x (W+1)\n  for i = 1 to N:\n    for w = 1 to W:\n      if wt[i-1] <= w:\n        dp[i][w] = max(val[i-1] + dp[i-1][w-wt[i-1]], dp[i-1][w])\n      else:\n        dp[i][w] = dp[i-1][w]\n  return dp[N][W]",
-    code: {
-      javascript:
-        "function knapsack(W, wt, val, n) {\n  const dp = Array.from({ length: n + 1 }, () => Array(W + 1).fill(0));\n  for (let i = 1; i <= n; i++) {\n    for (let w = 1; w <= W; w++) {\n      if (wt[i - 1] <= w) {\n        dp[i][w] = Math.max(val[i - 1] + dp[i - 1][w - wt[i - 1]], dp[i - 1][w]);\n      } else {\n        dp[i][w] = dp[i - 1][w];\n      }\n    }\n  }\n  return dp[n][W];\n}",
-      python:
-        "def knapsack(W, wt, val, n):\n    dp = [[0] * (W + 1) for _ in range(n + 1)]\n    for i in range(1, n + 1):\n        for w in range(1, W + 1):\n            if wt[i-1] <= w:\n                dp[i][w] = max(val[i-1] + dp[i-1][w - wt[i-1]], dp[i-1][w])\n            else:\n                dp[i][w] = dp[i-1][w]\n    return dp[n][W]",
-      java: "public class Knapsack {\n    public static int solve(int W, int[] wt, int[] val, int n) {\n        int[][] dp = new int[n + 1][W + 1];\n        for (int i = 1; i <= n; i++) {\n            for (int w = 1; w <= W; w++) {\n                if (wt[i - 1] <= w) {\n                    dp[i][w] = Math.max(val[i - 1] + dp[i - 1][w - wt[i - 1]], dp[i - 1][w]);\n                } else {\n                    dp[i][w] = dp[i - 1][w];\n                }\n            }\n        }\n        return dp[n][W];\n    }\n}",
-      cpp: "int knapsack(int W, const vector<int>& wt, const vector<int>& val, int n) {\n    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));\n    for (int i = 1; i <= n; ++i) {\n        for (int w = 1; w <= W; ++w) {\n            if (wt[i - 1] <= w) {\n                dp[i][w] = max(val[i - 1] + dp[i - 1][w - wt[i - 1]], dp[i - 1][w]);\n            } else {\n                dp[i][w] = dp[i - 1][w];\n            }\n        }\n    }\n    return dp[n][W];\n}",
-    },
+    ccode: {
+    python:
+        "def knapsack(W, wt, val, n):\n    dp = [[0] * (W + 1) for _ in range(n + 1)]\n    for i in range(1, n + 1):\n        for w in range(1, W + 1):\n            if wt[i-1] <= w:\n                dp[i][w] = max(val[i-1] + dp[i-1][w - wt[i-1]], dp[i-1][w])\n            else:\n                dp[i][w] = dp[i-1][w]\n    return dp[n][W]"
+  },
   },
   "coin-change-dp": {
     id: "coin-change-dp",
@@ -5122,14 +3736,10 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "coinChange(coins, amount):\n  dp = array size amount + 1, fill infinity\n  dp[0] = 0\n  for coin in coins:\n    for i = coin to amount:\n      dp[i] = min(dp[i], dp[i - coin] + 1)\n  return dp[amount]",
-    code: {
-      javascript:
-        "function coinChange(coins, amount) {\n  const dp = new Array(amount + 1).fill(Infinity);\n  dp[0] = 0;\n  for (let coin of coins) {\n    for (let i = coin; i <= amount; i++) {\n      dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n    }\n  }\n  return dp[amount] === Infinity ? -1 : dp[amount];\n}",
-      python:
-        "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    for coin in coins:\n        for i in range(coin, amount + 1):\n            dp[i] = min(dp[i], dp[i - coin] + 1)\n    return dp[amount] if dp[amount] != float('inf') else -1",
-      java: "import java.util.Arrays;\npublic class CoinChange {\n    public static int solve(int[] coins, int amount) {\n        int[] dp = new int[amount + 1];\n        Arrays.fill(dp, amount + 1);\n        dp[0] = 0;\n        for (int coin : coins) {\n            for (int i = coin; i <= amount; i++) {\n                dp[i] = Math.min(dp[i], dp[i - coin] + 1);\n            }\n        }\n        return dp[amount] > amount ? -1 : dp[amount];\n    }\n}",
-      cpp: "int coinChange(const vector<int>& coins, int amount) {\n    vector<int> dp(amount + 1, amount + 1);\n    dp[0] = 0;\n    for (int coin : coins) {\n        for (int i = coin; i <= amount; ++i) {\n            dp[i] = min(dp[i], dp[i - coin] + 1);\n        }\n    }\n    return dp[amount] > amount ? -1 : dp[amount];\n}",
-    },
+    ccode: {
+    python:
+        "def coin_change(coins, amount):\n    dp = [float('inf')] * (amount + 1)\n    dp[0] = 0\n    for coin in coins:\n        for i in range(coin, amount + 1):\n            dp[i] = min(dp[i], dp[i - coin] + 1)\n    return dp[amount] if dp[amount] != float('inf') else -1"
+  },
   },
   "ternary-search": {
     id: "ternary-search",
@@ -5163,14 +3773,10 @@ void traverseString(const string& s) {
     inputType: "search",
     pseudocode:
       "ternarySearch(arr, l, r, val):\n  if r >= l:\n    mid1 = l + (r - l) / 3\n    mid2 = r - (r - l) / 3\n    if arr[mid1] == val: return mid1\n    if arr[mid2] == val: return mid2\n    if val < arr[mid1]: return ternarySearch(arr, l, mid1 - 1, val)\n    else if val > arr[mid2]: return ternarySearch(arr, mid2 + 1, r, val)\n    else: return ternarySearch(arr, mid1 + 1, mid2 - 1, val)\n  return -1",
-    code: {
-      javascript:
-        "function ternarySearch(arr, target) {\n  let l = 0, r = arr.length - 1;\n  while (r >= l) {\n    const mid1 = l + Math.floor((r - l) / 3);\n    const mid2 = r - Math.floor((r - l) / 3);\n    if (arr[mid1] === target) return mid1;\n    if (arr[mid2] === target) return mid2;\n    if (target < arr[mid1]) r = mid1 - 1;\n    else if (target > arr[mid2]) l = mid2 + 1;\n    else { l = mid1 + 1; r = mid2 - 1; }\n  }\n  return -1;\n}",
-      python:
-        "def ternary_search(arr, target):\n    l, r = 0, len(arr) - 1\n    while r >= l:\n        mid1 = l + (r - l) // 3\n        mid2 = r - (r - l) // 3\n        if arr[mid1] == target: return mid1\n        if arr[mid2] == target: return mid2\n        if target < arr[mid1]: r = mid1 - 1\n        elif target > arr[mid2]: l = mid2 + 1\n        else:\n            l = mid1 + 1\n            r = mid2 - 1\n    return -1",
-      java: "public class TernarySearch {\n    public static int search(int[] arr, int target) {\n        int l = 0, r = arr.length - 1;\n        while (r >= l) {\n            int mid1 = l + (r - l) / 3;\n            int mid2 = r - (r - l) / 3;\n            if (arr[mid1] == target) return mid1;\n            if (arr[mid2] == target) return mid2;\n            if (target < arr[mid1]) r = mid1 - 1;\n            else if (target > arr[mid2]) l = mid2 + 1;\n            else { l = mid1 + 1; r = mid2 - 1; }\n        }\n        return -1;\n    }\n}",
-      cpp: "int ternarySearch(const vector<int>& arr, int target) {\n    int l = 0, r = arr.size() - 1;\n    while (r >= l) {\n        int mid1 = l + (r - l) / 3;\n        int mid2 = r - (r - l) / 3;\n        if (arr[mid1] == target) return mid1;\n        if (arr[mid2] == target) return mid2;\n        if (target < arr[mid1]) r = mid1 - 1;\n        else if (target > arr[mid2]) l = mid2 + 1;\n        else { l = mid1 + 1; r = mid2 - 1; }\n    }\n    return -1;\n}",
-    },
+    ccode: {
+    python:
+        "def ternary_search(arr, target):\n    l, r = 0, len(arr) - 1\n    while r >= l:\n        mid1 = l + (r - l) // 3\n        mid2 = r - (r - l) // 3\n        if arr[mid1] == target: return mid1\n        if arr[mid2] == target: return mid2\n        if target < arr[mid1]: r = mid1 - 1\n        elif target > arr[mid2]: l = mid2 + 1\n        else:\n            l = mid1 + 1\n            r = mid2 - 1\n    return -1"
+  },
   },
   bfs: {
     id: "bfs",
@@ -5204,14 +3810,10 @@ void traverseString(const string& s) {
     inputType: "graph",
     pseudocode:
       "bfs(start, adj):\n  visited = set(start)\n  queue = [start]\n  while queue not empty:\n    curr = queue.popFront()\n    process(curr)\n    for next in adj[curr]:\n      if next not in visited:\n        visited.add(next)\n        queue.push(next)",
-    code: {
-      javascript:
-        "function bfs(start, adj, numNodes) {\n  const visited = new Set([start]), queue = [start], res = [];\n  while (queue.length > 0) {\n    const curr = queue.shift();\n    res.push(curr);\n    for (let neighbor of adj[curr] || []) {\n      if (!visited.has(neighbor)) {\n        visited.add(neighbor);\n        queue.push(neighbor);\n      }\n    }\n  }\n  return res;\n}",
-      python:
-        "from collections import deque\ndef bfs(start, adj):\n    visited, q = {start}, deque([start])\n    res = []\n    while q:\n        curr = q.popleft()\n        res.append(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                q.append(neighbor)\n    return res",
-      java: "import java.util.*;\npublic class BFS {\n    public static List<Integer> traverse(int start, List<List<Integer>> adj) {\n        List<Integer> res = new ArrayList<>();\n        boolean[] visited = new boolean[adj.size()];\n        Queue<Integer> q = new LinkedList<>();\n        q.add(start); visited[start] = true;\n        while (!q.isEmpty()) {\n            int curr = q.poll(); res.add(curr);\n            for (int neighbor : adj.get(curr)) {\n                if (!visited[neighbor]) {\n                    visited[neighbor] = true; q.add(neighbor);\n                }\n            }\n        }\n        return res;\n    }\n}",
-      cpp: "vector<int> bfs(int start, const vector<vector<int>>& adj) {\n    vector<int> res; vector<bool> visited(adj.size(), false);\n    queue<int> q; q.push(start); visited[start] = true;\n    while (!q.empty()) {\n        int curr = q.front(); q.pop(); res.push_back(curr);\n        for (int neighbor : adj[curr]) {\n            if (!visited[neighbor]) {\n                visited[neighbor] = true; q.push(neighbor);\n            }\n        }\n    }\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "from collections import deque\ndef bfs(start, adj):\n    visited, q = {start}, deque([start])\n    res = []\n    while q:\n        curr = q.popleft()\n        res.append(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                visited.add(neighbor)\n                q.append(neighbor)\n    return res"
+  },
   },
   dfs: {
     id: "dfs",
@@ -5245,14 +3847,10 @@ void traverseString(const string& s) {
     inputType: "graph",
     pseudocode:
       "dfs(curr, visited, adj):\n  visited.add(curr)\n  process(curr)\n  for neighbor in adj[curr]:\n    if neighbor not in visited:\n      dfs(neighbor, visited, adj)",
-    code: {
-      javascript:
-        "function dfs(start, adj) {\n  const visited = new Set(), res = [];\n  function traverse(curr) {\n    visited.add(curr);\n    res.push(curr);\n    for (let neighbor of adj[curr] || []) {\n      if (!visited.has(neighbor)) traverse(neighbor);\n    }\n  }\n  traverse(start);\n  return res;\n}",
-      python:
-        "def dfs(start, adj):\n    visited, res = set(), []\n    def traverse(curr):\n        visited.add(curr)\n        res.append(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                traverse(neighbor)\n    traverse(start)\n    return res",
-      java: "import java.util.*;\npublic class DFS {\n    public static void traverse(int curr, List<List<Integer>> adj, boolean[] visited, List<Integer> res) {\n        visited[curr] = true; res.add(curr);\n        for (int neighbor : adj.get(curr)) {\n            if (!visited[neighbor]) traverse(neighbor, adj, visited, res);\n        }\n    }\n}",
-      cpp: "void dfs(int curr, const vector<vector<int>>& adj, vector<bool>& visited, vector<int>& res) {\n    visited[curr] = true; res.push_back(curr);\n    for (int neighbor : adj[curr]) {\n        if (!visited[neighbor]) dfs(neighbor, adj, visited, res);\n    }\n}",
-    },
+    ccode: {
+    python:
+        "def dfs(start, adj):\n    visited, res = set(), []\n    def traverse(curr):\n        visited.add(curr)\n        res.append(curr)\n        for neighbor in adj.get(curr, []):\n            if neighbor not in visited:\n                traverse(neighbor)\n    traverse(start)\n    return res"
+  },
   },
   "bst-search": {
     id: "bst-search",
@@ -5286,14 +3884,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "search(root, target):\n  if root == null or root.val == target: return root\n  if target < root.val: return search(root.left, target)\n  return search(root.right, target)",
-    code: {
-      javascript:
-        "function searchBST(root, target) {\n  if (!root || root.val === target) return root;\n  if (target < root.val) return searchBST(root.left, target);\n  return searchBST(root.right, target);\n}",
-      python:
-        "def search_bst(root, target):\n    if not root or root.val == target: return root\n    if target < root.val: return search_bst(root.left, target)\n    return search_bst(root.right, target)",
-      java: "public class BSTSearch {\n    public static Node search(Node root, int target) {\n        if (root == null || root.val == target) return root;\n        if (target < root.val) return search(root.left, target);\n        return search(root.right, target);\n    }\n}",
-      cpp: "Node* search(Node* root, int target) {\n    if (root == nullptr || root->val == target) return root;\n    if (target < root->val) return search(root->left, target);\n    return search(root->right, target);\n}",
-    },
+    ccode: {
+    python:
+        "def search_bst(root, target):\n    if not root or root.val == target: return root\n    if target < root.val: return search_bst(root.left, target)\n    return search_bst(root.right, target)"
+  },
   },
   "tree-height": {
     id: "tree-height",
@@ -5326,14 +3920,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "getHeight(root):\n  if root == null: return 0\n  return 1 + max(getHeight(root.left), getHeight(root.right))",
-    code: {
-      javascript:
-        "function getHeight(root) {\n  if (!root) return 0;\n  return 1 + Math.max(getHeight(root.left), getHeight(root.right));\n}",
-      python:
-        "def get_height(root):\n    if not root: return 0\n    return 1 + max(get_height(root.left), get_height(root.right))",
-      java: "public class TreeHeight {\n    public static int getHeight(Node root) {\n        if (root == null) return 0;\n        return 1 + Math.max(getHeight(root.left), getHeight(root.right));\n    }\n}",
-      cpp: "int getHeight(Node* root) {\n    if (root == nullptr) return 0;\n    return 1 + max(getHeight(root->left), getHeight(root->right));\n}",
-    },
+    ccode: {
+    python:
+        "def get_height(root):\n    if not root: return 0\n    return 1 + max(get_height(root.left), get_height(root.right))"
+  },
   },
   lca: {
     id: "lca",
@@ -5368,14 +3958,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "LCA(root, p, q):\n  if root == null or root == p or root == q: return root\n  left = LCA(root.left, p, q)\n  right = LCA(root.right, p, q)\n  if left and right: return root\n  return left ? left : right",
-    code: {
-      javascript:
-        "function lowestCommonAncestor(root, p, q) {\n  if (!root || root === p || root === q) return root;\n  const left = lowestCommonAncestor(root.left, p, q);\n  const right = lowestCommonAncestor(root.right, p, q);\n  if (left && right) return root;\n  return left ? left : right;\n}",
-      python:
-        "def lowest_common_ancestor(root, p, q):\n    if not root or root == p or root == q: return root\n    left = lowest_common_ancestor(root.left, p, q)\n    right = lowest_common_ancestor(root.right, p, q)\n    if left and right: return root\n    return left if left else right",
-      java: "public class LCA {\n    public static Node lowestCommonAncestor(Node root, Node p, Node q) {\n        if (root == null || root == p || root == q) return root;\n        Node left = lowestCommonAncestor(root.left, p, q);\n        Node right = lowestCommonAncestor(root.right, p, q);\n        if (left != null && right != null) return root;\n        return left != null ? left : right;\n    }\n}",
-      cpp: "Node* lowestCommonAncestor(Node* root, Node* p, Node* q) {\n    if (root == nullptr || root == p || root == q) return root;\n    Node* left = lowestCommonAncestor(root->left, p, q);\n    Node* right = lowestCommonAncestor(root->right, p, q);\n    if (left != nullptr && right != nullptr) return root;\n    return left != nullptr ? left : right;\n}",
-    },
+    ccode: {
+    python:
+        "def lowest_common_ancestor(root, p, q):\n    if not root or root == p or root == q: return root\n    left = lowest_common_ancestor(root.left, p, q)\n    right = lowest_common_ancestor(root.right, p, q)\n    if left and right: return root\n    return left if left else right"
+  },
   },
   "activity-selection": {
     id: "activity-selection",
@@ -5408,14 +3994,10 @@ void traverseString(const string& s) {
     inputType: "greedy-interval",
     pseudocode:
       "activitySelection(activities):\n  sort activities by finish time\n  selected = [activities[0]]\n  lastFinish = activities[0].finish\n  for i = 1 to n-1:\n    if activities[i].start >= lastFinish:\n      selected.push(activities[i])\n      lastFinish = activities[i].finish\n  return selected",
-    code: {
-      javascript:
-        "function activitySelection(activities) {\n  activities.sort((a, b) => a.finish - b.finish);\n  const selected = [activities[0]];\n  let lastFinish = activities[0].finish;\n  for (let i = 1; i < activities.length; i++) {\n    if (activities[i].start >= lastFinish) {\n      selected.push(activities[i]);\n      lastFinish = activities[i].finish;\n    }\n  }\n  return selected;\n}",
-      python:
-        "def activity_selection(activities):\n    activities.sort(key=lambda x: x['finish'])\n    selected = [activities[0]]\n    last_finish = activities[0]['finish']\n    for act in activities[1:]:\n        if act['start'] >= last_finish:\n            selected.append(act)\n            last_finish = act['finish']\n    return selected",
-      java: "public class ActivitySelection {\n    public static List<Activity> select(List<Activity> list) {\n        list.sort(Comparator.comparingInt(a -> a.finish));\n        List<Activity> selected = new ArrayList<>();\n        selected.add(list.get(0));\n        int lastFinish = list.get(0).finish;\n        for (int i = 1; i < list.size(); i++) {\n            if (list.get(i).start >= lastFinish) {\n                selected.add(list.get(i));\n                lastFinish = list.get(i).finish;\n            }\n        }\n        return selected;\n    }\n}",
-      cpp: "vector<Activity> select(vector<Activity>& list) {\n    sort(list.begin(), list.end(), [](const Activity& a, const Activity& b) {\n        return a.finish < b.finish;\n    });\n    vector<Activity> selected = {list[0]};\n    int lastFinish = list[0].finish;\n    for (size_t i = 1; i < list.size(); ++i) {\n        if (list[i].start >= lastFinish) {\n            selected.push_back(list[i]);\n            lastFinish = list[i].finish;\n        }\n    }\n    return selected;\n}",
-    },
+    ccode: {
+    python:
+        "def activity_selection(activities):\n    activities.sort(key=lambda x: x['finish'])\n    selected = [activities[0]]\n    last_finish = activities[0]['finish']\n    for act in activities[1:]:\n        if act['start'] >= last_finish:\n            selected.append(act)\n            last_finish = act['finish']\n    return selected"
+  },
   },
   "fractional-knapsack": {
     id: "fractional-knapsack",
@@ -5447,14 +4029,10 @@ void traverseString(const string& s) {
     inputType: "greedy-ratio",
     pseudocode:
       "fractionalKnapsack(val, wt, W):\n  sort items by ratio = val/wt descending\n  totalVal = 0, currWt = 0\n  for item in items:\n    if currWt + item.wt <= W:\n      currWt += item.wt\n      totalVal += item.val\n    else:\n      fraction = (W - currWt) / item.wt\n      totalVal += item.val * fraction\n      break\n  return totalVal",
-    code: {
-      javascript:
-        "function knapsack(items, W) {\n  items.sort((a, b) => (b.val / b.wt) - (a.val / a.wt));\n  let totalVal = 0, currWt = 0;\n  for (let item of items) {\n    if (currWt + item.wt <= W) {\n      currWt += item.wt;\n      totalVal += item.val;\n    } else {\n      let remain = W - currWt;\n      totalVal += item.val * (remain / item.wt);\n      break;\n    }\n  }\n  return totalVal;\n}",
-      python:
-        "def knapsack(items, W):\n    items.sort(key=lambda x: x['val']/x['wt'], reverse=True)\n    total_val = 0.0\n    curr_wt = 0\n    for item in items:\n        if curr_wt + item['wt'] <= W:\n            curr_wt += item['wt']\n            total_val += item['val']\n        else:\n            remain = W - curr_wt\n            total_val += item['val'] * (remain / item['wt'])\n            break\n    return total_val",
-      java: "public class FractionalKnapsack {\n    public static double getMaxValue(Item[] items, int W) {\n        Arrays.sort(items, (a, b) -> Double.compare((double)b.val/b.wt, (double)a.val/a.wt));\n        double totalVal = 0; int currWt = 0;\n        for (Item item : items) {\n            if (currWt + item.wt <= W) {\n                currWt += item.wt;\n                totalVal += item.val;\n            } else {\n                int remain = W - currWt;\n                totalVal += item.val * ((double)remain / item.wt);\n                break;\n            }\n        }\n        return totalVal;\n    }\n}",
-      cpp: "double getMaxValue(vector<Item>& items, int W) {\n    sort(items.begin(), items.end(), [](const Item& a, const Item& b) {\n        return (double)a.val/a.wt > (double)b.val/b.wt;\n    });\n    double totalVal = 0.0; int currWt = 0;\n    for (auto& item : items) {\n        if (currWt + item.wt <= W) {\n            currWt += item.wt;\n            totalVal += item.val;\n        } else {\n            int remain = W - currWt;\n            totalVal += item.val * ((double)remain / item.wt);\n            break;\n        }\n    }\n    return totalVal;\n}",
-    },
+    ccode: {
+    python:
+        "def knapsack(items, W):\n    items.sort(key=lambda x: x['val']/x['wt'], reverse=True)\n    total_val = 0.0\n    curr_wt = 0\n    for item in items:\n        if curr_wt + item['wt'] <= W:\n            curr_wt += item['wt']\n            total_val += item['val']\n        else:\n            remain = W - curr_wt\n            total_val += item['val'] * (remain / item['wt'])\n            break\n    return total_val"
+  },
   },
   "single-number": {
     id: "single-number",
@@ -5488,14 +4066,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "findSingleNumber(arr):\n  res = 0\n  for val in arr:\n    res = res ^ val\n  return res",
-    code: {
-      javascript:
-        "function findSingleNumber(arr) {\n  let res = 0;\n  for (let val of arr) {\n    res ^= val;\n  }\n  return res;\n}",
-      python:
-        "def find_single_number(arr):\n    res = 0\n    for val in arr:\n        res ^= val\n    return res",
-      java: "public class SingleNumber {\n    public static int find(int[] arr) {\n        int res = 0;\n        for (int x : arr) res ^= x;\n        return res;\n    }\n}",
-      cpp: "int findSingleNumber(const vector<int>& arr) {\n    int res = 0;\n    for (int x : arr) res ^= x;\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "def find_single_number(arr):\n    res = 0\n    for val in arr:\n        res ^= val\n    return res"
+  },
   },
   "power-of-two": {
     id: "power-of-two",
@@ -5526,14 +4100,10 @@ void traverseString(const string& s) {
     inputType: "bit-value",
     pseudocode:
       "isPowerOfTwo(n):\n  if n <= 0: return false\n  return (n & (n - 1)) == 0",
-    code: {
-      javascript:
-        "function isPowerOfTwo(n) {\n  if (n <= 0) return false;\n  return (n & (n - 1)) === 0;\n}",
-      python:
-        "def is_power_of_two(n):\n    return n > 0 and (n & (n - 1)) == 0",
-      java: "public class PowerOfTwo {\n    public static boolean check(int n) {\n        return n > 0 && (n & (n - 1)) == 0;\n    }\n}",
-      cpp: "bool isPowerOfTwo(int n) {\n    return n > 0 && (n & (n - 1)) == 0;\n}",
-    },
+    ccode: {
+    python:
+        "def is_power_of_two(n):\n    return n > 0 and (n & (n - 1)) == 0"
+  },
   },
   "gcd-euclidean": {
     id: "gcd-euclidean",
@@ -5564,14 +4134,10 @@ void traverseString(const string& s) {
     defaultInput: "48 18",
     inputType: "math-gcd",
     pseudocode: "gcd(a, b):\n  if b == 0: return a\n  return gcd(b, a % b)",
-    code: {
-      javascript:
-        "function gcd(a, b) {\n  while (b !== 0) {\n    let tmp = b;\n    b = a % b;\n    a = tmp;\n  }\n  return a;\n}",
-      python:
-        "def gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a",
-      java: "public class GCD {\n    public static int getGCD(int a, int b) {\n        while (b != 0) {\n            int tmp = b;\n            b = a % b;\n            a = tmp;\n        }\n        return a;\n    }\n}",
-      cpp: "int gcd(int a, int b) {\n    while (b != 0) {\n        int tmp = b;\n        b = a % b;\n        a = tmp;\n    }\n    return a;\n}",
-    },
+    ccode: {
+    python:
+        "def gcd(a, b):\n    while b:\n        a, b = b, a % b\n    return a"
+  },
   },
   "sieve-erato": {
     id: "sieve-erato",
@@ -5603,14 +4169,10 @@ void traverseString(const string& s) {
     inputType: "math-sieve",
     pseudocode:
       "sieve(n):\n  prime = array size n+1, fill true\n  for p = 2 to sqrt(n):\n    if prime[p] == true:\n      for i = p*p to n step p:\n        prime[i] = false\n  return primes",
-    code: {
-      javascript:
-        "function sieve(n) {\n  const prime = new Array(n + 1).fill(true);\n  prime[0] = prime[1] = false;\n  for (let p = 2; p * p <= n; p++) {\n    if (prime[p]) {\n      for (let i = p * p; i <= n; i += p) prime[i] = false;\n    }\n  }\n  return prime;\n}",
-      python:
-        "def sieve(n):\n    prime = [True] * (n + 1)\n    prime[0] = prime[1] = False\n    p = 2\n    while p * p <= n:\n        if prime[p]:\n            for i in range(p * p, n + 1, p):\n                prime[i] = False\n        p += 1\n    return prime",
-      java: "public class Sieve {\n    public static boolean[] sieve(int n) {\n        boolean[] prime = new boolean[n + 1];\n        Arrays.fill(prime, true);\n        prime[0] = prime[1] = false;\n        for (int p = 2; p * p <= n; p++) {\n            if (prime[p]) {\n                for (int i = p * p; i <= n; i += p) prime[i] = false;\n            }\n        }\n        return prime;\n    }\n}",
-      cpp: "vector<bool> sieve(int n) {\n    vector<bool> prime(n + 1, true);\n    prime[0] = prime[1] = false;\n    for (int p = 2; p * p <= n; ++p) {\n        if (prime[p]) {\n            for (int i = p * p; i <= n; i += p) prime[i] = false;\n        }\n    }\n    return prime;\n}",
-    },
+    ccode: {
+    python:
+        "def sieve(n):\n    prime = [True] * (n + 1)\n    prime[0] = prime[1] = False\n    p = 2\n    while p * p <= n:\n        if prime[p]:\n            for i in range(p * p, n + 1, p):\n                prime[i] = False\n        p += 1\n    return prime"
+  },
   },
   "remove-duplicates": {
     id: "remove-duplicates",
@@ -5640,14 +4202,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "removeDuplicates(arr):\n  if arr empty: return 0\n  idx = 0\n  for i = 1 to arr.length - 1:\n    if arr[i] != arr[idx]:\n      idx++\n      arr[idx] = arr[i]\n  return idx + 1",
-    code: {
-      javascript:
-        "function removeDuplicates(arr) {\n  if (arr.length === 0) return 0;\n  let idx = 0;\n  for (let i = 1; i < arr.length; i++) {\n    if (arr[i] !== arr[idx]) {\n      idx++;\n      arr[idx] = arr[i];\n    }\n  }\n  return idx + 1;\n}",
-      python:
-        "def remove_duplicates(arr):\n    if not arr: return 0\n    idx = 0\n    for i in range(1, len(arr)):\n        if arr[i] != arr[idx]:\n            idx += 1\n            arr[idx] = arr[i]\n    return idx + 1",
-      java: "public class Duplicates {\n    public static int remove(int[] arr) {\n        if (arr.length == 0) return 0;\n        int idx = 0;\n        for (int i = 1; i < arr.length; i++) {\n            if (arr[i] != arr[idx]) {\n                idx++;\n                arr[idx] = arr[i];\n            }\n        }\n        return idx + 1;\n    }\n}",
-      cpp: "int removeDuplicates(vector<int>& arr) {\n    if (arr.empty()) return 0;\n    int idx = 0;\n    for (size_t i = 1; i < arr.size(); ++i) {\n        if (arr[i] != arr[idx]) {\n            idx++;\n            arr[idx] = arr[i];\n        }\n    }\n    return idx + 1;\n}",
-    },
+    ccode: {
+    python:
+        "def remove_duplicates(arr):\n    if not arr: return 0\n    idx = 0\n    for i in range(1, len(arr)):\n        if arr[i] != arr[idx]:\n            idx += 1\n            arr[idx] = arr[i]\n    return idx + 1"
+  },
   },
   "equilibrium-index": {
     id: "equilibrium-index",
@@ -5678,14 +4236,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "equilibrium(arr):\n  totalSum = sum(arr)\n  leftSum = 0\n  for i = 0 to arr.length - 1:\n    totalSum -= arr[i]\n    if leftSum == totalSum: return i\n    leftSum += arr[i]\n  return -1",
-    code: {
-      javascript:
-        "function findEquilibrium(arr) {\n  let totalSum = arr.reduce((a, b) => a + b, 0);\n  let leftSum = 0;\n  for (let i = 0; i < arr.length; i++) {\n    totalSum -= arr[i];\n    if (leftSum === totalSum) return i;\n    leftSum += arr[i];\n  }\n  return -1;\n}",
-      python:
-        "def find_equilibrium(arr):\n    total_sum = sum(arr)\n    left_sum = 0\n    for i, x in enumerate(arr):\n        total_sum -= x\n        if left_sum == total_sum:\n            return i\n        left_sum += x\n    return -1",
-      java: "public class Equilibrium {\n    public static int find(int[] arr) {\n        int totalSum = 0;\n        for (int x : arr) totalSum += x;\n        int leftSum = 0;\n        for (int i = 0; i < arr.length; i++) {\n            totalSum -= arr[i];\n            if (leftSum == totalSum) return i;\n            leftSum += arr[i];\n        }\n        return -1;\n    }\n}",
-      cpp: "int findEquilibrium(const vector<int>& arr) {\n        long long totalSum = 0;\n        for (int x : arr) totalSum += x;\n        long long leftSum = 0;\n        for (int i = 0; i < arr.size(); i++) {\n            totalSum -= arr[i];\n            if (leftSum == totalSum) return i;\n            leftSum += arr[i];\n        }\n        return -1;\n    }",
-    },
+    ccode: {
+    python:
+        "def find_equilibrium(arr):\n    total_sum = sum(arr)\n    left_sum = 0\n    for i, x in enumerate(arr):\n        total_sum -= x\n        if left_sum == total_sum:\n            return i\n        left_sum += x\n    return -1"
+  },
   },
   "union-find-cycle": {
     id: "union-find-cycle",
@@ -5717,14 +4271,10 @@ void traverseString(const string& s) {
     inputType: "graph",
     pseudocode:
       "detectCycle(V, edges):\n  parent = new Array(V, fill i)\n  for [u, v] in edges:\n    rootU = find(u)\n    rootV = find(v)\n    if rootU == rootV: return true // cycle!\n    union(rootU, rootV)\n  return false",
-    code: {
-      javascript:
-        "function hasCycle(V, edges) {\n  const parent = Array.from({ length: V }, (_, i) => i);\n  function find(i) {\n    if (parent[i] === i) return i;\n    return parent[i] = find(parent[i]); // path compression\n  }\n  for (let [u, v] of edges) {\n    let rU = find(u), rV = find(v);\n    if (rU === rV) return true;\n    parent[rU] = rV;\n  }\n  return false;\n}",
-      python:
-        "def has_cycle(V, edges):\n    parent = list(range(V))\n    def find(i):\n        if parent[i] == i: return i\n        parent[i] = find(parent[i])\n        return parent[i]\n    for u, v in edges:\n        rU, rV = find(u), find(v)\n        if rU == rV: return True\n        parent[rU] = rV\n    return False",
-      java: "public class DSU {\n    int[] parent;\n    int find(int i) {\n        if (parent[i] == i) return i;\n        return parent[i] = find(parent[i]);\n    }\n    public boolean hasCycle(int V, int[][] edges) {\n        parent = new int[V];\n        for (int i = 0; i < V; i++) parent[i] = i;\n        for (int[] edge : edges) {\n            int rU = find(edge[0]);\n            int rV = find(edge[1]);\n            if (rU == rV) return true;\n            parent[rU] = rV;\n        }\n        return false;\n    }\n}",
-      cpp: "class DSU {\n    vector<int> parent;\npublic:\n    int findNode(int i) {\n        if (parent[i] == i) return i;\n        return parent[i] = findNode(parent[i]);\n    }\n    bool hasCycle(int V, vector<pair<int, int>>& edges) {\n        parent.resize(V);\n        for (int i = 0; i < V; i++) parent[i] = i;\n        for (auto& edge : edges) {\n            int rU = findNode(edge.first);\n            int rV = findNode(edge.second);\n            if (rU == rV) return true;\n            parent[rU] = rV;\n        }\n        return false;\n    }\n};",
-    },
+    ccode: {
+    python:
+        "def has_cycle(V, edges):\n    parent = list(range(V))\n    def find(i):\n        if parent[i] == i: return i\n        parent[i] = find(parent[i])\n        return parent[i]\n    for u, v in edges:\n        rU, rV = find(u), find(v)\n        if rU == rV: return True\n        parent[rU] = rV\n    return False"
+  },
   },
   "segment-tree": {
     id: "segment-tree",
@@ -5756,14 +4306,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "buildTree(arr, tree, node, start, end):\n  if start == end: tree[node] = arr[start]\n  else:\n    mid = (start + end)/2\n    buildTree(arr, tree, 2*node, start, mid)\n    buildTree(arr, tree, 2*node+1, mid+1, end)\n    tree[node] = tree[2*node] + tree[2*node+1]",
-    code: {
-      javascript:
-        "function build(arr, tree, node, s, e) {\n  if (s === e) { tree[node] = arr[s]; return; }\n  let mid = Math.floor((s + e) / 2);\n  build(arr, tree, 2 * node, s, mid);\n  build(arr, tree, 2 * node + 1, mid + 1, e);\n  tree[node] = tree[2 * node] + tree[2 * node + 1];\n}",
-      python:
-        "def build(arr, tree, node, s, e):\n    if s == e:\n        tree[node] = arr[s]\n        return\n    mid = (s + e) // 2\n    build(arr, tree, 2 * node, s, mid)\n    build(arr, tree, 2 * node + 1, mid + 1, e)\n    tree[node] = tree[2 * node] + tree[2 * node + 1]",
-      java: "public class SegmentTree {\n    public static void build(int[] arr, int[] tree, int node, int s, int e) {\n        if (s == e) { tree[node] = arr[s]; return; }\n        int mid = (s + e) / 2;\n        build(arr, tree, 2 * node, s, mid);\n        build(arr, tree, 2 * node + 1, mid + 1, e);\n        tree[node] = tree[2 * node] + tree[2 * node + 1];\n    }\n}",
-      cpp: "void build(const vector<int>& arr, vector<int>& tree, int node, int s, int e) {\n    if (s == e) { tree[node] = arr[s]; return; }\n    int mid = (s + e) / 2;\n    build(arr, tree, 2 * node, s, mid);\n    build(arr, tree, 2 * node + 1, mid + 1, e);\n    tree[node] = tree[2 * node] + tree[2 * node + 1];\n}",
-    },
+    ccode: {
+    python:
+        "def build(arr, tree, node, s, e):\n    if s == e:\n        tree[node] = arr[s]\n        return\n    mid = (s + e) // 2\n    build(arr, tree, 2 * node, s, mid)\n    build(arr, tree, 2 * node + 1, mid + 1, e)\n    tree[node] = tree[2 * node] + tree[2 * node + 1]"
+  },
   },
   "trie-search": {
     id: "trie-search",
@@ -5797,14 +4343,10 @@ void traverseString(const string& s) {
     inputType: "strings",
     pseudocode:
       "insert(root, word):\n  curr = root\n  for char in word:\n    if char not in curr.children:\n      curr.children[char] = new TrieNode()\n    curr = curr.children[char]\n  curr.isEndOfWord = true",
-    code: {
-      javascript:
-        "class TrieNode {\n  constructor() {\n    this.children = {};\n    this.isEndOfWord = false;\n  }\n}\nfunction insert(root, word) {\n  let curr = root;\n  for (let char of word) {\n    if (!curr.children[char]) curr.children[char] = new TrieNode();\n    curr = curr.children[char];\n  }\n  curr.isEndOfWord = true;\n}",
-      python:
-        "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\ndef insert(root, word):\n    curr = root\n    for char in word:\n        if char not in curr.children:\n            curr.children[char] = TrieNode()\n        curr = curr.children[char]\n    curr.is_end = True",
-      java: "public class Trie {\n    static class TrieNode {\n        TrieNode[] children = new TrieNode[26];\n        boolean isEnd = false;\n    }\n    public static void insert(TrieNode root, String word) {\n        TrieNode curr = root;\n        for (char ch : word.toCharArray()) {\n            int idx = ch - 'a';\n            if (curr.children[idx] == null) curr.children[idx] = new TrieNode();\n            curr = curr.children[idx];\n        }\n        curr.isEnd = true;\n    }\n}",
-      cpp: "struct TrieNode {\n    TrieNode* children[26] = {nullptr};\n    bool isEnd = false;\n};\nvoid insertNode(TrieNode* root, string word) {\n    TrieNode* curr = root;\n    for (char ch : word) {\n        int idx = ch - 'a';\n        if (curr->children[idx] == nullptr) curr->children[idx] = new TrieNode();\n        curr = curr->children[idx];\n    }\n    curr->isEnd = true;\n}",
-    },
+    ccode: {
+    python:
+        "class TrieNode:\n    def __init__(self):\n        self.children = {}\n        self.is_end = False\ndef insert(root, word):\n    curr = root\n    for char in word:\n        if char not in curr.children:\n            curr.children[char] = TrieNode()\n        curr = curr.children[char]\n    curr.is_end = True"
+  },
   },
   "rabin-karp": {
     id: "rabin-karp",
@@ -5836,14 +4378,10 @@ void traverseString(const string& s) {
     inputType: "string-pattern",
     pseudocode:
       "rabinKarp(txt, pat):\n  hpat = hash(pat), htxt = hash(txt[0 to m-1])\n  for i = 0 to n-m:\n    if hpat == htxt:\n      if txt[i to i+m-1] == pat: report match\n    htxt = rollHash(htxt, txt[i], txt[i+m])",
-    code: {
-      javascript:
-        "function search(txt, pat, q = 101) {\n  const d = 256;\n  let m = pat.length, n = txt.length;\n  let hpat = 0, htxt = 0, h = 1;\n  for (let i = 0; i < m - 1; i++) h = (h * d) % q;\n  for (let i = 0; i < m; i++) {\n    hpat = (d * hpat + pat.charCodeAt(i)) % q;\n    htxt = (d * htxt + txt.charCodeAt(i)) % q;\n  }\n  const indices = [];\n  for (let i = 0; i <= n - m; i++) {\n    if (hpat === htxt) {\n      if (txt.substring(i, i + m) === pat) indices.push(i);\n    }\n    if (i < n - m) {\n      htxt = (d * (htxt - txt.charCodeAt(i) * h) + txt.charCodeAt(i + m)) % q;\n      if (htxt < 0) htxt = htxt + q;\n    }\n  }\n  return indices;\n}",
-      python:
-        "def search(txt, pat, q=101):\n    d = 256\n    m, n = len(pat), len(txt)\n    hpat = htxt = 0\n    h = pow(d, m-1, q)\n    for i in range(m):\n        hpat = (d * hpat + ord(pat[i])) % q\n        htxt = (d * htxt + ord(txt[i])) % q\n    indices = []\n    for i in range(n - m + 1):\n        if hpat == htxt:\n            if txt[i:i+m] == pat: indices.append(i)\n        if i < n - m:\n            htxt = (d * (htxt - ord(txt[i]) * h) + ord(txt[i+m])) % q\n            if htxt < 0: htxt += q\n    return indices",
-      java: "public class RabinKarp {\n    public static List<Integer> search(String txt, String pat) {\n        int d = 256, q = 101;\n        int m = pat.length(), n = txt.length();\n        int hpat = 0, htxt = 0, h = 1;\n        for (int i = 0; i < m - 1; i++) h = (h * d) % q;\n        for (int i = 0; i < m; i++) {\n            hpat = (d * hpat + pat.charAt(i)) % q;\n            htxt = (d * htxt + txt.charAt(i)) % q;\n        }\n        List<Integer> indices = new ArrayList<>();\n        for (int i = 0; i <= n - m; i++) {\n            if (hpat == htxt) {\n                if (txt.substring(i, i + m).equals(pat)) indices.add(i);\n            }\n            if (i < n - m) {\n                htxt = (d * (htxt - txt.charAt(i) * h) + txt.charAt(i + m)) % q;\n                if (htxt < 0) htxt += q;\n            }\n        }\n        return indices;\n    }\n}",
-      cpp: "vector<int> search(string txt, string pat) {\n    int d = 256, q = 101;\n    int m = pat.length(), n = txt.length();\n    int hpat = 0, htxt = 0, h = 1;\n    for (int i = 0; i < m - 1; i++) h = (h * d) % q;\n    for (int i = 0; i < m; i++) {\n        hpat = (d * hpat + pat[i]) % q;\n        htxt = (d * htxt + txt[i]) % q;\n    }\n    vector<int> indices;\n    for (int i = 0; i <= n - m; i++) {\n        if (hpat == htxt) {\n            if (txt.substr(i, i + m) == pat) indices.push_back(i);\n        }\n        if (i < n - m) {\n            htxt = (d * (htxt - txt[i] * h) + txt[i + m]) % q;\n            if (htxt < 0) htxt += q;\n        }\n    }\n    return indices;\n}",
-    },
+    ccode: {
+    python:
+        "def search(txt, pat, q=101):\n    d = 256\n    m, n = len(pat), len(txt)\n    hpat = htxt = 0\n    h = pow(d, m-1, q)\n    for i in range(m):\n        hpat = (d * hpat + ord(pat[i])) % q\n        htxt = (d * htxt + ord(txt[i])) % q\n    indices = []\n    for i in range(n - m + 1):\n        if hpat == htxt:\n            if txt[i:i+m] == pat: indices.append(i)\n        if i < n - m:\n            htxt = (d * (htxt - ord(txt[i]) * h) + ord(txt[i+m])) % q\n            if htxt < 0: htxt += q\n    return indices"
+  },
   },
   "reverse-array": {
     id: "reverse-array",
@@ -5873,14 +4411,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "reverseArray(arr):\n  left = 0, right = arr.length - 1\n  while left < right:\n    swap(arr[left], arr[right])\n    left++, right--",
-    code: {
-      javascript:
-        "function reverseArray(arr) {\n  let left = 0, right = arr.length - 1;\n  while (left < right) {\n    [arr[left], arr[right]] = [arr[right], arr[left]];\n    left++;\n    right--;\n  }\n  return arr;\n}",
-      python:
-        "def reverse_array(arr):\n    left, right = 0, len(arr) - 1\n    while left < right:\n        arr[left], arr[right] = arr[right], arr[left]\n        left += 1\n        right -= 1\n    return arr",
-      java: "public class ReverseArray {\n    public static void reverse(int[] arr) {\n        int left = 0, right = arr.length - 1;\n        while (left < right) {\n            int tmp = arr[left];\n            arr[left++] = arr[right];\n            arr[right--] = tmp;\n        }\n    }\n}",
-      cpp: "void reverseArray(vector<int>& arr) {\n    int left = 0, right = arr.size() - 1;\n    while (left < right) {\n        swap(arr[left++], arr[right--]);\n    }\n}",
-    },
+    ccode: {
+    python:
+        "def reverse_array(arr):\n    left, right = 0, len(arr) - 1\n    while left < right:\n        arr[left], arr[right] = arr[right], arr[left]\n        left += 1\n        right -= 1\n    return arr"
+  },
   },
   "palindrome-check": {
     id: "palindrome-check",
@@ -5906,13 +4440,9 @@ void traverseString(const string& s) {
     inputType: "strings-list",
     pseudocode:
       "isPalindrome(str):\n  left = 0, right = str.length - 1\n  while left < right:\n    if str[left] != str[right]: return false\n    left++, right--\n  return true",
-    code: {
-      javascript:
-        "function isPalindrome(str) {\n  let left = 0, right = str.length - 1;\n  while (left < right) {\n    if (str[left] !== str[right]) return false;\n    left++;\n    right--;\n  }\n  return true;\n}",
-      python: "def is_palindrome(s):\n    return s == s[::-1]",
-      java: "public class Palindrome {\n    public static boolean check(String s) {\n        int l = 0, r = s.length() - 1;\n        while (l < r) {\n            if (s.charAt(l++) != s.charAt(r--)) return false;\n        }\n        return true;\n    }\n}",
-      cpp: "bool isPalindrome(string s) {\n    int l = 0, r = s.length() - 1;\n    while (l < r) {\n        if (s[l++] != s[r--]) return false;\n    }\n    return true;\n}",
-    },
+    ccode: {
+    python: "def is_palindrome(s):\n    return s == s[::-1]"
+  },
   },
   "reverse-string": {
     id: "reverse-string",
@@ -5938,13 +4468,9 @@ void traverseString(const string& s) {
     inputType: "strings-list",
     pseudocode:
       "reverseString(chars):\n  left = 0, right = chars.length - 1\n  while left < right:\n    swap(chars[left], chars[right])\n    left++, right--",
-    code: {
-      javascript:
-        "function reverseString(s) {\n  return s.split('').reverse().join('');\n}",
-      python: "def reverse_string(s):\n    return s[::-1]",
-      java: "public class ReverseString {\n    public static String reverse(String s) {\n        return new StringBuilder(s).reverse().toString();\n    }\n}",
-      cpp: "string reverseString(string s) {\n    reverse(s.begin(), s.end());\n    return s;\n}",
-    },
+    ccode: {
+    python: "def reverse_string(s):\n    return s[::-1]"
+  },
   },
   "merge-sorted-lists": {
     id: "merge-sorted-lists",
@@ -5974,14 +4500,10 @@ void traverseString(const string& s) {
     inputType: "linked-list",
     pseudocode:
       "mergeSorted(l1, l2):\n  dummy = new Node(0)\n  curr = dummy\n  while l1 and l2:\n    if l1.val <= l2.val: curr.next = l1; l1 = l1.next\n    else: curr.next = l2; l2 = l2.next\n    curr = curr.next\n  curr.next = l1 or l2\n  return dummy.next",
-    code: {
-      javascript:
-        "function mergeSortedLists(l1, l2) {\n  const dummy = { val: 0, next: null };\n  let curr = dummy;\n  while (l1 && l2) {\n    if (l1.val <= l2.val) { curr.next = l1; l1 = l1.next; }\n    else { curr.next = l2; l2 = l2.next; }\n    curr = curr.next;\n  }\n  curr.next = l1 || l2;\n  return dummy.next;\n}",
-      python:
-        "def merge_sorted(l1, l2):\n    dummy = ListNode(0)\n    curr = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            curr.next = l1; l1 = l1.next\n        else:\n            curr.next = l2; l2 = l2.next\n        curr = curr.next\n    curr.next = l1 or l2\n    return dummy.next",
-      java: "public ListNode mergeTwoLists(ListNode l1, ListNode l2) {\n    ListNode dummy = new ListNode(0), curr = dummy;\n    while (l1 != null && l2 != null) {\n        if (l1.val <= l2.val) { curr.next = l1; l1 = l1.next; }\n        else { curr.next = l2; l2 = l2.next; }\n        curr = curr.next;\n    }\n    curr.next = (l1 != null) ? l1 : l2;\n    return dummy.next;\n}",
-      cpp: "ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {\n    ListNode dummy(0), *curr = &dummy;\n    while (l1 && l2) {\n        if (l1->val <= l2->val) { curr->next = l1; l1 = l1->next; }\n        else { curr->next = l2; l2 = l2->next; }\n        curr = curr->next;\n    }\n    curr->next = l1 ? l1 : l2;\n    return dummy.next;\n}",
-    },
+    ccode: {
+    python:
+        "def merge_sorted(l1, l2):\n    dummy = ListNode(0)\n    curr = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            curr.next = l1; l1 = l1.next\n        else:\n            curr.next = l2; l2 = l2.next\n        curr = curr.next\n    curr.next = l1 or l2\n    return dummy.next"
+  },
   },
   "min-stack": {
     id: "min-stack",
@@ -6010,14 +4532,10 @@ void traverseString(const string& s) {
     inputType: "stack",
     pseudocode:
       "MinStack:\n  stack = [], minStack = []\n  push(val):\n    stack.push(val)\n    minStack.push(min(val, minStack.top))\n  pop(): stack.pop(), minStack.pop()\n  getMin(): return minStack.top",
-    code: {
-      javascript:
-        "class MinStack {\n  constructor() { this.stack = []; this.minStk = []; }\n  push(val) {\n    this.stack.push(val);\n    const m = this.minStk.length ? Math.min(val, this.minStk.at(-1)) : val;\n    this.minStk.push(m);\n  }\n  pop() { this.stack.pop(); this.minStk.pop(); }\n  getMin() { return this.minStk.at(-1); }\n}",
-      python:
-        "class MinStack:\n    def __init__(self): self.stack, self.min_stk = [], []\n    def push(self, val):\n        self.stack.append(val)\n        m = min(val, self.min_stk[-1]) if self.min_stk else val\n        self.min_stk.append(m)\n    def pop(self): self.stack.pop(); self.min_stk.pop()\n    def get_min(self): return self.min_stk[-1]",
-      java: "class MinStack {\n    Deque<Integer> stack = new ArrayDeque<>(), minStk = new ArrayDeque<>();\n    public void push(int val) {\n        stack.push(val);\n        minStk.push(minStk.isEmpty() ? val : Math.min(val, minStk.peek()));\n    }\n    public void pop() { stack.pop(); minStk.pop(); }\n    public int getMin() { return minStk.peek(); }\n}",
-      cpp: "class MinStack {\n    stack<int> stk, minStk;\npublic:\n    void push(int val) {\n        stk.push(val);\n        minStk.push(minStk.empty() ? val : min(val, minStk.top()));\n    }\n    void pop() { stk.pop(); minStk.pop(); }\n    int getMin() { return minStk.top(); }\n};",
-    },
+    ccode: {
+    python:
+        "class MinStack:\n    def __init__(self): self.stack, self.min_stk = [], []\n    def push(self, val):\n        self.stack.append(val)\n        m = min(val, self.min_stk[-1]) if self.min_stk else val\n        self.min_stk.append(m)\n    def pop(self): self.stack.pop(); self.min_stk.pop()\n    def get_min(self): return self.min_stk[-1]"
+  },
   },
   "level-order-traversal": {
     id: "level-order-traversal",
@@ -6052,14 +4570,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "levelOrder(root):\n  queue = [root]\n  while queue not empty:\n    level = []\n    for node in current level:\n      level.add(node.val)\n      enqueue node.left, node.right\n    result.add(level)",
-    code: {
-      javascript:
-        "function levelOrder(root) {\n  if (!root) return [];\n  const queue = [root], result = [];\n  while (queue.length) {\n    const level = [], n = queue.length;\n    for (let i = 0; i < n; i++) {\n      const node = queue.shift();\n      level.push(node.val);\n      if (node.left) queue.push(node.left);\n      if (node.right) queue.push(node.right);\n    }\n    result.push(level);\n  }\n  return result;\n}",
-      python:
-        "from collections import deque\ndef level_order(root):\n    if not root: return []\n    q, res = deque([root]), []\n    while q:\n        level = []\n        for _ in range(len(q)):\n            node = q.popleft()\n            level.append(node.val)\n            if node.left: q.append(node.left)\n            if node.right: q.append(node.right)\n        res.append(level)\n    return res",
-      java: "public List<List<Integer>> levelOrder(TreeNode root) {\n    List<List<Integer>> res = new ArrayList<>();\n    if (root == null) return res;\n    Queue<TreeNode> q = new LinkedList<>();\n    q.offer(root);\n    while (!q.isEmpty()) {\n        int n = q.size();\n        List<Integer> level = new ArrayList<>();\n        for (int i = 0; i < n; i++) {\n            TreeNode node = q.poll();\n            level.add(node.val);\n            if (node.left != null) q.offer(node.left);\n            if (node.right != null) q.offer(node.right);\n        }\n        res.add(level);\n    }\n    return res;\n}",
-      cpp: "vector<vector<int>> levelOrder(TreeNode* root) {\n    vector<vector<int>> res;\n    if (!root) return res;\n    queue<TreeNode*> q;\n    q.push(root);\n    while (!q.empty()) {\n        int n = q.size();\n        vector<int> level;\n        for (int i = 0; i < n; i++) {\n            auto node = q.front(); q.pop();\n            level.push_back(node->val);\n            if (node->left) q.push(node->left);\n            if (node->right) q.push(node->right);\n        }\n        res.push_back(level);\n    }\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "from collections import deque\ndef level_order(root):\n    if not root: return []\n    q, res = deque([root]), []\n    while q:\n        level = []\n        for _ in range(len(q)):\n            node = q.popleft()\n            level.append(node.val)\n            if node.left: q.append(node.left)\n            if node.right: q.append(node.right)\n        res.append(level)\n    return res"
+  },
   },
   "bellman-ford": {
     id: "bellman-ford",
@@ -6089,14 +4603,10 @@ void traverseString(const string& s) {
     inputType: "graph",
     pseudocode:
       "bellmanFord(graph, src):\n  dist = [INF]*V; dist[src] = 0\n  for i = 1 to V-1:\n    for each edge (u,v,w):\n      if dist[u]+w < dist[v]: dist[v] = dist[u]+w",
-    code: {
-      javascript:
-        "function bellmanFord(V, edges, src) {\n  const dist = new Array(V).fill(Infinity);\n  dist[src] = 0;\n  for (let i = 0; i < V - 1; i++) {\n    for (const [u, v, w] of edges) {\n      if (dist[u] !== Infinity && dist[u] + w < dist[v]) {\n        dist[v] = dist[u] + w;\n      }\n    }\n  }\n  return dist;\n}",
-      python:
-        "def bellman_ford(V, edges, src):\n    dist = [float('inf')] * V\n    dist[src] = 0\n    for _ in range(V - 1):\n        for u, v, w in edges:\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n    return dist",
-      java: "public int[] bellmanFord(int V, int[][] edges, int src) {\n    int[] dist = new int[V];\n    Arrays.fill(dist, Integer.MAX_VALUE);\n    dist[src] = 0;\n    for (int i = 0; i < V - 1; i++) {\n        for (int[] e : edges) {\n            if (dist[e[0]] != Integer.MAX_VALUE && dist[e[0]] + e[2] < dist[e[1]])\n                dist[e[1]] = dist[e[0]] + e[2];\n        }\n    }\n    return dist;\n}",
-      cpp: "vector<int> bellmanFord(int V, vector<tuple<int,int,int>>& edges, int src) {\n    vector<int> dist(V, INT_MAX);\n    dist[src] = 0;\n    for (int i = 0; i < V - 1; ++i) {\n        for (auto& [u, v, w] : edges) {\n            if (dist[u] != INT_MAX && dist[u] + w < dist[v])\n                dist[v] = dist[u] + w;\n        }\n    }\n    return dist;\n}",
-    },
+    ccode: {
+    python:
+        "def bellman_ford(V, edges, src):\n    dist = [float('inf')] * V\n    dist[src] = 0\n    for _ in range(V - 1):\n        for u, v, w in edges:\n            if dist[u] + w < dist[v]:\n                dist[v] = dist[u] + w\n    return dist"
+  },
   },
   "word-search": {
     id: "word-search",
@@ -6122,14 +4632,10 @@ void traverseString(const string& s) {
     inputType: "word-search-grid",
     pseudocode:
       "wordSearch(board, word):\n  for each cell (i,j):\n    if dfs(board, word, i, j, 0): return true\n  return false",
-    code: {
-      javascript:
-        "function exist(board, word) {\n  const rows = board.length, cols = board[0].length;\n  const dfs = (r, c, idx) => {\n    if (idx === word.length) return true;\n    if (r < 0 || r >= rows || c < 0 || c >= cols || board[r][c] !== word[idx]) return false;\n    const tmp = board[r][c]; board[r][c] = '#';\n    const found = dfs(r+1,c,idx+1)||dfs(r-1,c,idx+1)||dfs(r,c+1,idx+1)||dfs(r,c-1,idx+1);\n    board[r][c] = tmp;\n    return found;\n  };\n  for (let r = 0; r < rows; r++)\n    for (let c = 0; c < cols; c++)\n      if (dfs(r, c, 0)) return true;\n  return false;\n}",
-      python:
-        "def exist(board, word):\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c, i):\n        if i == len(word): return True\n        if not (0<=r<rows and 0<=c<cols) or board[r][c] != word[i]: return False\n        tmp, board[r][c] = board[r][c], '#'\n        found = any(dfs(r+dr, c+dc, i+1) for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)])\n        board[r][c] = tmp\n        return found\n    return any(dfs(r,c,0) for r in range(rows) for c in range(cols))",
-      java: "public boolean exist(char[][] board, String word) {\n    for (int r = 0; r < board.length; r++)\n        for (int c = 0; c < board[0].length; c++)\n            if (dfs(board, word, r, c, 0)) return true;\n    return false;\n}\nprivate boolean dfs(char[][] b, String w, int r, int c, int i) {\n    if (i == w.length()) return true;\n    if (r<0||r>=b.length||c<0||c>=b[0].length||b[r][c]!=w.charAt(i)) return false;\n    char tmp = b[r][c]; b[r][c] = '#';\n    boolean found = dfs(b,w,r+1,c,i+1)||dfs(b,w,r-1,c,i+1)||dfs(b,w,r,c+1,i+1)||dfs(b,w,r,c-1,i+1);\n    b[r][c] = tmp; return found;\n}",
-      cpp: "bool exist(vector<vector<char>>& board, string word) {\n    int m=board.size(), n=board[0].size();\n    function<bool(int,int,int)> dfs=[&](int r,int c,int i){\n        if(i==(int)word.size()) return true;\n        if(r<0||r>=m||c<0||c>=n||board[r][c]!=word[i]) return false;\n        char tmp=board[r][c]; board[r][c]='#';\n        bool ok=dfs(r+1,c,i+1)||dfs(r-1,c,i+1)||dfs(r,c+1,i+1)||dfs(r,c-1,i+1);\n        board[r][c]=tmp; return ok;\n    };\n    for(int r=0;r<m;r++) for(int c=0;c<n;c++) if(dfs(r,c,0)) return true;\n    return false;\n}",
-    },
+    ccode: {
+    python:
+        "def exist(board, word):\n    rows, cols = len(board), len(board[0])\n    def dfs(r, c, i):\n        if i == len(word): return True\n        if not (0<=r<rows and 0<=c<cols) or board[r][c] != word[i]: return False\n        tmp, board[r][c] = board[r][c], '#'\n        found = any(dfs(r+dr, c+dc, i+1) for dr,dc in [(1,0),(-1,0),(0,1),(0,-1)])\n        board[r][c] = tmp\n        return found\n    return any(dfs(r,c,0) for r in range(rows) for c in range(cols))"
+  },
   },
   "generate-parentheses": {
     id: "generate-parentheses",
@@ -6159,14 +4665,10 @@ void traverseString(const string& s) {
     inputType: "recursion",
     pseudocode:
       "generateParentheses(n):\n  result = []\n  backtrack('', 0, 0, n)\n  if open < n: add '('\n  if close < open: add ')'",
-    code: {
-      javascript:
-        "function generateParenthesis(n) {\n  const res = [];\n  const bt = (cur, open, close) => {\n    if (cur.length === 2 * n) { res.push(cur); return; }\n    if (open < n) bt(cur + '(', open + 1, close);\n    if (close < open) bt(cur + ')', open, close + 1);\n  };\n  bt('', 0, 0);\n  return res;\n}",
-      python:
-        "def generate_parenthesis(n):\n    res = []\n    def bt(cur, op, cl):\n        if len(cur) == 2*n: res.append(cur); return\n        if op < n: bt(cur+'(', op+1, cl)\n        if cl < op: bt(cur+')', op, cl+1)\n    bt('', 0, 0)\n    return res",
-      java: 'public List<String> generateParenthesis(int n) {\n    List<String> res = new ArrayList<>();\n    backtrack(res, "", 0, 0, n);\n    return res;\n}\nprivate void backtrack(List<String> res, String cur, int op, int cl, int n) {\n    if (cur.length() == 2*n) { res.add(cur); return; }\n    if (op < n) backtrack(res, cur+"(", op+1, cl, n);\n    if (cl < op) backtrack(res, cur+")", op, cl+1, n);\n}',
-      cpp: 'vector<string> generateParenthesis(int n) {\n    vector<string> res;\n    function<void(string,int,int)> bt=[&](string cur,int op,int cl){\n        if((int)cur.size()==2*n){res.push_back(cur);return;}\n        if(op<n) bt(cur+"(",op+1,cl);\n        if(cl<op) bt(cur+")",op,cl+1);\n    };\n    bt("",0,0);\n    return res;\n}',
-    },
+    ccode: {
+    python:
+        "def generate_parenthesis(n):\n    res = []\n    def bt(cur, op, cl):\n        if len(cur) == 2*n: res.append(cur); return\n        if op < n: bt(cur+'(', op+1, cl)\n        if cl < op: bt(cur+')', op, cl+1)\n    bt('', 0, 0)\n    return res"
+  },
   },
   "lcs-dp": {
     id: "lcs-dp",
@@ -6193,14 +4695,10 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "lcs(s1, s2):\n  if s1[i-1]==s2[j-1]: dp[i][j] = dp[i-1][j-1] + 1\n  else: dp[i][j] = max(dp[i-1][j], dp[i][j-1])",
-    code: {
-      javascript:
-        "function lcs(s1, s2) {\n  const m = s1.length, n = s2.length;\n  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));\n  for (let i = 1; i <= m; i++)\n    for (let j = 1; j <= n; j++)\n      dp[i][j] = s1[i-1]===s2[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);\n  return dp[m][n];\n}",
-      python:
-        "def lcs(s1, s2):\n    m, n = len(s1), len(s2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if s1[i-1] == s2[j-1]: dp[i][j] = dp[i-1][j-1] + 1\n            else: dp[i][j] = max(dp[i-1][j], dp[i][j-1])\n    return dp[m][n]",
-      java: "public int lcs(String s1, String s2) {\n    int m=s1.length(), n=s2.length();\n    int[][] dp = new int[m+1][n+1];\n    for (int i=1;i<=m;i++)\n        for (int j=1;j<=n;j++)\n            dp[i][j]=s1.charAt(i-1)==s2.charAt(j-1)?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);\n    return dp[m][n];\n}",
-      cpp: "int lcs(string s1, string s2) {\n    int m=s1.size(),n=s2.size();\n    vector<vector<int>> dp(m+1,vector<int>(n+1,0));\n    for(int i=1;i<=m;i++)\n        for(int j=1;j<=n;j++)\n            dp[i][j]=s1[i-1]==s2[j-1]?dp[i-1][j-1]+1:max(dp[i-1][j],dp[i][j-1]);\n    return dp[m][n];\n}",
-    },
+    ccode: {
+    python:
+        "def lcs(s1, s2):\n    m, n = len(s1), len(s2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if s1[i-1] == s2[j-1]: dp[i][j] = dp[i-1][j-1] + 1\n            else: dp[i][j] = max(dp[i-1][j], dp[i][j-1])\n    return dp[m][n]"
+  },
   },
   "longest-common-substring": {
     id: "longest-common-substring",
@@ -6226,12 +4724,10 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "lcs(s1, s2):\n  if s1[i-1]==s2[j-1]: dp[i][j] = dp[i-1][j-1] + 1\n  else: dp[i][j] = 0",
-    code: {
-      javascript:
-        "function longestCommonSubstring(s1, s2) {\n  const m = s1.length, n = s2.length;\n  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));\n  let maxLen = 0;\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (s1[i-1] === s2[j-1]) {\n        dp[i][j] = dp[i-1][j-1] + 1;\n        maxLen = Math.max(maxLen, dp[i][j]);\n      } else {\n        dp[i][j] = 0;\n      }\n    }\n  }\n  return maxLen;\n}",
-      python:
-        "def longestCommonSubstring(s1, s2):\n    m, n = len(s1), len(s2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    maxLen = 0\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if s1[i-1] == s2[j-1]:\n                dp[i][j] = dp[i-1][j-1] + 1\n                maxLen = max(maxLen, dp[i][j])\n            else:\n                dp[i][j] = 0\n    return maxLen",
-    },
+    ccode: {
+    python:
+        "def longestCommonSubstring(s1, s2):\n    m, n = len(s1), len(s2)\n    dp = [[0]*(n+1) for _ in range(m+1)]\n    maxLen = 0\n    for i in range(1, m+1):\n        for j in range(1, n+1):\n            if s1[i-1] == s2[j-1]:\n                dp[i][j] = dp[i-1][j-1] + 1\n                maxLen = max(maxLen, dp[i][j])\n            else:\n                dp[i][j] = 0\n    return maxLen"
+  },
   },
   "dp-burst-balloons": {
     id: "dp-burst-balloons",
@@ -6254,12 +4750,10 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "burst(nums):\n  dp[i][j] = max_{k=i..j} (dp[i][k-1] + val[i-1]*val[k]*val[j+1] + dp[k+1][j])",
-    code: {
-      javascript:
-        "function maxCoins(nums) {\n  const arr = [1, ...nums, 1];\n  const n = nums.length;\n  const dp = Array.from({length: n+2}, () => new Array(n+2).fill(0));\n  for (let len = 1; len <= n; len++) {\n    for (let i = 1; i <= n - len + 1; i++) {\n      let j = i + len - 1;\n      for (let k = i; k <= j; k++) {\n        dp[i][j] = Math.max(dp[i][j], dp[i][k-1] + arr[i-1] * arr[k] * arr[j+1] + dp[k+1][j]);\n      }\n    }\n  }\n  return dp[1][n];\n}",
-      python:
-        "def maxCoins(nums):\n    arr = [1] + nums + [1]\n    n = len(nums)\n    dp = [[0] * (n + 2) for _ in range(n + 2)]\n    for length in range(1, n + 1):\n        for i in range(1, n - length + 2):\n            j = i + length - 1\n            for k in range(i, j + 1):\n                dp[i][j] = max(dp[i][j], dp[i][k-1] + arr[i-1] * arr[k] * arr[j+1] + dp[k+1][j])\n    return dp[1][n]",
-    },
+    ccode: {
+    python:
+        "def maxCoins(nums):\n    arr = [1] + nums + [1]\n    n = len(nums)\n    dp = [[0] * (n + 2) for _ in range(n + 2)]\n    for length in range(1, n + 1):\n        for i in range(1, n - length + 2):\n            j = i + length - 1\n            for k in range(i, j + 1):\n                dp[i][j] = max(dp[i][j], dp[i][k-1] + arr[i-1] * arr[k] * arr[j+1] + dp[k+1][j])\n    return dp[1][n]"
+  },
   },
   "dp-matrix-chain-multiplication": {
     id: "dp-matrix-chain-multiplication",
@@ -6285,10 +4779,9 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "mcm(p):\n  dp[i][j] = min_{k} (dp[i][k] + dp[k+1][j] + p[i-1]*p[k]*p[j])",
-    code: {
-      javascript:
-        "function mcm(p) {\n  const n = p.length - 1;\n  const dp = Array.from({length: n+1}, () => new Array(n+1).fill(0));\n  for (let len = 2; len <= n; len++) {\n    for (let i = 1; i <= n - len + 1; i++) {\n      let j = i + len - 1;\n      dp[i][j] = Infinity;\n      for (let k = i; k < j; k++) {\n        dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[k+1][j] + p[i-1] * p[k] * p[j]);\n      }\n    }\n  }\n  return dp[1][n];\n}",
-    },
+    ccode: {
+    python: "def mcm(p):\n    n = len(p) - 1\n    dp = [[0] * (n + 1) for _ in range(n + 1)]\n    for length in range(2, n + 1):\n        for i in range(1, n - length + 2):\n            j = i + length - 1\n            dp[i][j] = float('inf')\n            for k in range(i, j):\n                dp[i][j] = min(dp[i][j], dp[i][k] + dp[k+1][j] + p[i-1] * p[k] * p[j])\n    return dp[1][n]"
+  },
   },
   "dp-wildcard-matching": {
     id: "dp-wildcard-matching",
@@ -6311,10 +4804,9 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "match(s, p):\n  if p[j-1]=='*': dp[i][j] = dp[i-1][j] || dp[i][j-1]\n  else if matchChar: dp[i][j] = dp[i-1][j-1]",
-    code: {
-      javascript:
-        "function wildcardMatch(s, p) {\n  const m = s.length, n = p.length;\n  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(false));\n  dp[0][0] = true;\n  for (let j = 1; j <= n; j++) {\n    if (p[j-1] === '*') dp[0][j] = dp[0][j-1];\n  }\n  for (let i = 1; i <= m; i++) {\n    for (let j = 1; j <= n; j++) {\n      if (p[j-1] === '*') dp[i][j] = dp[i-1][j] || dp[i][j-1];\n      else if (p[j-1] === '?' || s[i-1] === p[j-1]) dp[i][j] = dp[i-1][j-1];\n    }\n  }\n  return dp[m][n];\n}",
-    },
+    ccode: {
+    python: "def wildcard_match(s, p):\n    m, n = len(s), len(p)\n    dp = [[False] * (n + 1) for _ in range(m + 1)]\n    dp[0][0] = True\n    for j in range(1, n + 1):\n        if p[j-1] == '*':\n            dp[0][j] = dp[0][j-1]\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if p[j-1] == '*':\n                dp[i][j] = dp[i-1][j] or dp[i][j-1]\n            elif p[j-1] == '?' or s[i-1] == p[j-1]:\n                dp[i][j] = dp[i-1][j-1]\n    return dp[m][n]"
+  },
   },
   "dp-egg-dropping": {
     id: "dp-egg-dropping",
@@ -6340,10 +4832,9 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "trials(e, f):\n  dp[e][f] = 1 + min_{k} max(dp[e-1][k-1], dp[e][f-k])",
-    code: {
-      javascript:
-        "function eggDrop(eggs, floors) {\n  const dp = Array.from({length: eggs+1}, () => new Array(floors+1).fill(0));\n  for (let j = 1; j <= floors; j++) dp[1][j] = j;\n  for (let i = 1; i <= eggs; i++) dp[i][1] = 1;\n  for (let i = 2; i <= eggs; i++) {\n    for (let j = 2; j <= floors; j++) {\n      let minTrials = Infinity;\n      for (let k = 1; k <= j; k++) {\n        minTrials = Math.min(minTrials, 1 + Math.max(dp[i-1][k-1], dp[i][j-k]));\n      }\n      dp[i][j] = minTrials;\n    }\n  }\n  return dp[eggs][floors];\n}",
-    },
+    ccode: {
+    python: "def egg_drop(eggs, floors):\n    dp = [[0] * (floors + 1) for _ in range(eggs + 1)]\n    for j in range(1, floors + 1):\n        dp[1][j] = j\n    for i in range(1, eggs + 1):\n        dp[i][1] = 1\n    for i in range(2, eggs + 1):\n        for j in range(2, floors + 1):\n            min_trials = float('inf')\n            for k in range(1, j + 1):\n                min_trials = min(min_trials, 1 + max(dp[i-1][k-1], dp[i][j-k]))\n            dp[i][j] = min_trials\n    return dp[eggs][floors]"
+  },
   },
   "dp-palindrome-partitioning": {
     id: "dp-palindrome-partitioning",
@@ -6369,10 +4860,9 @@ void traverseString(const string& s) {
     inputType: "dp",
     pseudocode:
       "cuts(s):\n  if isPal[i][j]: dp[i][j] = 0\n  else: dp[i][j] = min_k (dp[i][k] + dp[k+1][j] + 1)",
-    code: {
-      javascript:
-        "function minCuts(s) {\n  const n = s.length;\n  const dp = Array.from({length: n+1}, () => new Array(n+1).fill(0));\n  const isPal = Array.from({length: n+1}, () => new Array(n+1).fill(true));\n  for (let len = 2; len <= n; len++) {\n    for (let i = 1; i <= n - len + 1; i++) {\n      let j = i + len - 1;\n      isPal[i][j] = (s[i-1] === s[j-1]) && isPal[i+1][j-1];\n    }\n  }\n  for (let len = 1; len <= n; len++) {\n    for (let i = 1; i <= n - len + 1; i++) {\n      let j = i + len - 1;\n      if (isPal[i][j]) dp[i][j] = 0;\n      else {\n        dp[i][j] = Infinity;\n        for (let k = i; k < j; k++) {\n          dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[k+1][j] + 1);\n        }\n      }\n    }\n  }\n  return dp[1][n];\n}",
-    },
+    ccode: {
+    python: "def min_cuts(s):\n    n = len(s)\n    dp = [[0] * (n + 1) for _ in range(n + 1)]\n    is_pal = [[True] * (n + 1) for _ in range(n + 1)]\n    for length in range(2, n + 1):\n        for i in range(1, n - length + 2):\n            j = i + length - 1\n            is_pal[i][j] = (s[i-1] == s[j-1]) and is_pal[i+1][j-1]\n    for length in range(1, n + 1):\n        for i in range(1, n - length + 2):\n            j = i + length - 1\n            if is_pal[i][j]:\n                dp[i][j] = 0\n            else:\n                dp[i][j] = float('inf')\n                for k in range(i, j):\n                    dp[i][j] = min(dp[i][j], dp[i][k] + dp[k+1][j] + 1)\n    return dp[1][n]"
+  },
   },
   "counting-sort": {
     id: "counting-sort",
@@ -6402,14 +4892,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "countingSort(arr, k):\n  count = array of size k+1, fill 0\n  for x in arr: count[x]++\n  for i=1 to k: count[i] += count[i-1]\n  output: place elements from right to left",
-    code: {
-      javascript:
-        "function countingSort(arr) {\n  const k = Math.max(...arr);\n  const count = new Array(k + 1).fill(0);\n  arr.forEach(x => count[x]++);\n  for (let i = 1; i <= k; i++) count[i] += count[i-1];\n  const out = new Array(arr.length);\n  for (let i = arr.length - 1; i >= 0; i--) out[--count[arr[i]]] = arr[i];\n  return out;\n}",
-      python:
-        "def counting_sort(arr):\n    k = max(arr)\n    count = [0] * (k + 1)\n    for x in arr: count[x] += 1\n    for i in range(1, k+1): count[i] += count[i-1]\n    out = [0] * len(arr)\n    for x in reversed(arr):\n        count[x] -= 1\n        out[count[x]] = x\n    return out",
-      java: "public int[] countingSort(int[] arr) {\n    int k = Arrays.stream(arr).max().getAsInt();\n    int[] count = new int[k+1];\n    for (int x : arr) count[x]++;\n    for (int i=1;i<=k;i++) count[i]+=count[i-1];\n    int[] out = new int[arr.length];\n    for (int i=arr.length-1;i>=0;i--) out[--count[arr[i]]]=arr[i];\n    return out;\n}",
-      cpp: "vector<int> countingSort(vector<int>& arr) {\n    int k=*max_element(arr.begin(),arr.end());\n    vector<int> count(k+1,0);\n    for (int x:arr) count[x]++;\n    for (int i=1;i<=k;i++) count[i]+=count[i-1];\n    vector<int> out(arr.size());\n    for (int i=arr.size()-1;i>=0;i--) out[--count[arr[i]]]=arr[i];\n    return out;\n}",
-    },
+    ccode: {
+    python:
+        "def counting_sort(arr):\n    k = max(arr)\n    count = [0] * (k + 1)\n    for x in arr: count[x] += 1\n    for i in range(1, k+1): count[i] += count[i-1]\n    out = [0] * len(arr)\n    for x in reversed(arr):\n        count[x] -= 1\n        out[count[x]] = x\n    return out"
+  },
   },
   "radix-sort": {
     id: "radix-sort",
@@ -6441,14 +4927,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "radixSort(arr):\n  for exp = 1, 10, 100, ... while max/exp > 0:\n    stable sort by digit at position exp",
-    code: {
-      javascript:
-        "function radixSort(arr) {\n  const max = Math.max(...arr);\n  for (let exp = 1; Math.floor(max/exp) > 0; exp *= 10) {\n    const count = new Array(10).fill(0);\n    arr.forEach(x => count[Math.floor(x/exp)%10]++);\n    for (let i=1;i<10;i++) count[i]+=count[i-1];\n    const out = new Array(arr.length);\n    for (let i=arr.length-1;i>=0;i--) {\n      const d=Math.floor(arr[i]/exp)%10;\n      out[--count[d]]=arr[i];\n    }\n    arr.splice(0,arr.length,...out);\n  }\n  return arr;\n}",
-      python:
-        "def radix_sort(arr):\n    max_val = max(arr)\n    exp = 1\n    while max_val // exp > 0:\n        n=len(arr); out=[0]*n; count=[0]*10\n        for x in arr: count[(x//exp)%10]+=1\n        for i in range(1,10): count[i]+=count[i-1]\n        for i in range(n-1,-1,-1):\n            d=(arr[i]//exp)%10; count[d]-=1; out[count[d]]=arr[i]\n        arr[:]=out\n        exp*=10\n    return arr",
-      java: "public void radixSort(int[] arr) {\n    int max=Arrays.stream(arr).max().getAsInt();\n    for(int exp=1;max/exp>0;exp*=10) {\n        int n=arr.length;\n        int[] out=new int[n],count=new int[10];\n        for(int x:arr) count[(x/exp)%10]++;\n        for(int i=1;i<10;i++) count[i]+=count[i-1];\n        for(int i=n-1;i>=0;i--) out[--count[(arr[i]/exp)%10]]=arr[i];\n        System.arraycopy(out,0,arr,0,n);\n    }\n}",
-      cpp: "void radixSort(vector<int>& arr) {\n    int mx=*max_element(arr.begin(),arr.end());\n    for(int exp=1;mx/exp>0;exp*=10) {\n        int n=arr.size();\n        vector<int> out(n),count(10,0);\n        for(int x:arr) count[(x/exp)%10]++;\n        for(int i=1;i<10;i++) count[i]+=count[i-1];\n        for(int i=n-1;i>=0;i--) out[--count[(arr[i]/exp)%10]]=arr[i];\n        arr=out;\n    }\n}",
-    },
+    ccode: {
+    python:
+        "def radix_sort(arr):\n    max_val = max(arr)\n    exp = 1\n    while max_val // exp > 0:\n        n=len(arr); out=[0]*n; count=[0]*10\n        for x in arr: count[(x//exp)%10]+=1\n        for i in range(1,10): count[i]+=count[i-1]\n        for i in range(n-1,-1,-1):\n            d=(arr[i]//exp)%10; count[d]-=1; out[count[d]]=arr[i]\n        arr[:]=out\n        exp*=10\n    return arr"
+  },
   },
   "count-set-bits": {
     id: "count-set-bits",
@@ -6478,14 +4960,10 @@ void traverseString(const string& s) {
     inputType: "bit-value",
     pseudocode:
       "countSetBits(n):\n  count = 0\n  while n != 0:\n    n = n & (n - 1)  // clear lowest set bit\n    count++\n  return count",
-    code: {
-      javascript:
-        "function countSetBits(n) {\n  let count = 0;\n  while (n !== 0) {\n    n &= (n - 1);\n    count++;\n  }\n  return count;\n}",
-      python:
-        "def count_set_bits(n):\n    count = 0\n    while n:\n        n &= (n - 1)\n        count += 1\n    return count",
-      java: "public int countBits(int n) {\n    int count = 0;\n    while (n != 0) { n &= (n-1); count++; }\n    return count;\n}",
-      cpp: "int countSetBits(int n) {\n    int count = 0;\n    while (n) { n &= (n-1); count++; }\n    return count;\n}",
-    },
+    ccode: {
+    python:
+        "def count_set_bits(n):\n    count = 0\n    while n:\n        n &= (n - 1)\n        count += 1\n    return count"
+  },
   },
   "xor-operations": {
     id: "xor-operations",
@@ -6515,14 +4993,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "xorAll(arr):\n  result = 0\n  for x in arr:\n    result = result XOR x\n  return result",
-    code: {
-      javascript:
-        "function xorAll(arr) {\n  return arr.reduce((acc, x) => acc ^ x, 0);\n}",
-      python:
-        "from functools import reduce\ndef xor_all(arr):\n    return reduce(lambda a, x: a ^ x, arr, 0)",
-      java: "public int xorAll(int[] arr) {\n    int res = 0;\n    for (int x : arr) res ^= x;\n    return res;\n}",
-      cpp: "int xorAll(vector<int>& arr) {\n    int res = 0;\n    for (int x : arr) res ^= x;\n    return res;\n}",
-    },
+    ccode: {
+    python:
+        "from functools import reduce\ndef xor_all(arr):\n    return reduce(lambda a, x: a ^ x, arr, 0)"
+  },
   },
   "fast-exponentiation": {
     id: "fast-exponentiation",
@@ -6552,14 +5026,10 @@ void traverseString(const string& s) {
     inputType: "math-gcd",
     pseudocode:
       "fastPow(base, exp):\n  result = 1\n  while exp > 0:\n    if exp is odd: result *= base\n    base = base * base\n    exp = exp / 2\n  return result",
-    code: {
-      javascript:
-        "function fastPow(base, exp) {\n  let result = 1;\n  while (exp > 0) {\n    if (exp % 2 === 1) result *= base;\n    base *= base;\n    exp = Math.floor(exp / 2);\n  }\n  return result;\n}",
-      python:
-        "def fast_pow(base, exp):\n    result = 1\n    while exp > 0:\n        if exp % 2 == 1: result *= base\n        base *= base\n        exp //= 2\n    return result",
-      java: "public long fastPow(long base, int exp) {\n    long result = 1;\n    while (exp > 0) {\n        if ((exp & 1) == 1) result *= base;\n        base *= base;\n        exp >>= 1;\n    }\n    return result;\n}",
-      cpp: "long long fastPow(long long base, int exp) {\n    long long result = 1;\n    while (exp > 0) {\n        if (exp & 1) result *= base;\n        base *= base;\n        exp >>= 1;\n    }\n    return result;\n}",
-    },
+    ccode: {
+    python:
+        "def fast_pow(base, exp):\n    result = 1\n    while exp > 0:\n        if exp % 2 == 1: result *= base\n        base *= base\n        exp //= 2\n    return result"
+  },
   },
   "pascal-triangle": {
     id: "pascal-triangle",
@@ -6589,14 +5059,10 @@ void traverseString(const string& s) {
     inputType: "math-sieve",
     pseudocode:
       "pascal(n):\n  for each row i:\n    row[0] = row[i] = 1\n    row[j] = prev[j-1] + prev[j]",
-    code: {
-      javascript:
-        "function pascal(n) {\n  const tri = [[1]];\n  for (let i = 1; i < n; i++) {\n    const row = [1];\n    for (let j = 1; j < i; j++) row.push(tri[i-1][j-1] + tri[i-1][j]);\n    row.push(1);\n    tri.push(row);\n  }\n  return tri;\n}",
-      python:
-        "def pascal(n):\n    tri = [[1]]\n    for i in range(1, n):\n        row = [1]\n        for j in range(1, i): row.append(tri[i-1][j-1] + tri[i-1][j])\n        row.append(1)\n        tri.append(row)\n    return tri",
-      java: "public List<List<Integer>> generate(int n) {\n    List<List<Integer>> tri = new ArrayList<>();\n    for (int i=0;i<n;i++) {\n        List<Integer> row = new ArrayList<>(Arrays.asList(1));\n        for (int j=1;j<i;j++) row.add(tri.get(i-1).get(j-1)+tri.get(i-1).get(j));\n        if (i>0) row.add(1);\n        tri.add(row);\n    }\n    return tri;\n}",
-      cpp: "vector<vector<int>> generate(int n) {\n    vector<vector<int>> tri={{1}};\n    for(int i=1;i<n;i++) {\n        vector<int> row={1};\n        for(int j=1;j<i;j++) row.push_back(tri[i-1][j-1]+tri[i-1][j]);\n        row.push_back(1);\n        tri.push_back(row);\n    }\n    return tri;\n}",
-    },
+    ccode: {
+    python:
+        "def pascal(n):\n    tri = [[1]]\n    for i in range(1, n):\n        row = [1]\n        for j in range(1, i): row.append(tri[i-1][j-1] + tri[i-1][j])\n        row.append(1)\n        tri.append(row)\n    return tri"
+  },
   },
   "trapping-rain-water": {
     id: "trapping-rain-water",
@@ -6625,14 +5091,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "trap(h):\n  l=0,r=n-1,lm=0,rm=0,water=0\n  while l<r:\n    if h[l]<=h[r]: water+=max(0,lm-h[l]); lm=max(lm,h[l]); l++\n    else: water+=max(0,rm-h[r]); rm=max(rm,h[r]); r--",
-    code: {
-      javascript:
-        "function trap(height) {\n  let l=0, r=height.length-1, lm=0, rm=0, w=0;\n  while (l < r) {\n    if (height[l] <= height[r]) {\n      lm = Math.max(lm, height[l]);\n      w += lm - height[l++];\n    } else {\n      rm = Math.max(rm, height[r]);\n      w += rm - height[r--];\n    }\n  }\n  return w;\n}",
-      python:
-        "def trap(h):\n    l,r,lm,rm,w=0,len(h)-1,0,0,0\n    while l<r:\n        if h[l]<=h[r]:\n            lm=max(lm,h[l]); w+=lm-h[l]; l+=1\n        else:\n            rm=max(rm,h[r]); w+=rm-h[r]; r-=1\n    return w",
-      java: "public int trap(int[] h) {\n    int l=0,r=h.length-1,lm=0,rm=0,w=0;\n    while(l<r) {\n        if(h[l]<=h[r]){lm=Math.max(lm,h[l]);w+=lm-h[l++];}\n        else{rm=Math.max(rm,h[r]);w+=rm-h[r--];}\n    }\n    return w;\n}",
-      cpp: "int trap(vector<int>& h){\n    int l=0,r=h.size()-1,lm=0,rm=0,w=0;\n    while(l<r){\n        if(h[l]<=h[r]){lm=max(lm,h[l]);w+=lm-h[l++];}\n        else{rm=max(rm,h[r]);w+=rm-h[r--];}\n    }\n    return w;\n}",
-    },
+    ccode: {
+    python:
+        "def trap(h):\n    l,r,lm,rm,w=0,len(h)-1,0,0,0\n    while l<r:\n        if h[l]<=h[r]:\n            lm=max(lm,h[l]); w+=lm-h[l]; l+=1\n        else:\n            rm=max(rm,h[r]); w+=rm-h[r]; r-=1\n    return w"
+  },
   },
   "floyd-warshall": {
     id: "floyd-warshall",
@@ -6664,14 +5126,10 @@ void traverseString(const string& s) {
     inputType: "graph",
     pseudocode:
       "floydWarshall(dist):\n  for k in 0..V-1:\n    for i in 0..V-1:\n      for j in 0..V-1:\n        dist[i][j] = min(dist[i][j], dist[i][k]+dist[k][j])",
-    code: {
-      javascript:
-        "function floydWarshall(dist) {\n  const V = dist.length;\n  for (let k=0;k<V;k++)\n    for (let i=0;i<V;i++)\n      for (let j=0;j<V;j++)\n        if (dist[i][k]+dist[k][j] < dist[i][j])\n          dist[i][j] = dist[i][k]+dist[k][j];\n  return dist;\n}",
-      python:
-        "def floyd_warshall(dist):\n    V=len(dist)\n    for k in range(V):\n        for i in range(V):\n            for j in range(V):\n                if dist[i][k]+dist[k][j] < dist[i][j]:\n                    dist[i][j]=dist[i][k]+dist[k][j]\n    return dist",
-      java: "public void floydWarshall(int[][] d) {\n    int V=d.length;\n    for(int k=0;k<V;k++)\n        for(int i=0;i<V;i++)\n            for(int j=0;j<V;j++)\n                if(d[i][k]!=1000000 && d[k][j]!=1000000 && d[i][k]+d[k][j]<d[i][j])\n                    d[i][j]=d[i][k]+d[k][j];\n}",
-      cpp: "void floydWarshall(vector<vector<int>>& d) {\n    int V=d.size();\n    for(int k=0;k<V;k++)\n        for(int i=0;i<V;i++)\n            for(int j=0;j<V;j++)\n                d[i][j]=min(d[i][j],d[i][k]+d[k][j]);\n}",
-    },
+    ccode: {
+    python:
+        "def floyd_warshall(dist):\n    V=len(dist)\n    for k in range(V):\n        for i in range(V):\n            for j in range(V):\n                if dist[i][k]+dist[k][j] < dist[i][j]:\n                    dist[i][j]=dist[i][k]+dist[k][j]\n    return dist"
+  },
   },
   "two-sum-two-pointer": {
     id: "two-sum-two-pointer",
@@ -6697,14 +5155,10 @@ void traverseString(const string& s) {
     inputType: "array",
     pseudocode:
       "twoSum(arr, target):\n  l=0, r=len-1\n  while l<r:\n    sum=arr[l]+arr[r]\n    if sum==target: return [l,r]\n    elif sum<target: l++\n    else: r--",
-    code: {
-      javascript:
-        "function twoSum(arr, target) {\n  let l=0, r=arr.length-1;\n  while (l<r) {\n    const sum=arr[l]+arr[r];\n    if (sum===target) return [l,r];\n    else if (sum<target) l++;\n    else r--;\n  }\n  return [-1,-1];\n}",
-      python:
-        "def two_sum(arr, target):\n    l,r=0,len(arr)-1\n    while l<r:\n        s=arr[l]+arr[r]\n        if s==target: return [l,r]\n        elif s<target: l+=1\n        else: r-=1\n    return [-1,-1]",
-      java: "public int[] twoSum(int[] a, int t) {\n    int l=0,r=a.length-1;\n    while(l<r){\n        int s=a[l]+a[r];\n        if(s==t) return new int[]{l,r};\n        else if(s<t) l++; else r--;\n    }\n    return new int[]{-1,-1};\n}",
-      cpp: "vector<int> twoSum(vector<int>& a,int t){\n    int l=0,r=a.size()-1;\n    while(l<r){\n        int s=a[l]+a[r];\n        if(s==t) return{l,r};\n        else if(s<t) l++; else r--;\n    }\n    return{-1,-1};\n}",
-    },
+    ccode: {
+    python:
+        "def two_sum(arr, target):\n    l,r=0,len(arr)-1\n    while l<r:\n        s=arr[l]+arr[r]\n        if s==target: return [l,r]\n        elif s<target: l+=1\n        else: r-=1\n    return [-1,-1]"
+  },
   },
   "bst-insert": {
     id: "bst-insert",
@@ -6734,14 +5188,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "bstInsert(root, val):\n  if root is null: return new Node(val)\n  if val < root.val: root.left = insert(root.left, val)\n  else: root.right = insert(root.right, val)\n  return root",
-    code: {
-      javascript:
-        "function insert(root, val) {\n  if (!root) return { val, left: null, right: null };\n  if (val < root.val) root.left = insert(root.left, val);\n  else root.right = insert(root.right, val);\n  return root;\n}",
-      python:
-        "def insert(root, val):\n    if not root: return TreeNode(val)\n    if val < root.val: root.left = insert(root.left, val)\n    else: root.right = insert(root.right, val)\n    return root",
-      java: "public TreeNode insert(TreeNode root, int val) {\n    if (root == null) return new TreeNode(val);\n    if (val < root.val) root.left = insert(root.left, val);\n    else root.right = insert(root.right, val);\n    return root;\n}",
-      cpp: "TreeNode* insert(TreeNode* root, int val) {\n    if (!root) return new TreeNode(val);\n    if (val < root->val) root->left = insert(root->left, val);\n    else root->right = insert(root->right, val);\n    return root;\n}",
-    },
+    ccode: {
+    python:
+        "def insert(root, val):\n    if not root: return TreeNode(val)\n    if val < root.val: root.left = insert(root.left, val)\n    else: root.right = insert(root.right, val)\n    return root"
+  },
   },
   "bst-delete": {
     id: "bst-delete",
@@ -6771,14 +5221,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "bstDelete(root, key):\n  if key < root.val: left subtree\n  elif key > root.val: right subtree\n  else:\n    case 1: leaf → remove\n    case 2: one child → replace\n    case 3: two children → find successor",
-    code: {
-      javascript:
-        "function deleteNode(root, key) {\n  if (!root) return null;\n  if (key < root.val) root.left = deleteNode(root.left, key);\n  else if (key > root.val) root.right = deleteNode(root.right, key);\n  else {\n    if (!root.left) return root.right;\n    if (!root.right) return root.left;\n    let succ = root.right;\n    while (succ.left) succ = succ.left;\n    root.val = succ.val;\n    root.right = deleteNode(root.right, succ.val);\n  }\n  return root;\n}",
-      python:
-        "def delete(root, key):\n    if not root: return None\n    if key < root.val: root.left = delete(root.left, key)\n    elif key > root.val: root.right = delete(root.right, key)\n    else:\n        if not root.left: return root.right\n        if not root.right: return root.left\n        succ = root.right\n        while succ.left: succ = succ.left\n        root.val = succ.val\n        root.right = delete(root.right, succ.val)\n    return root",
-      java: "public TreeNode deleteNode(TreeNode root, int key) {\n    if (root == null) return null;\n    if (key < root.val) root.left = deleteNode(root.left, key);\n    else if (key > root.val) root.right = deleteNode(root.right, key);\n    else {\n        if (root.left == null) return root.right;\n        if (root.right == null) return root.left;\n        TreeNode succ = root.right;\n        while (succ.left != null) succ = succ.left;\n        root.val = succ.val;\n        root.right = deleteNode(root.right, succ.val);\n    }\n    return root;\n}",
-      cpp: "TreeNode* deleteNode(TreeNode* root, int key) {\n    if (!root) return nullptr;\n    if (key < root->val) root->left = deleteNode(root->left, key);\n    else if (key > root->val) root->right = deleteNode(root->right, key);\n    else {\n        if (!root->left) return root->right;\n        if (!root->right) return root->left;\n        auto succ = root->right;\n        while (succ->left) succ = succ->left;\n        root->val = succ->val;\n        root->right = deleteNode(root->right, succ->val);\n    }\n    return root;\n}",
-    },
+    ccode: {
+    python:
+        "def delete(root, key):\n    if not root: return None\n    if key < root.val: root.left = delete(root.left, key)\n    elif key > root.val: root.right = delete(root.right, key)\n    else:\n        if not root.left: return root.right\n        if not root.right: return root.left\n        succ = root.right\n        while succ.left: succ = succ.left\n        root.val = succ.val\n        root.right = delete(root.right, succ.val)\n    return root"
+  },
   },
   "avl-insert": {
     id: "avl-insert",
@@ -6811,14 +5257,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "avlInsert(root, val):\n  BST insert, then update height\n  balance = getBalance(root)\n  if balance > 1:\n    if val < left.val: rightRotate  // LL\n    else: leftRotate(left), rightRotate  // LR\n  if balance < -1:\n    if val > right.val: leftRotate  // RR\n    else: rightRotate(right), leftRotate  // RL",
-    code: {
-      javascript:
-        "function insert(root, val) {\n  if (!root) return { val, left: null, right: null, h: 1, bf: 0 };\n  if (val < root.val) root.left = insert(root.left, val);\n  else root.right = insert(root.right, val);\n  root.h = 1 + Math.max(height(root.left), height(root.right));\n  root.bf = height(root.left) - height(root.right);\n  return balance(root);\n}",
-      python:
-        "def insert(root, val):\n    if not root: return Node(val)\n    if val < root.val: root.left = insert(root.left, val)\n    else: root.right = insert(root.right, val)\n    root.h = 1 + max(height(root.left), height(root.right))\n    root.bf = height(root.left) - height(root.right)\n    return balance(root)",
-      java: "public AVLNode insert(AVLNode root, int val) {\n    if (root == null) return new AVLNode(val);\n    if (val < root.val) root.left = insert(root.left, val);\n    else root.right = insert(root.right, val);\n    updateHeight(root);\n    return balance(root);\n}",
-      cpp: "AVLNode* insert(AVLNode* root, int val) {\n    if (!root) return new AVLNode(val);\n    if (val < root->val) root->left = insert(root->left, val);\n    else root->right = insert(root->right, val);\n    updateHeight(root);\n    return balance(root);\n}",
-    },
+    ccode: {
+    python:
+        "def insert(root, val):\n    if not root: return Node(val)\n    if val < root.val: root.left = insert(root.left, val)\n    else: root.right = insert(root.right, val)\n    root.h = 1 + max(height(root.left), height(root.right))\n    root.bf = height(root.left) - height(root.right)\n    return balance(root)"
+  },
   },
   "avl-delete": {
     id: "avl-delete",
@@ -6843,14 +5285,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "avlDelete(root, key):\n  BST delete the node\n  walk back up updating heights\n  at each node: if |bf| > 1, rotate to rebalance",
-    code: {
-      javascript:
-        "function deleteAVL(root, key) {\n  root = bstDelete(root, key);\n  if (!root) return null;\n  root.h = 1 + Math.max(height(root.left), height(root.right));\n  root.bf = height(root.left) - height(root.right);\n  return balance(root);\n}",
-      python:
-        "def delete_avl(root, key):\n    root = bst_delete(root, key)\n    if not root: return None\n    root.h = 1 + max(height(root.left), height(root.right))\n    root.bf = height(root.left) - height(root.right)\n    return balance(root)",
-      java: "public AVLNode delete(AVLNode root, int key) {\n    root = bstDelete(root, key);\n    if (root == null) return null;\n    updateHeight(root);\n    return balance(root);\n}",
-      cpp: "AVLNode* deleteAVL(AVLNode* root, int key) {\n    root = bstDelete(root, key);\n    if (!root) return nullptr;\n    updateHeight(root);\n    return balance(root);\n}",
-    },
+    ccode: {
+    python:
+        "def delete_avl(root, key):\n    root = bst_delete(root, key)\n    if not root: return None\n    root.h = 1 + max(height(root.left), height(root.right))\n    root.bf = height(root.left) - height(root.right)\n    return balance(root)"
+  },
   },
   "bt-insert": {
     id: "bt-insert",
@@ -6880,14 +5318,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "btInsert(root, val):\n  use BFS queue\n  for each node in level order:\n    if node.left is null: node.left = new Node(val); return\n    if node.right is null: node.right = new Node(val); return",
-    code: {
-      javascript:
-        "function btInsert(root, val) {\n  const node = { val, left: null, right: null };\n  if (!root) return node;\n  const q = [root];\n  while (q.length) {\n    const curr = q.shift();\n    if (!curr.left) { curr.left = node; return root; }\n    q.push(curr.left);\n    if (!curr.right) { curr.right = node; return root; }\n    q.push(curr.right);\n  }\n  return root;\n}",
-      python:
-        "from collections import deque\ndef bt_insert(root, val):\n    node = TreeNode(val)\n    if not root: return node\n    q = deque([root])\n    while q:\n        curr = q.popleft()\n        if not curr.left: curr.left = node; return root\n        q.append(curr.left)\n        if not curr.right: curr.right = node; return root\n        q.append(curr.right)\n    return root",
-      java: "public TreeNode btInsert(TreeNode root, int val) {\n    TreeNode node = new TreeNode(val);\n    if (root == null) return node;\n    Queue<TreeNode> q = new LinkedList<>();\n    q.offer(root);\n    while (!q.isEmpty()) {\n        TreeNode curr = q.poll();\n        if (curr.left == null) { curr.left = node; return root; }\n        q.offer(curr.left);\n        if (curr.right == null) { curr.right = node; return root; }\n        q.offer(curr.right);\n    }\n    return root;\n}",
-      cpp: "TreeNode* btInsert(TreeNode* root, int val) {\n    TreeNode* node = new TreeNode(val);\n    if (!root) return node;\n    queue<TreeNode*> q;\n    q.push(root);\n    while (!q.empty()) {\n        auto curr = q.front(); q.pop();\n        if (!curr->left) { curr->left = node; return root; }\n        q.push(curr->left);\n        if (!curr->right) { curr->right = node; return root; }\n        q.push(curr->right);\n    }\n    return root;\n}",
-    },
+    ccode: {
+    python:
+        "from collections import deque\ndef bt_insert(root, val):\n    node = TreeNode(val)\n    if not root: return node\n    q = deque([root])\n    while q:\n        curr = q.popleft()\n        if not curr.left: curr.left = node; return root\n        q.append(curr.left)\n        if not curr.right: curr.right = node; return root\n        q.append(curr.right)\n    return root"
+  },
   },
   "bt-delete": {
     id: "bt-delete",
@@ -6913,14 +5347,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "btDelete(root, key):\n  find deepest rightmost node using BFS\n  find node with key using BFS\n  replace key node's value with deepest's value\n  delete deepest rightmost node",
-    code: {
-      javascript:
-        "function btDelete(root, key) {\n  if (!root) return null;\n  const q = [root];\n  let target = null, last = null, lastParent = null;\n  while (q.length) {\n    last = q.shift();\n    if (last.val === key) target = last;\n    if (last.left) q.push(last.left);\n    if (last.right) q.push(last.right);\n  }\n  if (target) target.val = last.val;\n  // delete last node\n  return root;\n}",
-      python:
-        "def bt_delete(root, key):\n    if not root: return None\n    from collections import deque\n    q = deque([root])\n    key_node, last = None, None\n    while q:\n        last = q.popleft()\n        if last.val == key: key_node = last\n        if last.left: q.append(last.left)\n        if last.right: q.append(last.right)\n    if key_node: key_node.val = last.val\n    return root",
-      java: "public TreeNode btDelete(TreeNode root, int key) {\n    if (root == null) return null;\n    Queue<TreeNode> q = new LinkedList<>();\n    q.offer(root);\n    TreeNode keyNode = null, last = null;\n    while (!q.isEmpty()) {\n        last = q.poll();\n        if (last.val == key) keyNode = last;\n        if (last.left != null) q.offer(last.left);\n        if (last.right != null) q.offer(last.right);\n    }\n    if (keyNode != null) keyNode.val = last.val;\n    return root;\n}",
-      cpp: "TreeNode* btDelete(TreeNode* root, int key) {\n    if (!root) return nullptr;\n    queue<TreeNode*> q; q.push(root);\n    TreeNode *keyNode = nullptr, *last = nullptr;\n    while (!q.empty()) {\n        last = q.front(); q.pop();\n        if (last->val == key) keyNode = last;\n        if (last->left) q.push(last->left);\n        if (last->right) q.push(last->right);\n    }\n    if (keyNode) keyNode->val = last->val;\n    return root;\n}",
-    },
+    ccode: {
+    python:
+        "def bt_delete(root, key):\n    if not root: return None\n    from collections import deque\n    q = deque([root])\n    key_node, last = None, None\n    while q:\n        last = q.popleft()\n        if last.val == key: key_node = last\n        if last.left: q.append(last.left)\n        if last.right: q.append(last.right)\n    if key_node: key_node.val = last.val\n    return root"
+  },
   },
   "rbt-insert": {
     id: "rbt-insert",
@@ -6947,14 +5377,10 @@ void traverseString(const string& s) {
     inputType: "tree",
     pseudocode:
       "rbtInsert(root, val):\n  BST insert, color node RED\n  Fix violations:\n  while parent is RED:\n    if uncle is RED: recolor\n    else: rotate + recolor\n  root.color = BLACK",
-    code: {
-      javascript:
-        "// Red-Black Tree insert fix\nfunction fixInsert(node) {\n  while (node.parent?.color === 'RED') {\n    const uncle = getUncle(node);\n    if (uncle?.color === 'RED') {\n      // Case 1: Recolor\n      node.parent.color = 'BLACK';\n      uncle.color = 'BLACK';\n      node.parent.parent.color = 'RED';\n      node = node.parent.parent;\n    } else {\n      // Case 2/3: Rotate\n      rotate(node);\n    }\n  }\n  root.color = 'BLACK';\n}",
-      python:
-        "# Red-Black Tree insert fix\ndef fix_insert(self, node):\n    while node.parent and node.parent.color == 'RED':\n        uncle = self.get_uncle(node)\n        if uncle and uncle.color == 'RED':\n            node.parent.color = 'BLACK'\n            uncle.color = 'BLACK'\n            node.parent.parent.color = 'RED'\n            node = node.parent.parent\n        else:\n            self.rotate(node)\n    self.root.color = 'BLACK'",
-      java: "private void fixInsert(RBNode node) {\n    while (node.parent != null && node.parent.color == RED) {\n        RBNode uncle = getUncle(node);\n        if (uncle != null && uncle.color == RED) {\n            node.parent.color = BLACK;\n            uncle.color = BLACK;\n            node.parent.parent.color = RED;\n            node = node.parent.parent;\n        } else { rotate(node); }\n    }\n    root.color = BLACK;\n}",
-      cpp: "void fixInsert(RBNode* node) {\n    while (node->parent && node->parent->color == RED) {\n        auto uncle = getUncle(node);\n        if (uncle && uncle->color == RED) {\n            node->parent->color = BLACK;\n            uncle->color = BLACK;\n            node->parent->parent->color = RED;\n            node = node->parent->parent;\n        } else { rotate(node); }\n    }\n    root->color = BLACK;\n}",
-    },
+    ccode: {
+    python:
+        "# Red-Black Tree insert fix\ndef fix_insert(self, node):\n    while node.parent and node.parent.color == 'RED':\n        uncle = self.get_uncle(node)\n        if uncle and uncle.color == 'RED':\n            node.parent.color = 'BLACK'\n            uncle.color = 'BLACK'\n            node.parent.parent.color = 'RED'\n            node = node.parent.parent\n        else:\n            self.rotate(node)\n    self.root.color = 'BLACK'"
+  },
   },
 };
 

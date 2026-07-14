@@ -1,216 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useVisualizer } from "../context/VisualizerContext";
 import { ALGORITHMS, CATEGORIES, COUNTERPARTS } from "../data/algorithmsData";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
-import VisualizerCanvas from "../components/visualizer/VisualizerCanvas";
 import ControlPanel from "../components/visualizer/ControlPanel";
 import StatsPanel from "../components/visualizer/StatsPanel";
-import CodePanel from "../components/visualizer/CodePanel";
 import ExplanationPanel from "../components/visualizer/ExplanationPanel";
 import ComplexityPanel from "../components/visualizer/ComplexityPanel";
-
-import {
-  // Arrays (basic operations)
-  dutchNationalFlagSteps,
-  mooresVotingSteps,
-  suffixSumSteps,
-  differenceArraySteps,
-  primsSteps,
-  arrayTraversalSteps,
-  arrayInsertionSteps,
-  arrayDeletionSteps,
-  splittingArraysSteps,
-  spiralMatrixSteps,
-  transposeMatrixSteps,
-  fruitsIntoBasketsSteps,
-  minWindowSubstringSteps,
-  stringTraversalSteps,
-  stringConcatenationSteps,
-  longestPalindromeSteps,
-  matrixMultiplicationSteps,
-  doublyLinkedListTraversalSteps,
-  doublyLinkedListInsertionSteps,
-  doublyLinkedListDeletionSteps,
-  circularLinkedListTraversalSteps,
-  // Strings
-  zAlgorithmSteps,
-  manachersSteps,
-  stringCompressionSteps,
-  // Stack
-  infixToPrefixSteps,
-  prefixEvaluationSteps,
-  infixToPostfixSteps,
-  postfixEvaluationSteps,
-  nextSmallerElementSteps,
-  previousGreaterElementSteps,
-  largestRectangleHistogramSteps,
-  stockSpanSteps,
-  undoRedoSteps,
-  browserHistorySteps,
-  previousSmallerElementSteps,
-  dailyTemperaturesSteps,
-  removeKDigitsSteps,
-  // Trees
-  treeDiameterSteps,
-  treeTopViewSteps,
-  treeBottomViewSteps,
-  treeLeftViewSteps,
-  treeRightViewSteps,
-  zigzagTraversalSteps,
-  validateBstSteps,
-  kthSmallestSteps,
-  // Graphs
-  kruskalsSteps,
-  bipartiteCheckSteps,
-  connectedComponentsSteps,
-  // DP
-  longestIncreasingSubsequenceSteps,
-  editDistanceSteps,
-  houseRobberSteps,
-  longestPalindromicSubsequenceSteps,
-  // Greedy / Searching
-  jobSchedulingSteps,
-  jumpGameSteps,
-  exponentialSearchSteps,
-  interpolationSearchSteps,
-  shellSortSteps,
-  bucketSortSteps,
-  // Bit / Math / Advanced
-  grayCodeSteps,
-  lcmSteps,
-  nCrSteps,
-  lruCacheSteps,
-  minimumPlatformsSteps,
-  candyDistributionSteps,
-  fenwickTreeSteps,
-  bTreeSteps,
-  bPlusTreeSteps,
-  splayTreeSteps,
-  treapSteps,
-  kdTreeSteps,
-  quadTreeSteps,
-  octreeSteps,
-  intervalTreeSteps,
-  suffixTreeSteps,
-  cartesianTreeSteps,
-  josephusSteps,
-  dequeSteps,
-  cpuSchedulingSteps,
-  printerQueueSteps,
-  lfuCacheSteps,
-  slidingWindowMaxMonoSteps,
-  hashMapChainingSteps,
-  hashSetSteps,
-  twoSumChainingSteps,
-  longestConsecutiveSequenceSteps,
-  bloomFilterSteps,
-  factorialRecursionSteps,
-  letterCombinationsSteps,
-  backtrackingPalindromePartitioningSteps,
-  permutationsSteps,
-  crosswordSolverSteps,
-  branchAndBoundSteps,
-} from "../algorithms/roadmapGenerators";
-
-// Step Frame Generators
-import {
-  bubbleSortSteps,
-  selectionSortSteps,
-  insertionSortSteps,
-  mergeSortSteps,
-  quickSortSteps,
-  linearSearchSteps,
-  binarySearchSteps,
-  kadaneSteps,
-  reverseListSteps,
-  balancedParenthesesSteps,
-  queueOperationsSteps,
-  bstTraversalSteps,
-  dijkstraSteps,
-  towerOfHanoiSteps,
-  climbingStairsSteps,
-  twoSumHashSteps,
-  bfsSteps,
-  dfsSteps,
-  bstSearchSteps,
-  treeHeightSteps,
-  lcaSteps,
-  heapSortSteps,
-  minHeapSteps,
-  maxHeapSteps,
-  prefixSumSteps,
-  slidingWindowSteps,
-  twoPointerSteps,
-  rotateArraySteps,
-  mergeArraysSteps,
-  frequencyCountSteps,
-  linkedListTraversalSteps,
-  cycleDetectionSteps,
-  middleNodeSteps,
-  stackOperationsSteps,
-  nextGreaterElementSteps,
-  circularQueueSteps,
-  slidingWindowMaxSteps,
-  topologicalSortSteps,
-  hashMapSteps,
-  groupAnagramsSteps,
-  fibonacciRecursionSteps,
-  nQueensSteps,
-  knapsackDpSteps,
-  coinChangeDpSteps,
-  ternarySearchSteps,
-  ratInAMazeSteps,
-  sudokuSolverSteps,
-  kmpSearchSteps,
-  longestCommonPrefixSteps,
-  activitySelectionSteps,
-  fractionalKnapsackSteps,
-  singleNumberSteps,
-  powerOfTwoSteps,
-  gcdSteps,
-  sieveSteps,
-  removeDuplicatesSteps,
-  equilibriumIndexSteps,
-  dsuCycleSteps,
-  segmentTreeSteps,
-  trieSteps,
-  rabinKarpSteps,
-  reverseArraySteps,
-  palindromeCheckSteps,
-  reverseStringSteps,
-  mergeSortedListsSteps,
-  minStackSteps,
-  levelOrderTraversalSteps,
-  bellmanFordSteps,
-  wordSearchSteps,
-  generateParenthesesSteps,
-  lcsDpSteps,
-  longestCommonSubstringSteps,
-  burstBalloonsSteps,
-  matrixChainSteps,
-  wildcardMatchingSteps,
-  eggDroppingSteps,
-  palindromePartitioningSteps,
-  countingSortSteps,
-  radixSortSteps,
-  countSetBitsSteps,
-  xorOperationsSteps,
-  fastExponentiationSteps,
-  pascalTriangleSteps,
-  trappingRainWaterSteps,
-  floydWarshallSteps,
-  twoSumTwoPointerSteps,
-  bstInsertSteps,
-  bstDeleteSteps,
-  avlInsertSteps,
-  avlDeleteSteps,
-  btInsertSteps,
-  btDeleteSteps,
-  rbtInsertSteps,
-} from "../algorithms/stepGenerators";
-
 import {
   ArrowLeft,
   Heart,
@@ -220,7 +17,111 @@ import {
   ThumbsUp,
   ThumbsDown,
   BookOpen,
+  Plus,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  List,
 } from "lucide-react";
+
+// Heavy components — lazy-loaded so they don't block the initial bundle
+const VisualizerCanvas = lazy(
+  () => import("../components/visualizer/VisualizerCanvas"),
+);
+const CodePanel = lazy(() => import("../components/visualizer/CodePanel"));
+
+// Trees category algorithms list
+const TREE_ALGOS = new Set([
+  "bst-traversal",
+  "bst-search",
+  "tree-height",
+  "lca",
+  "level-order-traversal",
+  "bst-insert",
+  "bst-delete",
+  "avl-insert",
+  "avl-delete",
+  "bt-insert",
+  "bt-delete",
+  "rbt-insert",
+  "tree-diameter",
+  "diameter-of-binary-tree",
+  "tree-top-view",
+  "top-view",
+  "tree-bottom-view",
+  "bottom-view",
+  "tree-left-view",
+  "left-view",
+  "tree-right-view",
+  "right-view",
+  "zigzag-traversal",
+  "tree-zigzag",
+  "zigzag-level-order",
+  "validate-bst",
+  "validate-bst-concept",
+  "kth-smallest",
+  "kth-smallest-in-bst",
+  "b-tree",
+  "b-plus-tree",
+  "splay-tree",
+  "treap",
+  "cartesian-tree",
+  "suffix-tree",
+  "interval-tree",
+  "kd-tree",
+  "quad-tree",
+  "octree",
+]);
+
+// Heaps category algorithms list
+const HEAP_ALGOS = new Set(["min-heap", "max-heap", "heap-sort"]);
+
+// Hashing category algorithms list
+const HASHING_ALGOS = new Set([
+  "linear-probing",
+  "quadratic-probing",
+  "double-hashing",
+  "separate-chaining",
+  "hash-map",
+  "hash-set",
+  "group-anagrams",
+  "longest-consecutive-sequence",
+  "bloom-filter",
+]);
+
+// Lazy Generator Loaders
+let _generatorsPromise = null;
+let _treeGeneratorsPromise = null;
+let _heapGeneratorsPromise = null;
+let _hashingGeneratorsPromise = null;
+
+function getGenerators(algoId) {
+  if (TREE_ALGOS.has(algoId)) {
+    if (!_treeGeneratorsPromise) {
+      _treeGeneratorsPromise = import("../algorithms/treeGenerators");
+    }
+    return _treeGeneratorsPromise;
+  }
+  if (HEAP_ALGOS.has(algoId)) {
+    if (!_heapGeneratorsPromise) {
+      _heapGeneratorsPromise = import("../algorithms/heapGenerators");
+    }
+    return _heapGeneratorsPromise;
+  }
+  if (HASHING_ALGOS.has(algoId)) {
+    if (!_hashingGeneratorsPromise) {
+      _hashingGeneratorsPromise = import("../algorithms/hashingGenerators");
+    }
+    return _hashingGeneratorsPromise;
+  }
+  if (!_generatorsPromise) {
+    _generatorsPromise = Promise.all([
+      import("../algorithms/stepGenerators"),
+      import("../algorithms/roadmapGenerators"),
+    ]).then(([stepMod, roadmapMod]) => ({ ...stepMod, ...roadmapMod }));
+  }
+  return _generatorsPromise;
+}
 
 // Configuration map for algorithms that need a second input field.
 // Each entry defines the placeholder text, default value, and random value generator.
@@ -401,6 +302,40 @@ const SECOND_INPUT_CONFIG = {
     randomVal: (arr) =>
       arr[Math.floor(Math.random() * arr.length)]?.toString() || "3",
   },
+  "linked-list-insertion": {
+    label: "Val & Index (e.g. 99 2)",
+    defaultVal: "99 2",
+    randomVal: (arr) => {
+      const val = Math.floor(Math.random() * 90) + 10;
+      const idx = Math.min(2, arr.length);
+      return `${val} ${idx}`;
+    },
+  },
+  "linked-list-deletion": {
+    label: "Delete Index",
+    defaultVal: "2",
+    randomVal: (arr) => {
+      const idx = Math.min(2, Math.max(0, arr.length - 1));
+      return idx.toString();
+    },
+  },
+  "doubly-linked-list-insertion": {
+    label: "Val & Index (e.g. 99 2)",
+    defaultVal: "99 2",
+    randomVal: (arr) => {
+      const val = Math.floor(Math.random() * 90) + 10;
+      const idx = Math.min(2, arr.length);
+      return `${val} ${idx}`;
+    },
+  },
+  "doubly-linked-list-deletion": {
+    label: "Delete Index",
+    defaultVal: "2",
+    randomVal: (arr) => {
+      const idx = Math.min(2, Math.max(0, arr.length - 1));
+      return idx.toString();
+    },
+  },
   "merge-sorted-lists": {
     label: "Second List",
     defaultVal: "2 4 6 8",
@@ -462,12 +397,113 @@ const SECOND_INPUT_CONFIG = {
   },
 };
 
+const getCustomInputPlaceholder = (algo) => {
+  if (!algo) return "";
+  if (algo.id === "knapsack-dp") {
+    return "Enter weights and values (newline separated):\nLine 1: weights (e.g., 2 3 4 5)\nLine 2: values (e.g., 3 4 5 6)";
+  }
+  if (algo.id === "merge-arrays" || algo.counterpartId === "merge-arrays") {
+    return "Enter two sorted arrays (newline separated):\nLine 1: Sorted Array A (e.g., 1 3 5)\nLine 2: Sorted Array B (e.g., 2 4 6)";
+  }
+  if (algo.inputType === "word-search-grid") {
+    return "Enter character grid board layout (newline separated rows), e.g.:\nA B C E\nS F C S\nA D E E";
+  }
+  if (algo.inputType === "grid") {
+    return "Enter grid board layout (space-separated cells, newline-separated rows), e.g.:\n0 1 0 0\n0 0 0 1\n1 0 0 0";
+  }
+  if (algo.inputType === "graph") {
+    return "Enter graph edges: u v weight (newline separated rows), e.g.:\n0 1 4\n0 2 1\n2 1 2\n1 3 5";
+  }
+  if (algo.inputType === "tree") {
+    return "Enter tree nodes in level-order format (e.g., 10 5 15 3 7 12 18)";
+  }
+  if (algo.inputType === "heap") {
+    return "Enter space-separated heap elements (e.g., 10 20 15 30 40)";
+  }
+  if (algo.inputType === "linked-list") {
+    return "Enter space-separated linked list values (e.g., 10 20 30 40)";
+  }
+  if (algo.inputType === "stack") {
+    if (algo.id === "balanced-parentheses") {
+      return "Enter parentheses sequence to validate (e.g., { [ ( ) ] })";
+    }
+    return "Enter space-separated stack elements or brackets (e.g., 12 45 67 89)";
+  }
+  if (algo.inputType === "queue") {
+    return "Enter space-separated queue elements (e.g., 12 45 67 89)";
+  }
+  if (algo.inputType === "recursion") {
+    return "Enter positive integer for recursion (e.g., 3 or 5)";
+  }
+  if (algo.inputType === "dp") {
+    return "Enter integer size / value (e.g., 5 or 11)";
+  }
+  if (algo.inputType === "search") {
+    return "Enter space-separated search array/list (e.g., 1 3 5 7 9)";
+  }
+  if (algo.inputType === "hash") {
+    if (
+      algo.id === "linear-probing" ||
+      algo.id === "quadratic-probing" ||
+      algo.id === "double-hashing" ||
+      algo.id === "separate-chaining" ||
+      algo.id === "hash-map" ||
+      algo.id === "hash-set"
+    ) {
+      return "Enter space-separated numbers to insert (e.g., 12 45 67 89 23)";
+    }
+    if (algo.id === "group-anagrams") {
+      return "Enter space-separated words to group (e.g., eat tea tan ate nat bat)";
+    }
+    return "Enter space-separated keys (e.g., 12 45 67 89)";
+  }
+  if (algo.inputType === "array") {
+    return "Enter space-separated numbers (e.g., 5 3 8 1 9)";
+  }
+  return "Enter input variables (separated by space or newline)";
+};
+
+const getSecondInputPlaceholder = (config) => {
+  if (!config) return "";
+  return `Enter ${config.label.toLowerCase()}`;
+};
+
 const VisualizerPage = () => {
   const { algoId } = useParams();
   const navigate = useNavigate();
+  const isInsert =
+    algoId === "bst-insert" ||
+    algoId === "avl-insert" ||
+    algoId === "bt-insert" ||
+    algoId === "array-insertion" ||
+    algoId === "doubly-linked-list-insertion" ||
+    algoId === "linked-list-insertion";
+  const isDelete =
+    algoId === "bst-delete" ||
+    algoId === "avl-delete" ||
+    algoId === "bt-delete" ||
+    algoId === "array-deletion" ||
+    algoId === "doubly-linked-list-deletion" ||
+    algoId === "linked-list-deletion";
+  const isCombinedTreeAlgo =
+    algoId === "bst-insert" ||
+    algoId === "avl-insert" ||
+    algoId === "bt-insert" ||
+    algoId === "linked-list-traversal" ||
+    algoId === "linked-list-insertion" ||
+    algoId === "linked-list-deletion" ||
+    algoId === "reverse-list" ||
+    algoId === "cycle-detection" ||
+    algoId === "middle-node" ||
+    algoId === "doubly-linked-list-traversal" ||
+    algoId === "doubly-linked-list-insertion" ||
+    algoId === "doubly-linked-list-deletion";
 
   const {
     currentStep,
+    setCurrentStep,
+    isPlaying,
+    setIsPlaying,
     steps,
     setSteps,
     setCurrentAlgoId,
@@ -481,7 +517,21 @@ const VisualizerPage = () => {
 
   const [activeTab, setActiveTab] = useState("overview"); // 'overview', 'details', 'applications'
   const [targetInput, setTargetInput] = useState("");
+  const [deleteInput, setDeleteInput] = useState("");
   const [isNavigating, setIsNavigating] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    if (isExpanded) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isExpanded]);
 
   // Find matched category dynamically
   const matchedCategory = CATEGORIES.find((cat) =>
@@ -547,8 +597,13 @@ const VisualizerPage = () => {
 
   const secondInputConfig = SECOND_INPUT_CONFIG[algoId] || null;
 
-  // Parse and generate steps based on input text and target value
-  const generateSteps = (inputText, targetValText) => {
+  // Async step generator — loads only the needed shard chunk on demand
+  const generateSteps = async (
+    inputText,
+    targetValText,
+    isDeletionAction = false,
+    autoPlay = false,
+  ) => {
     const outerAlgo = algo;
     const counterpartId = outerAlgo.counterpartId || outerAlgo.id;
     const counterpartInputType =
@@ -561,8 +616,210 @@ const VisualizerPage = () => {
       inputType: counterpartInputType,
     };
 
-    const computedSteps = ((algo) => {
-      const rawInput = inputText || customInput || algo.defaultInput;
+    let baseStepsCount = 0;
+
+    const computedSteps = await (async (algo) => {
+      // Destructure ALL generator functions from the lazily-loaded combined module.
+      // Both stepGenerators.js and roadmapGenerators.js are loaded as separate dynamic
+      // chunks and cached — only loads on first visualizer visit, instant on repeat visits.
+      const {
+        // ── stepGenerators.js ─────────────────────────────────────────────────────────────────
+        bubbleSortSteps,
+        selectionSortSteps,
+        insertionSortSteps,
+        mergeSortSteps,
+        quickSortSteps,
+        linearSearchSteps,
+        binarySearchSteps,
+        kadaneSteps,
+        reverseListSteps,
+        balancedParenthesesSteps,
+        queueOperationsSteps,
+        bstTraversalSteps,
+        dijkstraSteps,
+        towerOfHanoiSteps,
+        climbingStairsSteps,
+        twoSumHashSteps,
+        bfsSteps,
+        dfsSteps,
+        bstSearchSteps,
+        treeHeightSteps,
+        lcaSteps,
+        heapSortSteps,
+        minHeapSteps,
+        maxHeapSteps,
+        prefixSumSteps,
+        slidingWindowSteps,
+        twoPointerSteps,
+        rotateArraySteps,
+        mergeArraysSteps,
+        frequencyCountSteps,
+        linkedListTraversalSteps,
+        cycleDetectionSteps,
+        middleNodeSteps,
+        stackOperationsSteps,
+        nextGreaterElementSteps,
+        circularQueueSteps,
+        slidingWindowMaxSteps,
+        topologicalSortSteps,
+        hashMapSteps,
+        groupAnagramsSteps,
+        fibonacciRecursionSteps,
+        nQueensSteps,
+        knapsackDpSteps,
+        coinChangeDpSteps,
+        ternarySearchSteps,
+        ratInAMazeSteps,
+        sudokuSolverSteps,
+        kmpSearchSteps,
+        longestCommonPrefixSteps,
+        activitySelectionSteps,
+        fractionalKnapsackSteps,
+        singleNumberSteps,
+        powerOfTwoSteps,
+        gcdSteps,
+        sieveSteps,
+        removeDuplicatesSteps,
+        equilibriumIndexSteps,
+        dsuCycleSteps,
+        segmentTreeSteps,
+        trieSteps,
+        rabinKarpSteps,
+        reverseArraySteps,
+        palindromeCheckSteps,
+        reverseStringSteps,
+        mergeSortedListsSteps,
+        minStackSteps,
+        levelOrderTraversalSteps,
+        bellmanFordSteps,
+        wordSearchSteps,
+        generateParenthesesSteps,
+        lcsDpSteps,
+        longestCommonSubstringSteps,
+        burstBalloonsSteps,
+        matrixChainSteps,
+        wildcardMatchingSteps,
+        eggDroppingSteps,
+        palindromePartitioningSteps,
+        countingSortSteps,
+        radixSortSteps,
+        countSetBitsSteps,
+        xorOperationsSteps,
+        fastExponentiationSteps,
+        pascalTriangleSteps,
+        trappingRainWaterSteps,
+        floydWarshallSteps,
+        twoSumTwoPointerSteps,
+        bstInsertSteps,
+        bstDeleteSteps,
+        avlInsertSteps,
+        avlDeleteSteps,
+        btInsertSteps,
+        btDeleteSteps,
+        rbtInsertSteps,
+        // ── roadmapGenerators.js ─────────────────────────────────────────────────────────────
+        arrayTraversalSteps,
+        arrayInsertionSteps,
+        arrayDeletionSteps,
+        dutchNationalFlagSteps,
+        mooresVotingSteps,
+        suffixSumSteps,
+        differenceArraySteps,
+        splittingArraysSteps,
+        spiralMatrixSteps,
+        transposeMatrixSteps,
+        fruitsIntoBasketsSteps,
+        minWindowSubstringSteps,
+        stringTraversalSteps,
+        stringConcatenationSteps,
+        longestPalindromeSteps,
+        doublyLinkedListTraversalSteps,
+        doublyLinkedListInsertionSteps,
+        doublyLinkedListDeletionSteps,
+        linkedListInsertionSteps,
+        linkedListDeletionSteps,
+        circularLinkedListTraversalSteps,
+        matrixMultiplicationSteps,
+        zAlgorithmSteps,
+        manachersSteps,
+        stringCompressionSteps,
+        infixToPrefixSteps,
+        prefixEvaluationSteps,
+        infixToPostfixSteps,
+        postfixEvaluationSteps,
+        nextSmallerElementSteps,
+        previousGreaterElementSteps,
+        largestRectangleHistogramSteps,
+        stockSpanSteps,
+        treeDiameterSteps,
+        treeTopViewSteps,
+        treeBottomViewSteps,
+        treeLeftViewSteps,
+        treeRightViewSteps,
+        zigzagTraversalSteps,
+        validateBstSteps,
+        kthSmallestSteps,
+        kruskalsSteps,
+        bipartiteCheckSteps,
+        connectedComponentsSteps,
+        primsSteps,
+        longestIncreasingSubsequenceSteps,
+        editDistanceSteps,
+        houseRobberSteps,
+        longestPalindromicSubsequenceSteps,
+        jobSchedulingSteps,
+        jumpGameSteps,
+        exponentialSearchSteps,
+        interpolationSearchSteps,
+        shellSortSteps,
+        bucketSortSteps,
+        grayCodeSteps,
+        lcmSteps,
+        nCrSteps,
+        lruCacheSteps,
+        minimumPlatformsSteps,
+        candyDistributionSteps,
+        fenwickTreeSteps,
+        bTreeSteps,
+        bPlusTreeSteps,
+        splayTreeSteps,
+        treapSteps,
+        kdTreeSteps,
+        quadTreeSteps,
+        octreeSteps,
+        intervalTreeSteps,
+        suffixTreeSteps,
+        cartesianTreeSteps,
+        undoRedoSteps,
+        browserHistorySteps,
+        previousSmallerElementSteps,
+        dailyTemperaturesSteps,
+        removeKDigitsSteps,
+        josephusSteps,
+        dequeSteps,
+        cpuSchedulingSteps,
+        printerQueueSteps,
+        lfuCacheSteps,
+        slidingWindowMaxMonoSteps,
+        hashMapChainingSteps,
+        hashSetSteps,
+        twoSumChainingSteps,
+        longestConsecutiveSequenceSteps,
+        bloomFilterSteps,
+        factorialRecursionSteps,
+        letterCombinationsSteps,
+        backtrackingPalindromePartitioningSteps,
+        permutationsSteps,
+        crosswordSolverSteps,
+        branchAndBoundSteps,
+        linearProbingSteps,
+        quadraticProbingSteps,
+        doubleHashingSteps,
+        separateChainingSteps,
+      } = await getGenerators(counterpartId);
+
+      const rawInput =
+        inputText !== undefined ? inputText : customInput || algo.defaultInput;
       const rawTarget =
         targetValText !== undefined ? targetValText : targetInput;
       let computedSteps = [];
@@ -810,12 +1067,71 @@ const VisualizerPage = () => {
               l2.length ? l2 : [2, 4, 6],
             );
           } else {
-            const arr = parsedInput
-              .split(/\s+/)
-              .map(Number)
-              .filter((x) => !isNaN(x));
-            if (algo.id === "linked-list-traversal") {
+            const arr = parsedInput.trim() === ""
+              ? []
+              : parsedInput
+                  .split(/\s+/)
+                  .map(Number)
+                  .filter((x) => !isNaN(x));
+            const isSinglyList =
+              algo.id === "linked-list-traversal" ||
+              algo.id === "linked-list-insertion" ||
+              algo.id === "linked-list-deletion" ||
+              algo.id === "reverse-list" ||
+              algo.id === "cycle-detection" ||
+              algo.id === "middle-node";
+
+            const isDoublyList =
+              algo.id === "doubly-linked-list-traversal" ||
+              algo.id === "doubly-linked-list-insertion" ||
+              algo.id === "doubly-linked-list-deletion";
+
+            if (isSinglyList && targetValText && !isDeletionAction) {
+              const parts = targetValText.trim().split(/\s+/);
+              const insertVal = parts[0] ? parseInt(parts[0]) : 99;
+              const pos = parts[1] !== undefined ? parseInt(parts[1]) : arr.length;
+              if (autoPlay) {
+                baseStepsCount = 1;
+              }
+              computedSteps = linkedListInsertionSteps(arr, insertVal, pos);
+            } else if (isSinglyList && targetValText && isDeletionAction) {
+              const pos = parseInt(targetValText);
+              if (autoPlay) {
+                baseStepsCount = 1;
+              }
+              computedSteps = linkedListDeletionSteps(arr, pos);
+            } else if (isDoublyList && targetValText && !isDeletionAction) {
+              const parts = targetValText.trim().split(/\s+/);
+              const insertVal = parts[0] ? parseInt(parts[0]) : 99;
+              const pos = parts[1] !== undefined ? parseInt(parts[1]) : arr.length;
+              if (autoPlay) {
+                baseStepsCount = 1;
+              }
+              computedSteps = doublyLinkedListInsertionSteps(arr, insertVal, pos);
+            } else if (isDoublyList && targetValText && isDeletionAction) {
+              const pos = parseInt(targetValText);
+              if (autoPlay) {
+                baseStepsCount = 1;
+              }
+              computedSteps = doublyLinkedListDeletionSteps(arr, pos);
+            } else if (algo.id === "linked-list-traversal") {
               computedSteps = linkedListTraversalSteps(arr);
+            } else if (algo.id === "linked-list-insertion") {
+              computedSteps = [
+                {
+                  data: arr.map((val, idx) => ({
+                    id: idx,
+                    val,
+                    next: idx < arr.length - 1 ? idx + 1 : null
+                  })),
+                  listState: { head: arr.length > 0 ? 0 : null, curr: null, prev: null, next: null },
+                  highlights: {},
+                  explanation: "Linked List ready. Use the Custom Input Panel to insert or delete elements.",
+                  stats: { step: 0 }
+                }
+              ];
+            } else if (algo.id === "linked-list-deletion") {
+              computedSteps = linkedListDeletionSteps(arr, 2);
             } else if (algo.id === "cycle-detection") {
               computedSteps = cycleDetectionSteps(arr);
             } else if (algo.id === "middle-node") {
@@ -823,9 +1139,22 @@ const VisualizerPage = () => {
             } else if (algo.id === "doubly-linked-list-traversal") {
               computedSteps = doublyLinkedListTraversalSteps(arr);
             } else if (algo.id === "doubly-linked-list-insertion") {
-              computedSteps = doublyLinkedListInsertionSteps(arr);
+              computedSteps = [
+                {
+                  data: arr.map((val, idx) => ({
+                    id: idx,
+                    val,
+                    next: idx < arr.length - 1 ? idx + 1 : null,
+                    prev: idx > 0 ? idx - 1 : null
+                  })),
+                  listState: { head: arr.length > 0 ? 0 : null, curr: null, prev: null, next: null },
+                  highlights: {},
+                  explanation: "Doubly Linked List ready. Use the Custom Input Panel to insert or delete elements.",
+                  stats: { step: 0 }
+                }
+              ];
             } else if (algo.id === "doubly-linked-list-deletion") {
-              computedSteps = doublyLinkedListDeletionSteps(arr);
+              computedSteps = doublyLinkedListDeletionSteps(arr, 2);
             } else if (algo.id === "circular-linked-list-traversal") {
               computedSteps = circularLinkedListTraversalSteps(arr);
             } else {
@@ -946,10 +1275,14 @@ const VisualizerPage = () => {
             computedSteps = queueOperationsSteps(rawInput);
           }
         } else if (algo.inputType === "tree") {
-          const arr = parsedInput
-            .split(/\s+/)
-            .map(Number)
-            .filter((x) => !isNaN(x));
+          const trimmedInput = parsedInput.trim();
+          const arr =
+            trimmedInput === ""
+              ? []
+              : trimmedInput
+                  .split(/\s+/)
+                  .map(Number)
+                  .filter((x) => !isNaN(x));
           const treeTarget = rawTarget ? parseInt(rawTarget) : undefined;
           if (algo.id === "bst-search") {
             computedSteps = bstSearchSteps(arr, target);
@@ -963,15 +1296,30 @@ const VisualizerPage = () => {
           } else if (algo.id === "level-order-traversal") {
             computedSteps = levelOrderTraversalSteps(arr);
           } else if (algo.id === "bst-insert") {
-            computedSteps = bstInsertSteps(arr, treeTarget);
+            if (autoPlay && !isDeletionAction) {
+              baseStepsCount = bstInsertSteps(arr, undefined).length;
+            }
+            computedSteps = isDeletionAction
+              ? bstDeleteSteps(arr, treeTarget)
+              : bstInsertSteps(arr, treeTarget);
           } else if (algo.id === "bst-delete") {
             computedSteps = bstDeleteSteps(arr, treeTarget);
           } else if (algo.id === "avl-insert") {
-            computedSteps = avlInsertSteps(arr, treeTarget);
+            if (autoPlay && !isDeletionAction) {
+              baseStepsCount = avlInsertSteps(arr, undefined).length;
+            }
+            computedSteps = isDeletionAction
+              ? avlDeleteSteps(arr, treeTarget)
+              : avlInsertSteps(arr, treeTarget);
           } else if (algo.id === "avl-delete") {
             computedSteps = avlDeleteSteps(arr, treeTarget);
           } else if (algo.id === "bt-insert") {
-            computedSteps = btInsertSteps(arr, treeTarget);
+            if (autoPlay && !isDeletionAction) {
+              baseStepsCount = btInsertSteps(arr, undefined).length;
+            }
+            computedSteps = isDeletionAction
+              ? btDeleteSteps(arr, treeTarget)
+              : btInsertSteps(arr, treeTarget);
           } else if (algo.id === "bt-delete") {
             computedSteps = btDeleteSteps(arr, treeTarget);
           } else if (algo.id === "rbt-insert") {
@@ -1192,10 +1540,18 @@ const VisualizerPage = () => {
             .map(Number)
             .filter((x) => !isNaN(x));
 
-          if (algo.id === "hash-map") {
-            computedSteps = hashMapChainingSteps(rawInput);
+          if (algo.id === "linear-probing") {
+            computedSteps = linearProbingSteps(arr);
+          } else if (algo.id === "quadratic-probing") {
+            computedSteps = quadraticProbingSteps(arr);
+          } else if (algo.id === "double-hashing") {
+            computedSteps = doubleHashingSteps(arr);
+          } else if (algo.id === "separate-chaining") {
+            computedSteps = separateChainingSteps(arr);
+          } else if (algo.id === "hash-map") {
+            computedSteps = hashMapSteps(arr);
           } else if (algo.id === "hash-set") {
-            computedSteps = hashSetSteps(rawInput);
+            computedSteps = hashSetSteps(arr);
           } else if (
             algo.id === "two-sum-hash" ||
             algo.id === "two-sum" ||
@@ -1364,16 +1720,29 @@ const VisualizerPage = () => {
     })(resolvedAlgo);
 
     setSteps(computedSteps);
-    resetVisualizer();
+    if (autoPlay) {
+      const startStep =
+        baseStepsCount > 0 ? Math.max(0, baseStepsCount - 1) : 0;
+      setCurrentStep(startStep);
+      setIsPlaying(true);
+    } else {
+      resetVisualizer();
+    }
   };
 
   useEffect(() => {
+    let cancelled = false;
     setIsNavigating(true);
     setCurrentAlgoId(algoId);
     addToRecent(algoId);
 
     let initialInput = algo.defaultInput;
     let initialTarget = "";
+
+    const isList =
+      algo.category === "linked-list" ||
+      algoId.includes("linked-list") ||
+      algoId.includes("list-");
 
     if (secondInputConfig) {
       if (algo.inputType === "grid" || algo.inputType === "graph") {
@@ -1385,26 +1754,166 @@ const VisualizerPage = () => {
         if (lines[1]) {
           initialTarget = lines[1].replace(/Target\s*=\s*/i, "").trim();
         } else {
-          initialTarget = secondInputConfig.defaultVal;
+          initialTarget = isList ? "" : secondInputConfig.defaultVal;
         }
       }
     }
 
-    setCustomInput(initialInput);
-    setTargetInput(initialTarget);
-    generateSteps(initialInput, initialTarget);
+    // Pre-populate customInput with default array for lists so it is not empty
+    if (isList) {
+      setCustomInput(initialInput.split("\n")[0]);
+    } else {
+      setCustomInput("");
+    }
+    setTargetInput("");
+    setDeleteInput("");
 
-    const timer = setTimeout(() => {
-      setIsNavigating(false);
-    }, 250);
-    return () => clearTimeout(timer);
+    // Compile the initial canvas steps using fallback default values
+    generateSteps(initialInput, isList ? "" : initialTarget).finally(() => {
+      if (!cancelled) {
+        setTimeout(() => setIsNavigating(false), 250);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [algoId]);
 
   const handleApplyCustomInput = () => {
-    generateSteps(customInput, targetInput);
+    const isInsertion =
+      algoId === "bst-insert" ||
+      algoId === "avl-insert" ||
+      algoId === "bt-insert";
+    const isDeletion =
+      algoId === "bst-delete" ||
+      algoId === "avl-delete" ||
+      algoId === "bt-delete";
+    const isArrayInsert = algoId === "array-insertion";
+    const isArrayDelete = algoId === "array-deletion";
+
+    let finalInput = customInput;
+    let finalTarget = targetInput;
+
+    if (isInsertion && targetInput.trim() !== "") {
+      const current = (customInput || "").trim() || algo.defaultInput.trim();
+      const nextVal = targetInput.trim();
+      finalInput = current ? `${current} ${nextVal}` : nextVal;
+      finalTarget = "";
+      setCustomInput(finalInput);
+      setTargetInput("");
+    } else if (isDeletion && targetInput.trim() !== "") {
+      const current = (
+        (customInput || "").trim() || algo.defaultInput.trim()
+      ).split(/\s+/);
+      const removeVal = targetInput.trim();
+      finalInput = current.filter((x) => x !== removeVal).join(" ");
+      finalTarget = "";
+      setCustomInput(finalInput);
+      setTargetInput("");
+    } else if (isArrayInsert && targetInput.trim() !== "") {
+      const parts = targetInput.trim().split(/\s+/);
+      const val = parts[0];
+      const idx = parseInt(parts[1]);
+      if (val && !isNaN(idx)) {
+        const arr = (
+          (customInput || "").trim() || algo.defaultInput.trim()
+        ).split(/\s+/);
+        arr.splice(idx, 0, val);
+        finalInput = arr.join(" ");
+        finalTarget = "";
+        setCustomInput(finalInput);
+        setTargetInput("");
+      }
+    } else if (isArrayDelete && targetInput.trim() !== "") {
+      const idx = parseInt(targetInput.trim());
+      if (!isNaN(idx)) {
+        const arr = (
+          (customInput || "").trim() || algo.defaultInput.trim()
+        ).split(/\s+/);
+        arr.splice(idx, 1);
+        finalInput = arr.join(" ");
+        finalTarget = "";
+        setCustomInput(finalInput);
+        setTargetInput("");
+      }
+    }
+
+    generateSteps(finalInput, finalTarget);
   };
 
-  const handleRandomInput = () => {
+  const handleInsertAction = () => {
+    const valText = targetInput.trim();
+    if (valText === "") return;
+    const current = (customInput || "").trim();
+    let finalInput = "";
+    
+    const isSinglyList =
+      algoId === "linked-list-traversal" ||
+      algoId === "linked-list-insertion" ||
+      algoId === "linked-list-deletion" ||
+      algoId === "reverse-list" ||
+      algoId === "cycle-detection" ||
+      algoId === "middle-node";
+
+    const isDoublyList =
+      algoId === "doubly-linked-list-traversal" ||
+      algoId === "doubly-linked-list-insertion" ||
+      algoId === "doubly-linked-list-deletion";
+    
+    if (isSinglyList || isDoublyList) {
+      const parts = valText.split(/\s+/);
+      const val = parts[0];
+      const arr = current === "" ? [] : current.split(/\s+/);
+      const idx = parts[1] !== undefined ? parseInt(parts[1]) : arr.length;
+      arr.splice(isNaN(idx) ? arr.length : idx, 0, val);
+      finalInput = arr.join(" ");
+    } else {
+      finalInput = current ? `${current} ${valText}` : valText;
+    }
+    
+    setCustomInput(finalInput);
+    setTargetInput("");
+    generateSteps(current, valText, false, true);
+  };
+
+  const handleDeleteAction = () => {
+    const valText = deleteInput.trim();
+    if (valText === "") return;
+    const currentStr = (customInput || "").trim();
+    if (currentStr === "") return;
+    const current = currentStr.split(/\s+/);
+    
+    const isSinglyList =
+      algoId === "linked-list-traversal" ||
+      algoId === "linked-list-insertion" ||
+      algoId === "linked-list-deletion" ||
+      algoId === "reverse-list" ||
+      algoId === "cycle-detection" ||
+      algoId === "middle-node";
+
+    const isDoublyList =
+      algoId === "doubly-linked-list-traversal" ||
+      algoId === "doubly-linked-list-insertion" ||
+      algoId === "doubly-linked-list-deletion";
+    
+    let finalInput = "";
+    if (isSinglyList || isDoublyList) {
+      const idx = parseInt(valText);
+      if (isNaN(idx) || idx < 0 || idx >= current.length) return;
+      current.splice(idx, 1);
+      finalInput = current.join(" ");
+    } else {
+      if (!current.includes(valText)) return;
+      finalInput = current.filter((x) => x !== valText).join(" ");
+    }
+    
+    setCustomInput(finalInput);
+    setDeleteInput("");
+    generateSteps(currentStr, valText, true, true);
+  };
+
+  const handleRandomInput = async () => {
     let randStr = "";
     let randTarget = "";
 
@@ -1444,7 +1953,8 @@ const VisualizerPage = () => {
         () => Math.floor(Math.random() * 20) + 1,
       );
       randStr = arr.join(" ");
-      if (secondInputConfig) randTarget = secondInputConfig.randomVal(arr);
+      if (secondInputConfig && !isCombinedTreeAlgo)
+        randTarget = secondInputConfig.randomVal(arr);
     } else if (algo.inputType === "search") {
       const arr = Array.from(
         { length: 7 },
@@ -1668,9 +2178,305 @@ const VisualizerPage = () => {
     generateSteps(randStr, randTarget);
   };
 
+  const rightBlockContent = (
+    <>
+      {/* Python code panel — first */}
+      <Suspense
+        fallback={
+          <div className="clay-card bg-white dark:bg-[#161b26] p-6 h-48 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-t-purple-500 border-r-cyan-500 border-b-transparent border-l-transparent" />
+          </div>
+        }
+      >
+        <CodePanel algorithm={algo} />
+      </Suspense>
+
+      {/* Static Complexities Card */}
+      <ComplexityPanel algorithm={algo} />
+
+      {/* Telemetry Real-time scoreboard */}
+      <StatsPanel />
+
+      {/* Details Overview Metadata tabs card */}
+      <div className="clay-card bg-white dark:bg-[#161b26] p-6 flex flex-col gap-4 text-left">
+        {/* Tabs */}
+        <div className="flex gap-1.5 pb-2 flex-wrap">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-full transition-all cursor-pointer ${activeTab === "overview" ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("details")}
+            className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-full transition-all cursor-pointer ${activeTab === "details" ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
+          >
+            Pros &amp; Cons
+          </button>
+          <button
+            onClick={() => setActiveTab("applications")}
+            className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-full transition-all cursor-pointer ${activeTab === "applications" ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
+          >
+            Uses
+          </button>
+        </div>
+
+        {/* Tab content switcher */}
+        {activeTab === "overview" && (
+          <div className="flex flex-col gap-3 pt-1">
+            <div className="flex items-center gap-1 text-xs font-bold text-accent">
+              <BookOpen className="w-4 h-4" />
+              <span>Concept Summary</span>
+            </div>
+            <p className="text-xs text-text-secondary leading-relaxed font-medium">
+              {algo.description}
+            </p>
+          </div>
+        )}
+
+        {activeTab === "details" && (
+          <div className="flex flex-col gap-3 pt-1">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1 text-xs font-bold text-green-500">
+                <ThumbsUp className="w-3.5 h-3.5" />
+                <span>Key Advantages</span>
+              </div>
+              <ul className="list-disc pl-4 text-xs text-text-secondary leading-relaxed flex flex-col gap-1 font-medium">
+                {algo.advantages?.map((adv, idx) => (
+                  <li key={idx}>{adv}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex flex-col gap-2 pt-2">
+              <div className="flex items-center gap-1 text-xs font-bold text-red-500">
+                <ThumbsDown className="w-3.5 h-3.5" />
+                <span>Disadvantages</span>
+              </div>
+              <ul className="list-disc pl-4 text-xs text-text-secondary leading-relaxed flex flex-col gap-1 font-medium">
+                {algo.disadvantages?.map((dis, idx) => (
+                  <li key={idx}>{dis}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "applications" && (
+          <div className="flex flex-col gap-3 pt-1">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1 text-xs font-bold text-purple-400">
+                <ClipboardList className="w-3.5 h-3.5" />
+                <span>Core Applications</span>
+              </div>
+              <ul className="list-disc pl-4 text-xs text-text-secondary leading-relaxed flex flex-col gap-1 font-medium">
+                {algo.applications?.map((app, idx) => (
+                  <li key={idx}>{app}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex flex-col gap-2 pt-2">
+              <div className="flex items-center gap-1 text-xs font-bold text-accent">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Real-world Deployments</span>
+              </div>
+              <ul className="list-disc pl-4 text-xs text-text-secondary leading-relaxed flex flex-col gap-1 font-medium">
+                {algo.realWorldUses?.map((use, idx) => (
+                  <li key={idx}>{use}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  const inputPanelContent = (
+    <div className="clay-card bg-white dark:bg-[#161b26] p-5 flex flex-col gap-3 text-left">
+      <div className="flex items-center justify-between pb-1">
+        <span className="text-xs font-bold text-text-secondary opacity-75 uppercase tracking-wider">
+          CUSTOM INPUT PANEL
+        </span>
+        <span className="text-[9px] text-text-secondary opacity-60 font-mono">
+          Type variables separated by spaces
+        </span>
+      </div>
+      {isCombinedTreeAlgo ? (
+        <div className="flex flex-col gap-3">
+          {/* 1. Underlying tree structure array */}
+          <div className="flex flex-col gap-1 w-full">
+            <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+              {algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Linked List Array" : "Tree Structure Array"}
+            </span>
+            <div className="flex gap-2 w-full">
+              <Input
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                placeholder={algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Enter linked list nodes space-separated (e.g. 1 2 3 4 5)" : "Enter tree nodes space-separated (e.g. 10 5 15 3 7)"}
+                className="flex-1"
+              />
+              <Button
+                onClick={() =>
+                  generateSteps(customInput || algo.defaultInput, "")
+                }
+                variant="default"
+                className="font-bold flex-shrink-0 clay-btn w-auto text-xs px-3"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>{algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Rebuild List" : "Rebuild Tree"}</span>
+              </Button>
+            </div>
+          </div>
+          {/* 2. Operations rows */}
+          <div className="flex flex-col sm:flex-row gap-3 items-end">
+            {/* Insert row */}
+            <div className="flex-1 flex gap-2 items-end w-full">
+              <div className="flex-1 flex flex-col gap-1">
+                <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                  Insert Value
+                </span>
+                <Input
+                  value={targetInput}
+                  onChange={(e) => setTargetInput(e.target.value)}
+                  placeholder={algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Enter val & index (e.g. 99 2)" : "Enter insert value"}
+                />
+              </div>
+              <Button
+                onClick={handleInsertAction}
+                variant="accent"
+                className="font-bold flex-shrink-0 clay-btn clay-btn-accent w-auto text-xs"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Insert</span>
+              </Button>
+            </div>
+            {/* Delete row */}
+            <div className="flex-1 flex gap-2 items-end w-full">
+              <div className="flex-1 flex flex-col gap-1">
+                <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                  {algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Delete Index" : "Delete Value"}
+                </span>
+                <Input
+                  value={deleteInput}
+                  onChange={(e) => setDeleteInput(e.target.value)}
+                  placeholder={algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Enter delete index" : "Enter delete value"}
+                />
+              </div>
+              <Button
+                onClick={handleDeleteAction}
+                variant="danger"
+                className="font-bold flex-shrink-0 clay-btn clay-btn-danger w-auto text-xs"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-start w-full">
+          <div className="flex-1">
+            {algo.inputType === "graph" ||
+            algo.inputType === "grid" ||
+            algo.inputType === "word-search-grid" ||
+            algo.id === "knapsack-dp" ||
+            algo.id === "merge-arrays" ||
+            algo.counterpartId === "merge-arrays" ||
+            (algo.defaultInput &&
+              algo.defaultInput.includes("\n") &&
+              !secondInputConfig) ? (
+              <textarea
+                rows={5}
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                placeholder={getCustomInputPlaceholder(algo)}
+                className="clay-input w-full font-mono text-xs px-3 py-2"
+              />
+            ) : (
+              <Input
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                placeholder={getCustomInputPlaceholder(algo)}
+              />
+            )}
+          </div>
+          {secondInputConfig && (
+            <div className={`w-full ${algo.id === "rat-in-a-maze" ? "sm:w-60 md:w-64" : "sm:w-28 md:w-36"} flex-shrink-0 flex flex-col gap-1`}>
+              <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                {algo.id === "rat-in-a-maze" ? "Direction Search Mode" : secondInputConfig.label.split("(")[0].trim()}
+              </span>
+              {algo.id === "rat-in-a-maze" ? (
+                <div className="flex bg-[#f3f4f6]/5 dark:bg-white/5 border border-black/5 dark:border-white/10 p-0.5 rounded-lg w-full">
+                  <button
+                    onClick={() => {
+                      setTargetInput("D R");
+                      generateSteps(customInput || algo.defaultInput, "D R", false, true);
+                    }}
+                    className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition-all duration-200 ${
+                      targetInput === "D R"
+                        ? "bg-amber-500 text-white shadow-md"
+                        : "text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    Down & Right
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTargetInput("D R U L");
+                      generateSteps(customInput || algo.defaultInput, "D R U L", false, true);
+                    }}
+                    className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition-all duration-200 ${
+                      targetInput !== "D R"
+                        ? "bg-amber-500 text-white shadow-md"
+                        : "text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    All 4 Directions
+                  </button>
+                </div>
+              ) : (
+                <Input
+                  value={targetInput}
+                  onChange={(e) => setTargetInput(e.target.value)}
+                  placeholder={getSecondInputPlaceholder(secondInputConfig)}
+                />
+              )}
+            </div>
+          )}
+          <Button
+            onClick={handleApplyCustomInput}
+            variant={isDelete ? "danger" : "accent"}
+            className={`font-bold flex-shrink-0 clay-btn ${isDelete ? "clay-btn-danger" : "clay-btn-accent"} w-full sm:w-auto`}
+          >
+            {isInsert ? (
+              <>
+                <Plus className="w-4 h-4" />
+                <span>Insert</span>
+              </>
+            ) : isDelete ? (
+              <>
+                <Trash2 className="w-4 h-4" />
+                <span>Delete</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin-hover" />
+                <span>Compile</span>
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
   const handleClear = () => {
+    setIsPlaying(false);
+    setCurrentStep(0);
+    setSteps([]);
     setCustomInput("");
     setTargetInput("");
+    setDeleteInput("");
   };
 
   const totalSteps = steps.length;
@@ -1720,206 +2526,124 @@ const VisualizerPage = () => {
       </div>
 
       {/* 2. DUAL COLUMN WORKSPACE — split pane layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 lg:h-[calc(100vh-180px)]">
-        {/* LEFT BLOCK: Visualizer + Controls — stays fixed in place */}
-        <div className="lg:col-span-2 lg:overflow-y-auto flex flex-col gap-4 p-5 md:p-6 rounded-[28px] bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-xl border border-white/20 dark:border-white/5 transition-all duration-300">
-          {/* Main Visualizer screen */}
-          <VisualizerCanvas algorithm={algo} loading={isNavigating} />
-
-          {/* Control Cockpit panel */}
-          <ControlPanel
-            onGenerate={handleApplyCustomInput}
-            onRandomInput={handleRandomInput}
-            onClear={handleClear}
-            canPrev={canPrev}
-            canNext={canNext}
-          />
-
-          {/* Input Panel Card */}
-          <div className="clay-card bg-white dark:bg-[#161b26] p-5 flex flex-col gap-3 text-left">
-            <div className="flex items-center justify-between pb-1">
-              <span className="text-xs font-bold text-text-secondary opacity-75 uppercase tracking-wider">
-                CUSTOM INPUT PANEL
-              </span>
-              <span className="text-[9px] text-text-secondary opacity-60 font-mono">
-                Type variables separated by spaces
-              </span>
+      {isExpanded ? (
+        /* FULLSCREEN SIDE-BY-SIDE MODE: covers sidebar, nav, everything */
+        <div className="fixed inset-0 z-50 w-screen h-screen bg-gradient-to-br from-[#F4F7FE] to-white dark:from-[#0B0F19] dark:to-[#161B26] flex flex-row p-6 gap-6 overflow-hidden">
+          
+          {/* LEFT SIDE CONTENT: visualizer canvas and controls deck */}
+          <div className="flex-1 h-full flex flex-col justify-between transition-all duration-300 min-w-0">
+            {/* Main Visualizer screen in fullscreen */}
+            <div className="flex-1 w-full flex items-center justify-center min-h-0 relative">
+              <Suspense
+                fallback={
+                  <div className="skeuo-screen w-full flex items-center justify-center min-h-[320px] h-80 bg-slate-950/80 rounded-2xl border border-slate-800">
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-t-purple-500 border-r-cyan-500 border-b-transparent border-l-transparent" />
+                  </div>
+                }
+              >
+                <VisualizerCanvas
+                  algorithm={algo}
+                  loading={isNavigating}
+                  isExpanded={isExpanded}
+                  onToggleExpand={() => setIsExpanded(false)}
+                />
+              </Suspense>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-start">
-              <div className="flex-1">
-                {algo.inputType === "graph" ||
-                algo.inputType === "grid" ||
-                algo.inputType === "word-search-grid" ||
-                algo.id === "knapsack-dp" ||
-                algo.id === "merge-arrays" ||
-                algo.counterpartId === "merge-arrays" ||
-                (algo.defaultInput &&
-                  algo.defaultInput.includes("\n") &&
-                  !secondInputConfig) ? (
-                  <textarea
-                    rows={5}
-                    value={customInput}
-                    onChange={(e) => setCustomInput(e.target.value)}
-                    placeholder={
-                      algo.id === "knapsack-dp"
-                        ? "Line 1: weights (e.g., 2 3 4 5)\nLine 2: values (e.g., 3 4 5 6)"
-                        : algo.id === "merge-arrays" ||
-                            algo.counterpartId === "merge-arrays"
-                          ? "Line 1: Array A (e.g., 1 3 5)\nLine 2: Array B (e.g., 2 4 6)"
-                          : algo.inputType === "word-search-grid"
-                            ? "Enter grid board layout (newline-separated rows), e.g.:\nA B C E\nS F C S\nA D E E"
-                            : algo.inputType === "grid"
-                              ? "Enter grid board layout (space-separated cells, newline-separated rows), e.g.:\n0 1 0 0\n0 0 0 1\n1 0 0 0\n0 1 0 0"
-                              : algo.inputType === "graph"
-                                ? "Enter graph edges: u v w (newline separated, e.g.):\n0 1 4\n1 2 8\n2 3 3"
-                                : "Enter lines of input (separated by newlines), e.g.:\n" +
-                                  algo.defaultInput
-                    }
-                    className="clay-input w-full font-mono text-xs px-3 py-2"
-                  />
-                ) : (
-                  <Input
-                    value={customInput}
-                    onChange={(e) => setCustomInput(e.target.value)}
-                    placeholder={
-                      secondInputConfig
-                        ? "Enter elements (separated by space)"
-                        : "E.g., 5 3 8 1 9"
-                    }
-                  />
-                )}
+
+            {/* Floating Control Cockpit and Input Panel at the bottom */}
+            <div className="w-full mt-4 z-10 flex flex-col md:flex-row gap-4 items-stretch">
+              {/* Left side: Custom Input Panel */}
+              <div className="flex-1 min-w-0">
+                {inputPanelContent}
               </div>
-              {secondInputConfig && (
-                <div className="w-full sm:w-28 md:w-36 flex-shrink-0 flex flex-col gap-1">
-                  <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
-                    {secondInputConfig.label.split("(")[0].trim()}
+
+              {/* Right side: Control Console */}
+              <div className="flex-1 min-w-0">
+                <ControlPanel
+                  onGenerate={handleApplyCustomInput}
+                  onRandomInput={handleRandomInput}
+                  onClear={handleClear}
+                  onReset={handleClear}
+                  canPrev={canPrev}
+                  canNext={canNext}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sliding Drawer toggle button */}
+          <button
+            onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+            className={`fixed top-24 z-50 flex items-center justify-center w-12 h-14 rounded-l-full bg-slate-100 dark:bg-[#161b26] border-2 border-emerald-600 dark:border-emerald-500 border-r-0 shadow-lg text-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800/80 transition-all duration-300 ${isDrawerOpen ? "right-[444px]" : "right-0"}`}
+            title={isDrawerOpen ? "Close Reference Panel" : "Open Reference Panel"}
+          >
+            {isDrawerOpen ? (
+              <ChevronRight className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <List className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            )}
+          </button>
+
+          {/* Sliding Drawer Container (shrinks and slides side-by-side) */}
+          <div
+            className={`h-full z-40 bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-2xl border-l border-white/20 dark:border-white/5 transition-all duration-300 flex flex-col p-6 overflow-y-auto gap-4 flex-shrink-0 ${isDrawerOpen ? "w-[420px] opacity-100" : "w-0 opacity-0 pointer-events-none p-0 border-l-0"}`}
+          >
+            {isDrawerOpen && (
+              <div className="flex flex-col gap-4 animate-fadeIn">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-sm font-extrabold text-text-primary uppercase tracking-wider">
+                    Reference Panel
                   </span>
-                  <Input
-                    value={targetInput}
-                    onChange={(e) => setTargetInput(e.target.value)}
-                    placeholder={secondInputConfig.label}
-                  />
                 </div>
-              )}
-              <Button
-                onClick={handleApplyCustomInput}
-                variant="accent"
-                className="font-bold flex-shrink-0 clay-btn clay-btn-accent w-full sm:w-auto"
-              >
-                <RefreshCw className="w-4 h-4 animate-spin-hover" />
-                <span>Compile</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Real-time description terminal logs */}
-          <ExplanationPanel />
-        </div>
-
-        {/* RIGHT BLOCK: Reference info — scrolls independently */}
-        <div className="flex flex-col gap-4 lg:overflow-y-auto lg:pr-1">
-          {/* Python code panel — first */}
-          <CodePanel algorithm={algo} />
-
-          {/* Static Complexities Card */}
-          <ComplexityPanel algorithm={algo} />
-
-          {/* Telemetry Real-time scoreboard */}
-          <StatsPanel />
-
-          {/* Details Overview Metadata tabs card */}
-          <div className="clay-card bg-white dark:bg-[#161b26] p-6 flex flex-col gap-4 text-left">
-            {/* Tabs */}
-            <div className="flex gap-1.5 pb-2 flex-wrap">
-              <button
-                onClick={() => setActiveTab("overview")}
-                className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-full transition-all cursor-pointer ${activeTab === "overview" ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab("details")}
-                className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-full transition-all cursor-pointer ${activeTab === "details" ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
-              >
-                Pros &amp; Cons
-              </button>
-              <button
-                onClick={() => setActiveTab("applications")}
-                className={`text-xs font-extrabold uppercase px-3 py-1.5 rounded-full transition-all cursor-pointer ${activeTab === "applications" ? "bg-primary text-white shadow-sm" : "text-text-secondary hover:text-text-primary"}`}
-              >
-                Uses
-              </button>
-            </div>
-
-            {/* Tab content switcher */}
-            {activeTab === "overview" && (
-              <div className="flex flex-col gap-3 pt-1">
-                <div className="flex items-center gap-1 text-xs font-bold text-accent">
-                  <BookOpen className="w-4 h-4" />
-                  <span>Concept Summary</span>
-                </div>
-                <p className="text-xs text-text-secondary leading-relaxed font-medium">
-                  {algo.description}
-                </p>
-              </div>
-            )}
-
-            {activeTab === "details" && (
-              <div className="flex flex-col gap-3 pt-1">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1 text-xs font-bold text-green-500">
-                    <ThumbsUp className="w-3.5 h-3.5" />
-                    <span>Key Advantages</span>
-                  </div>
-                  <ul className="list-disc pl-4 text-xs text-text-secondary leading-relaxed flex flex-col gap-1 font-medium">
-                    {algo.advantages?.map((adv, idx) => (
-                      <li key={idx}>{adv}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="flex flex-col gap-2 pt-2">
-                  <div className="flex items-center gap-1 text-xs font-bold text-red-500">
-                    <ThumbsDown className="w-3.5 h-3.5" />
-                    <span>Disadvantages</span>
-                  </div>
-                  <ul className="list-disc pl-4 text-xs text-text-secondary leading-relaxed flex flex-col gap-1 font-medium">
-                    {algo.disadvantages?.map((dis, idx) => (
-                      <li key={idx}>{dis}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "applications" && (
-              <div className="flex flex-col gap-3 pt-1">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1 text-xs font-bold text-purple-400">
-                    <ClipboardList className="w-3.5 h-3.5" />
-                    <span>Core Applications</span>
-                  </div>
-                  <ul className="list-disc pl-4 text-xs text-text-secondary leading-relaxed flex flex-col gap-1 font-medium">
-                    {algo.applications?.map((app, idx) => (
-                      <li key={idx}>{app}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="flex flex-col gap-2 pt-2">
-                  <div className="flex items-center gap-1 text-xs font-bold text-accent">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Real-world Deployments</span>
-                  </div>
-                  <ul className="list-disc pl-4 text-xs text-text-secondary leading-relaxed flex flex-col gap-1 font-medium">
-                    {algo.realWorldUses?.map((use, idx) => (
-                      <li key={idx}>{use}</li>
-                    ))}
-                  </ul>
-                </div>
+                {rightBlockContent}
               </div>
             )}
           </div>
         </div>
-      </div>
+      ) : (
+        /* NORMAL SPLIT COLUMN MODE */
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 lg:h-[calc(100vh-180px)]">
+          {/* LEFT BLOCK: Visualizer + Controls */}
+          <div className="lg:col-span-2 lg:overflow-y-auto flex flex-col gap-4 p-5 md:p-6 rounded-[28px] bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-xl border border-white/20 dark:border-white/5 transition-all duration-300">
+            {/* Main Visualizer screen */}
+            <Suspense
+              fallback={
+                <div className="skeuo-screen w-full flex items-center justify-center min-h-[320px] h-80 bg-slate-950/80 rounded-2xl border border-slate-800">
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-t-purple-500 border-r-cyan-500 border-b-transparent border-l-transparent" />
+                </div>
+              }
+            >
+              <VisualizerCanvas
+                algorithm={algo}
+                loading={isNavigating}
+                isExpanded={isExpanded}
+                onToggleExpand={() => setIsExpanded(!isExpanded)}
+              />
+            </Suspense>
+
+            {/* Control Cockpit panel */}
+            <ControlPanel
+              onGenerate={handleApplyCustomInput}
+              onRandomInput={handleRandomInput}
+              onClear={handleClear}
+              onReset={handleClear}
+              canPrev={canPrev}
+              canNext={canNext}
+            />
+
+            {/* Input Panel Card */}
+            {inputPanelContent}
+
+            {/* Real-time description terminal logs */}
+            <ExplanationPanel />
+          </div>
+
+          {/* RIGHT BLOCK: Reference info — scrolls independently */}
+          <div className="flex flex-col gap-4 lg:overflow-y-auto lg:pr-1">
+            {rightBlockContent}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

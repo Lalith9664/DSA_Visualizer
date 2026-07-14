@@ -8,6 +8,7 @@ const ControlPanel = ({
   onGenerate,
   onRandomInput,
   onClear,
+  onReset,
   canPrev,
   canNext
 }) => {
@@ -89,7 +90,7 @@ const ControlPanel = ({
 
         {/* Reset */}
         <Button
-          onClick={resetVisualizer}
+          onClick={onReset || resetVisualizer}
           variant="default"
           className="clay-btn"
           title="Reset Sequence"

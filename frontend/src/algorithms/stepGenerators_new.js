@@ -844,6 +844,10 @@ export const queueOperationsSteps = (inputStr) => {
 
 // --- BST TRAVERSALS ---
 
+
+// Tree generators — loaded as a separate chunk
+export { bstTraversalSteps } from './treeGenerators';
+
 export const dijkstraSteps = (graphInput) => {
   const steps = [];
 
@@ -1392,6 +1396,10 @@ export const dfsSteps = (graphInput) => {
 
   return steps;
 };
+
+
+// Tree generators continued
+export { bstSearchSteps, treeHeightSteps, lcaSteps } from './treeGenerators';
 
 export const prefixSumSteps = (arr) => {
   const steps = [];
@@ -2334,8 +2342,110 @@ export const topologicalSortSteps = (graphInput) => {
   return steps;
 };
 
+export const hashMapSteps = (arr) => {
+  const steps = [];
+  const nums = arr.map(Number).filter((x) => !isNaN(x));
+  const n = nums.length;
+  const numBuckets = 5;
+  const hash = {};
+  for (let i = 0; i < numBuckets; i++) hash[i] = [];
 
+  steps.push({
+    data: { arr: nums, hash: JSON.parse(JSON.stringify(hash)) },
+    hashState: { num: null, currentIdx: -1 },
+    highlights: {},
+    explanation: `Initialize empty hash map chaining table with ${numBuckets} buckets. Hash function: slot = value % ${numBuckets}.`,
+    stats: { comparisons: 0, swaps: 0, step: 0 },
+  });
 
+  for (let i = 0; i < n; i++) {
+    const val = nums[i];
+    const slot = Math.abs(val) % numBuckets;
+
+    steps.push({
+      data: { arr: nums, hash: JSON.parse(JSON.stringify(hash)) },
+      hashState: { num: val, currentIdx: i },
+      highlights: { [i]: "pivot" },
+      explanation: `Hashing value ${val}. Computed index slot: ${val} % ${numBuckets} = ${slot}.`,
+      stats: { comparisons: i, swaps: 0, step: steps.length },
+    });
+
+    hash[slot].push(val);
+
+    steps.push({
+      data: { arr: nums, hash: JSON.parse(JSON.stringify(hash)) },
+      hashState: { num: val, currentIdx: i },
+      highlights: { [i]: "sorted" },
+      explanation: `Inserted value ${val} into bucket slot ${slot}. Bucket contents: [${hash[slot].join(", ")}].`,
+      stats: { comparisons: i, swaps: 0, step: steps.length },
+    });
+  }
+
+  steps.push({
+    data: { arr: nums, hash: JSON.parse(JSON.stringify(hash)) },
+    hashState: { num: null, currentIdx: -1 },
+    highlights: {},
+    explanation: "Hash Map insertion complete.",
+    stats: { comparisons: n, swaps: 0, step: steps.length },
+  });
+
+  return steps;
+};
+
+export const groupAnagramsSteps = (wordsStr) => {
+  const steps = [];
+  const words = wordsStr
+    .split(/[\s,]+/)
+    .map((w) => w.trim())
+    .filter(Boolean);
+  const n = words.length;
+  if (n === 0) return [];
+  const hash = {};
+
+  steps.push({
+    data: { arr: words, hash: {} },
+    hashState: { word: null, currentIdx: -1 },
+    highlights: {},
+    explanation: "Initialize empty hash map for grouping anagrams.",
+    stats: { comparisons: 0, swaps: 0, step: 0 },
+  });
+
+  for (let i = 0; i < n; i++) {
+    const word = words[i];
+    const sorted = word.split("").sort().join("");
+
+    steps.push({
+      data: { arr: words, hash: { ...hash } },
+      hashState: { word, currentIdx: i },
+      highlights: { [i]: "pivot" },
+      explanation: `Inspecting word "${word}" at index ${i}. Sorted characters: "${sorted}".`,
+      stats: { comparisons: i, swaps: 0, step: steps.length },
+    });
+
+    if (!hash[sorted]) hash[sorted] = [];
+    hash[sorted].push(word);
+
+    steps.push({
+      data: { arr: words, hash: { ...hash } },
+      hashState: { word, currentIdx: i },
+      highlights: { [i]: "sorted" },
+      explanation: `Added "${word}" to anagram group for key "${sorted}". Group values: [${hash[sorted].join(", ")}].`,
+      stats: { comparisons: i, swaps: 0, step: steps.length },
+    });
+  }
+
+  steps.push({
+    data: { arr: words, hash: { ...hash } },
+    hashState: { word: null, currentIdx: -1 },
+    highlights: {},
+    explanation: `Anagram grouping finished! Groups: ${Object.values(hash)
+      .map((g) => `[${g.join(", ")}]`)
+      .join(", ")}.`,
+    stats: { comparisons: n, swaps: 0, step: steps.length },
+  });
+
+  return steps;
+};
 
 export const fibonacciRecursionSteps = (n) => {
   const steps = [];
@@ -4343,6 +4453,10 @@ export const minStackSteps = (operations) => {
 };
 
 // --- LEVEL ORDER TRAVERSAL ---
+
+// Tree generators — level order
+export { levelOrderTraversalSteps } from './treeGenerators';
+
 export const bellmanFordSteps = (numVertices, edges) => {
   const steps = [];
   const V = numVertices;
@@ -5490,3 +5604,6 @@ function cloneNodes(nodes) {
 // ============================================================
 // BST INSERT
 // ============================================================
+
+// Tree generators — BST/AVL/BT/RBT operations
+export { bstInsertSteps, bstDeleteSteps, avlInsertSteps, avlDeleteSteps, btInsertSteps, btDeleteSteps, rbtInsertSteps } from './treeGenerators';

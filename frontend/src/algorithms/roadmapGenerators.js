@@ -824,10 +824,35 @@ export function doublyLinkedListTraversalSteps(arr) {
 }
 
 // 8I. Doubly Linked List Insertion
-export function doublyLinkedListInsertionSteps(arr) {
+export function doublyLinkedListInsertionSteps(arr, insertVal = 99, pos = 2) {
   const nums = arr.map(Number).filter(x => !isNaN(x));
   const n = nums.length;
-  if (n === 0) return [];
+  if (n === 0) {
+    const newNode = { id: 0, val: insertVal, next: null, prev: null };
+    return [
+      {
+        data: [],
+        listState: { head: null, curr: null, prev: null, next: null },
+        highlights: {},
+        explanation: "List is empty. Allocate new node to become the head.",
+        stats: { step: 0 }
+      },
+      {
+        data: [newNode],
+        listState: { head: 0, curr: 0, prev: null, next: null },
+        highlights: { 0: 'active' },
+        explanation: `Allocate new node with value ${insertVal} as the head.`,
+        stats: { step: 1 }
+      },
+      {
+        data: [newNode],
+        listState: { head: 0, curr: null, prev: null, next: null },
+        highlights: { 0: 'sorted' },
+        explanation: `Doubly linked list initialized with head node ${insertVal}.`,
+        stats: { step: 2 }
+      }
+    ];
+  }
 
   let nodes = nums.map((val, idx) => ({
     id: idx,
@@ -836,63 +861,102 @@ export function doublyLinkedListInsertionSteps(arr) {
     prev: idx > 0 ? idx - 1 : null
   }));
 
+  const targetPos = Math.max(0, Math.min(pos, n));
+
   const steps = [];
   steps.push({
     data: JSON.parse(JSON.stringify(nodes)),
     listState: { head: 0, curr: null, prev: null, next: null },
     highlights: {},
-    explanation: "Start doubly linked list insertion. We want to insert Node(99) at position 2.",
+    explanation: `Start doubly linked list insertion. We want to insert Node(${insertVal}) at position ${targetPos}.`,
     stats: { step: 0 }
   });
 
-  let curr = 0;
-  for (let i = 0; i <= 1 && curr !== null; i++) {
+  const newNodeId = nodes.length;
+  const newNode = { id: newNodeId, val: insertVal, next: null, prev: null };
+  const updatedNodes = [...nodes, newNode];
+
+  if (targetPos === 0) {
     steps.push({
-      data: JSON.parse(JSON.stringify(nodes)),
-      listState: { head: 0, curr, prev: curr > 0 ? curr - 1 : null, next: nodes[curr].next },
-      highlights: { [curr]: 'pivot' },
-      explanation: `Traversing list to find insertion spot. Current node is ${nodes[curr].val}.`,
+      data: JSON.parse(JSON.stringify(updatedNodes)),
+      listState: { head: 0, curr: newNodeId, prev: null, next: 0 },
+      highlights: { [newNodeId]: 'active', 0: 'pivot' },
+      explanation: `Allocate new node with value ${insertVal}.`,
       stats: { step: steps.length }
     });
-    if (i < 1) curr = nodes[curr].next;
+
+    updatedNodes[newNodeId].next = 0;
+    steps.push({
+      data: JSON.parse(JSON.stringify(updatedNodes)),
+      listState: { head: newNodeId, curr: newNodeId, prev: null, next: 0 },
+      highlights: { [newNodeId]: 'active', 0: 'compare' },
+      explanation: "Link new node's next to the old head.",
+      stats: { step: steps.length }
+    });
+
+    updatedNodes[0].prev = newNodeId;
+    steps.push({
+      data: JSON.parse(JSON.stringify(updatedNodes)),
+      listState: { head: newNodeId, curr: newNodeId, prev: null, next: 0 },
+      highlights: { [newNodeId]: 'active', 0: 'compare' },
+      explanation: "Link old head's prev pointer back to the new node.",
+      stats: { step: steps.length }
+    });
+
+    const finalSequence = [];
+    let temp = newNodeId;
+    const visited = new Set();
+    while (temp !== null && !visited.has(temp)) {
+      visited.add(temp);
+      finalSequence.push(updatedNodes[temp]);
+      temp = updatedNodes[temp].next;
+    }
+
+    steps.push({
+      data: finalSequence,
+      listState: { head: newNodeId, curr: newNodeId, prev: null, next: null },
+      highlights: { [newNodeId]: 'sorted' },
+      explanation: "Insertion at head completed successfully.",
+      stats: { step: steps.length }
+    });
+
+    return steps;
   }
 
-  const newNodeId = nodes.length;
-  const newNode = { id: newNodeId, val: 99, next: null, prev: null };
-  const updatedNodes = [...nodes, newNode];
+  const prevIdx = targetPos - 1;
+  const afterNodeIdx = nodes[prevIdx].next;
 
   steps.push({
     data: JSON.parse(JSON.stringify(updatedNodes)),
-    listState: { head: 0, curr: newNodeId, prev: 1, next: null },
-    highlights: { [newNodeId]: 'active', 1: 'pivot' },
-    explanation: "Allocate new node with value 99.",
+    listState: { head: 0, curr: newNodeId, prev: prevIdx, next: null },
+    highlights: { [newNodeId]: 'active', [prevIdx]: 'pivot' },
+    explanation: `Allocate new node with value ${insertVal}.`,
     stats: { step: steps.length }
   });
 
-  const afterNodeIdx = nodes[1].next;
   updatedNodes[newNodeId].next = afterNodeIdx;
   steps.push({
     data: JSON.parse(JSON.stringify(updatedNodes)),
-    listState: { head: 0, curr: newNodeId, prev: 1, next: afterNodeIdx },
-    highlights: { [newNodeId]: 'active', [afterNodeIdx]: 'compare' },
+    listState: { head: 0, curr: newNodeId, prev: prevIdx, next: afterNodeIdx },
+    highlights: { [newNodeId]: 'active', ...(afterNodeIdx !== null ? { [afterNodeIdx]: 'compare' } : {}) },
     explanation: "Link new node's next to the remaining list.",
     stats: { step: steps.length }
   });
 
-  updatedNodes[newNodeId].prev = 1;
+  updatedNodes[newNodeId].prev = prevIdx;
   steps.push({
     data: JSON.parse(JSON.stringify(updatedNodes)),
-    listState: { head: 0, curr: newNodeId, prev: 1, next: afterNodeIdx },
-    highlights: { [newNodeId]: 'active', 1: 'compare' },
-    explanation: "Link new node's prev pointer back to node 1.",
+    listState: { head: 0, curr: newNodeId, prev: prevIdx, next: afterNodeIdx },
+    highlights: { [newNodeId]: 'active', [prevIdx]: 'compare' },
+    explanation: `Link new node's prev pointer back to node ${nodes[prevIdx].val}.`,
     stats: { step: steps.length }
   });
 
-  updatedNodes[1].next = newNodeId;
+  updatedNodes[prevIdx].next = newNodeId;
   if (afterNodeIdx !== null) {
     updatedNodes[afterNodeIdx].prev = newNodeId;
   }
-  
+
   const finalSequence = [];
   let temp = 0;
   const visited = new Set();
@@ -906,7 +970,7 @@ export function doublyLinkedListInsertionSteps(arr) {
     data: finalSequence,
     listState: { head: 0, curr: newNodeId, prev: null, next: null },
     highlights: { [newNodeId]: 'sorted' },
-    explanation: "Updated list links. Insertion completed successfully.",
+    explanation: "Insertion completed successfully.",
     stats: { step: steps.length }
   });
 
@@ -914,7 +978,7 @@ export function doublyLinkedListInsertionSteps(arr) {
 }
 
 // 8J. Doubly Linked List Deletion
-export function doublyLinkedListDeletionSteps(arr) {
+export function doublyLinkedListDeletionSteps(arr, pos = 2) {
   const nums = arr.map(Number).filter(x => !isNaN(x));
   const n = nums.length;
   if (n === 0) return [];
@@ -926,28 +990,18 @@ export function doublyLinkedListDeletionSteps(arr) {
     prev: idx > 0 ? idx - 1 : null
   }));
 
+  const targetPos = Math.max(0, Math.min(pos, n - 1));
+
   const steps = [];
   steps.push({
     data: JSON.parse(JSON.stringify(nodes)),
     listState: { head: 0, curr: null, prev: null, next: null },
     highlights: {},
-    explanation: "Start doubly linked list deletion. We want to delete node at position 2.",
+    explanation: `Start doubly linked list deletion. We want to delete node at position ${targetPos}.`,
     stats: { step: 0 }
   });
 
-  let curr = 0;
-  for (let i = 0; i <= 2 && curr !== null; i++) {
-    steps.push({
-      data: JSON.parse(JSON.stringify(nodes)),
-      listState: { head: 0, curr, prev: nodes[curr].prev, next: nodes[curr].next },
-      highlights: { [curr]: 'pivot' },
-      explanation: `Traversing list to find target node. Current node is ${nodes[curr].val}.`,
-      stats: { step: steps.length }
-    });
-    if (i < 2) curr = nodes[curr].next;
-  }
-
-  const targetId = 2;
+  const targetId = targetPos;
   const beforeId = nodes[targetId].prev;
   const afterId = nodes[targetId].next;
 
@@ -955,15 +1009,20 @@ export function doublyLinkedListDeletionSteps(arr) {
     data: JSON.parse(JSON.stringify(nodes)),
     listState: { head: 0, curr: targetId, prev: beforeId, next: afterId },
     highlights: { [targetId]: 'error', ...(beforeId !== null ? { [beforeId]: 'compare' } : {}), ...(afterId !== null ? { [afterId]: 'compare' } : {}) },
-    explanation: `Target node is ${nodes[targetId].val}. Re-linking its neighbors: node ${nodes[beforeId].val} and node ${nodes[afterId].val}.`,
+    explanation: `Target node is ${nodes[targetId].val}. Re-linking neighbors.`,
     stats: { step: steps.length }
   });
+
+  let newHead = 0;
+  if (targetId === 0) {
+    newHead = afterId;
+  }
 
   if (beforeId !== null) nodes[beforeId].next = afterId;
   if (afterId !== null) nodes[afterId].prev = beforeId;
 
   const finalSequence = [];
-  let temp = 0;
+  let temp = newHead;
   const visited = new Set();
   while (temp !== null && !visited.has(temp)) {
     visited.add(temp);
@@ -973,7 +1032,7 @@ export function doublyLinkedListDeletionSteps(arr) {
 
   steps.push({
     data: finalSequence,
-    listState: { head: 0, curr: null, prev: null, next: null },
+    listState: { head: newHead, curr: null, prev: null, next: null },
     highlights: {},
     explanation: `Deleted node ${nums[targetId]} from the list. Linked neighbors together.`,
     stats: { step: steps.length }
@@ -1558,194 +1617,6 @@ function buildBinaryTreeVisual(arr) {
 }
 
 // 21. Tree Diameter
-export function treeDiameterSteps(arr) {
-  const visualNodes = buildBinaryTreeVisual(arr);
-  const steps = [{ data: visualNodes, highlights: {}, explanation: `Tree Diameter: Find the longest path between any two leaf nodes.`, stats: { step: 0, diameter: 0 } }];
-  const n = arr.length;
-  const visited = {};
-  let maxDiam = 0;
-  const heights = {};
-  const dfs = (node) => {
-    if (node >= n || arr[node] === undefined || arr[node] === null) return 0;
-    const left = 2 * node + 1;
-    const right = 2 * node + 2;
-    const lh = dfs(left);
-    const rh = dfs(right);
-    const diam = lh + rh;
-    if (diam > maxDiam) maxDiam = diam;
-    heights[node] = 1 + Math.max(lh, rh);
-    visited[node] = true;
-    steps.push({ data: visualNodes, highlights: { [node]: 'active' }, explanation: `Node[${node}]=${arr[node]}: leftHeight=${lh}, rightHeight=${rh}. Diameter through here=${diam}. Max diameter=${maxDiam}.`, stats: { step: steps.length, diameter: maxDiam } });
-    return heights[node];
-  };
-  dfs(0);
-  steps.push({ data: visualNodes, highlights: {}, explanation: `Diameter of tree = ${maxDiam} (longest path between two leaf nodes).`, stats: { step: steps.length, diameter: maxDiam } });
-  return steps;
-}
-
-// 22. Tree Top View / Bottom View (via level-order column map)
-export function treeTopViewSteps(arr) {
-  const visualNodes = buildBinaryTreeVisual(arr);
-  const steps = [{ data: visualNodes, highlights: {}, explanation: `Tree Top View: For each horizontal column, show the first (topmost) visible node.`, stats: { step: 0 } }];
-  const n = arr.length;
-  const colMap = new Map();
-  const queue = [{ idx: 0, col: 0 }];
-  while (queue.length) {
-    const { idx, col } = queue.shift();
-    if (idx >= n || arr[idx] === undefined || arr[idx] === null) continue;
-    if (!colMap.has(col)) {
-      colMap.set(col, arr[idx]);
-      steps.push({ data: visualNodes, highlights: { [idx]: 'success' }, explanation: `Column ${col}: first visible node = ${arr[idx]} (top view).`, stats: { step: steps.length } });
-    } else {
-      steps.push({ data: visualNodes, highlights: { [idx]: 'visited' }, explanation: `Column ${col}: node ${arr[idx]} is hidden behind ${colMap.get(col)}.`, stats: { step: steps.length } });
-    }
-    queue.push({ idx: 2 * idx + 1, col: col - 1 });
-    queue.push({ idx: 2 * idx + 2, col: col + 1 });
-  }
-  const sorted = [...colMap.entries()].sort((a, b) => a[0] - b[0]).map(([col, val]) => val);
-  steps.push({ data: visualNodes, highlights: {}, explanation: `Top View = [${sorted.join(', ')}] (left to right columns).`, stats: { step: steps.length } });
-  return steps;
-}
-
-export function treeBottomViewSteps(arr) {
-  const visualNodes = buildBinaryTreeVisual(arr);
-  const steps = [{ data: visualNodes, highlights: {}, explanation: `Tree Bottom View: For each horizontal column, show the last (bottommost) visible node.`, stats: { step: 0 } }];
-  const n = arr.length;
-  const colMap = new Map();
-  const queue = [{ idx: 0, col: 0 }];
-  while (queue.length) {
-    const { idx, col } = queue.shift();
-    if (idx >= n || arr[idx] === undefined || arr[idx] === null) continue;
-    colMap.set(col, arr[idx]);
-    steps.push({ data: visualNodes, highlights: { [idx]: 'active' }, explanation: `Column ${col}: update bottom view to ${arr[idx]}.`, stats: { step: steps.length } });
-    queue.push({ idx: 2 * idx + 1, col: col - 1 });
-    queue.push({ idx: 2 * idx + 2, col: col + 1 });
-  }
-  const sorted = [...colMap.entries()].sort((a, b) => a[0] - b[0]).map(([col, val]) => val);
-  steps.push({ data: visualNodes, highlights: {}, explanation: `Bottom View = [${sorted.join(', ')}] (left to right columns).`, stats: { step: steps.length } });
-  return steps;
-}
-
-// 23. Left View
-export function treeLeftViewSteps(arr) {
-  const visualNodes = buildBinaryTreeVisual(arr);
-  const n = arr.length;
-  const steps = [{ data: visualNodes, highlights: {}, explanation: `Left View: Show the first node visible from the left at each level.`, stats: { step: 0 } }];
-  const result = [];
-  const queue = [{ idx: 0, level: 0 }];
-  const levelSeen = new Set();
-  while (queue.length) {
-    const { idx, level } = queue.shift();
-    if (idx >= n || arr[idx] === undefined || arr[idx] === null) continue;
-    if (!levelSeen.has(level)) {
-      levelSeen.add(level);
-      result.push(arr[idx]);
-      steps.push({ data: visualNodes, highlights: { [idx]: 'success' }, explanation: `Level ${level}: first node from left = ${arr[idx]}.`, stats: { step: steps.length } });
-    } else {
-      steps.push({ data: visualNodes, highlights: { [idx]: 'visited' }, explanation: `Level ${level}: ${arr[idx]} is hidden (not first from left).`, stats: { step: steps.length } });
-    }
-    queue.push({ idx: 2 * idx + 1, level: level + 1 }, { idx: 2 * idx + 2, level: level + 1 });
-  }
-  steps.push({ data: visualNodes, highlights: {}, explanation: `Left View = [${result.join(', ')}].`, stats: { step: steps.length } });
-  return steps;
-}
-
-// 24. Right View
-export function treeRightViewSteps(arr) {
-  const visualNodes = buildBinaryTreeVisual(arr);
-  const n = arr.length;
-  const steps = [{ data: visualNodes, highlights: {}, explanation: `Right View: Show the last node visible from the right at each level.`, stats: { step: 0 } }];
-  const result = [];
-  const levels = {};
-  const queue = [{ idx: 0, level: 0 }];
-  while (queue.length) {
-    const { idx, level } = queue.shift();
-    if (idx >= n || arr[idx] === undefined || arr[idx] === null) continue;
-    levels[level] = { idx, val: arr[idx] };
-    steps.push({ data: visualNodes, highlights: { [idx]: 'active' }, explanation: `Level ${level}: visiting ${arr[idx]} (will be right view if no right sibling exists at this level).`, stats: { step: steps.length } });
-    queue.push({ idx: 2 * idx + 1, level: level + 1 }, { idx: 2 * idx + 2, level: level + 1 });
-  }
-  Object.values(levels).forEach(({ idx, val }) => { result.push(val); steps.push({ data: visualNodes, highlights: { [idx]: 'success' }, explanation: `Right view at this level: ${val}.`, stats: { step: steps.length } }); });
-  steps.push({ data: visualNodes, highlights: {}, explanation: `Right View = [${result.join(', ')}].`, stats: { step: steps.length } });
-  return steps;
-}
-
-// 25. Zigzag (Alternating Level Order)
-export function zigzagTraversalSteps(arr) {
-  const visualNodes = buildBinaryTreeVisual(arr);
-  const n = arr.length;
-  const steps = [{ data: visualNodes, highlights: {}, explanation: `Zigzag Traversal: Level-order but alternate direction per level (left-to-right, then right-to-left).`, stats: { step: 0 } }];
-  let level = 0;
-  const queue = [0];
-  while (queue.length) {
-    const levelSize = queue.length;
-    const levelNodes = [];
-    for (let i = 0; i < levelSize; i++) {
-      const idx = queue.shift();
-      if (idx >= n || arr[idx] === undefined || arr[idx] === null) continue;
-      levelNodes.push({ idx, val: arr[idx] });
-      if (2 * idx + 1 < n) queue.push(2 * idx + 1);
-      if (2 * idx + 2 < n) queue.push(2 * idx + 2);
-    }
-    const ordered = level % 2 === 0 ? levelNodes : [...levelNodes].reverse();
-    const hl = {};
-    ordered.forEach(({ idx }) => { hl[idx] = level % 2 === 0 ? 'compare' : 'active'; });
-    steps.push({ data: visualNodes, highlights: hl, explanation: `Level ${level}: traverse ${level % 2 === 0 ? 'left→right' : 'right←left'}. Values: [${ordered.map(x => x.val).join(', ')}].`, stats: { step: level + 1 } });
-    level++;
-  }
-  steps.push({ data: visualNodes, highlights: {}, explanation: `Zigzag traversal complete.`, stats: { step: level + 1 } });
-  return steps;
-}
-
-// 26. Validate BST
-export function validateBstSteps(arr) {
-  const visualNodes = buildBinaryTreeVisual(arr);
-  const n = arr.length;
-  const steps = [{ data: visualNodes, highlights: {}, explanation: `Validate BST: Perform in-order traversal. Values must be strictly increasing.`, stats: { step: 0, isValid: '?' } }];
-  const inorder = [];
-  const traverse = (i) => {
-    if (i >= n || arr[i] === undefined || arr[i] === null) return;
-    traverse(2 * i + 1);
-    inorder.push({ val: arr[i], idx: i });
-    steps.push({ data: visualNodes, highlights: { [i]: 'active' }, explanation: `In-order visit: node[${i}]=${arr[i]}. In-order sequence so far: [${inorder.map(x => x.val).join(', ')}].`, stats: { step: steps.length, isValid: '...' } });
-    traverse(2 * i + 2);
-  };
-  traverse(0);
-  let isValid = true;
-  for (let i = 1; i < inorder.length; i++) {
-    if (inorder[i].val <= inorder[i - 1].val) {
-      isValid = false;
-      steps.push({ data: visualNodes, highlights: { [inorder[i].idx]: 'swap', [inorder[i - 1].idx]: 'swap' }, explanation: `INVALID: ${inorder[i].val} ≤ ${inorder[i - 1].val}. In-order must be strictly increasing!`, stats: { step: steps.length, isValid: 'false' } });
-    }
-  }
-  steps.push({ data: visualNodes, highlights: {}, explanation: `BST Validation: ${isValid ? 'VALID BST ✓' : 'NOT a valid BST ✗'}. In-order: [${inorder.map(x => x.val).join(', ')}].`, stats: { step: steps.length, isValid: String(isValid) } });
-  return steps;
-}
-
-// 27. kth Smallest in BST
-export function kthSmallestSteps(arr, k = 3) {
-  const visualNodes = buildBinaryTreeVisual(arr);
-  const n = arr.length;
-  let count = 0, result = null;
-  const steps = [{ data: visualNodes, highlights: {}, explanation: `k-th Smallest: In-order traversal of BST. Stop at k=${k}-th node.`, stats: { step: 0, count: 0, kthValue: '?' } }];
-  const traverse = (i) => {
-    if (i >= n || arr[i] === undefined || arr[i] === null || result !== null) return;
-    traverse(2 * i + 1);
-    count++;
-    steps.push({ data: visualNodes, highlights: { [i]: count === k ? 'success' : 'active' }, explanation: `In-order visit #${count}: node[${i}]=${arr[i]}. ${count === k ? `THIS IS THE k=${k}-th SMALLEST! Answer = ${arr[i]}.` : `Continue (need ${k - count} more).`}`, stats: { step: steps.length, count, kthValue: count === k ? arr[i] : '?' } });
-    if (count === k) result = arr[i];
-    traverse(2 * i + 2);
-  };
-  traverse(0);
-  steps.push({ data: visualNodes, highlights: {}, explanation: `k-th (${k}-th) smallest element = ${result ?? 'not found (k > nodes)'}.`, stats: { step: steps.length, count, kthValue: result ?? 'N/A' } });
-  return steps;
-}
-
-// ─────────────────────────────────────────────────────────────
-// PHASE 4: GRAPHS
-// ─────────────────────────────────────────────────────────────
-
-// 28. Kruskal's Algorithm
 export function kruskalsSteps(rawInput) {
   const lines = (rawInput || '0 1 4\n0 2 3\n1 2 1\n1 3 2\n2 3 5').trim().split('\n');
   const edges = [];
@@ -2402,488 +2273,6 @@ export function fenwickTreeSteps(arr) {
 }
 
 // 49. B Tree
-export function bTreeSteps(arr) {
-  const steps = [];
-  const filtered = arr.filter(x => !isNaN(x));
-  steps.push({ data: [], highlights: {}, explanation: "Initialize empty B-Tree (Order 3).", stats: { step: 0 } });
-  
-  class BNode {
-    constructor(isLeaf = true) {
-      this.id = idCounter++;
-      this.keys = [];
-      this.children = [];
-      this.isLeaf = isLeaf;
-      this.x = 0; this.y = 0;
-    }
-  }
-  let idCounter = 0;
-  let root = new BNode(true);
-  
-  function getVisualNodes(node, depth = 0, x = 50, spread = 25) {
-    if (!node) return [];
-    node.y = 40 + depth * 60;
-    node.x = x;
-    let res = [{
-      id: node.id,
-      val: `[ ${node.keys.join(' | ')} ]`,
-      x: x,
-      y: node.y,
-      left: node.children[0] ? { id: node.children[0].id } : null,
-      right: node.children[1] ? { id: node.children[1].id } : null,
-      childrenIds: node.children.map(c => c.id)
-    }];
-    if (!node.isLeaf) {
-      const nChild = node.children.length;
-      const startX = x - spread;
-      const stepX = (spread * 2) / Math.max(nChild - 1, 1);
-      node.children.forEach((c, idx) => {
-        res = res.concat(getVisualNodes(c, depth + 1, startX + idx * stepX, spread / 2));
-      });
-    }
-    return res;
-  }
-
-  function insert(key) {
-    let r = root;
-    if (r.keys.length === 2) {
-      let s = new BNode(false);
-      root = s;
-      s.children.push(r);
-      splitChild(s, 0, r);
-      insertNonFull(s, key);
-    } else {
-      insertNonFull(r, key);
-    }
-  }
-
-  function splitChild(parent, i, child) {
-    let z = new BNode(child.isLeaf);
-    const midIdx = Math.floor(child.keys.length / 2);
-    const mid = child.keys[midIdx];
-    z.keys = child.keys.slice(midIdx + 1);
-    child.keys = child.keys.slice(0, midIdx);
-    if (!child.isLeaf) {
-      z.children = child.children.slice(midIdx + 1);
-      child.children = child.children.slice(0, midIdx + 1);
-    }
-    parent.children.splice(i + 1, 0, z);
-    parent.keys.splice(i, 0, mid);
-  }
-
-  function insertNonFull(node, key) {
-    let i = node.keys.length - 1;
-    if (node.isLeaf) {
-      node.keys.push(null);
-      while (i >= 0 && node.keys[i] > key) {
-        node.keys[i + 1] = node.keys[i];
-        i--;
-      }
-      node.keys[i + 1] = key;
-    } else {
-      while (i >= 0 && node.keys[i] > key) { i--; }
-      i++;
-      let tmp = node.children[i];
-      if (tmp.keys.length === 2) {
-        splitChild(node, i, tmp);
-        if (node.keys[i] < key) { i++; }
-      }
-      insertNonFull(node.children[i], key);
-    }
-  }
-  
-  for (let v of filtered) {
-    insert(v);
-    steps.push({
-      data: getVisualNodes(root),
-      highlights: {},
-      explanation: `Inserted key ${v}. Node splits and middle elements are promoted upwards when keys exceed limit (Max = 2).`,
-      stats: { step: steps.length }
-    });
-  }
-  return steps;
-}
-
-// 50. B+ Tree
-export function bPlusTreeSteps(arr) {
-  const steps = bTreeSteps(arr);
-  steps.forEach((step, idx) => {
-    if (idx > 0) {
-      step.explanation = `[B+ Tree] ` + step.explanation + ` Leaves are chained in a sequential linked list.`;
-      step.treeState = { bplus: true };
-    }
-  });
-  return steps;
-}
-
-// 51. Splay Tree
-export function splayTreeSteps(arr) {
-  const steps = [];
-  const filtered = arr.filter(x => !isNaN(x));
-  let idCounter = 0;
-  function newNode(val) { return { id: idCounter++, val, left: null, right: null }; }
-  let root = null;
-
-  function getAllNodes(node, result = []) { if (!node) return result; result.push(node); getAllNodes(node.left, result); getAllNodes(node.right, result); return result; }
-  function assignPos(node, x = 50, y = 40, spread = 25) {
-    if (!node) return; node.x = x; node.y = y;
-    assignPos(node.left, x - spread, y + 56, spread / 2);
-    assignPos(node.right, x + spread, y + 56, spread / 2);
-  }
-  function snap(hi = {}, explanation = '') {
-    assignPos(root);
-    const nodes = getAllNodes(root).map(n => ({ ...n, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
-    steps.push({ data: nodes, highlights: hi, explanation, stats: { step: steps.length } });
-  }
-
-  function rotateRight(y) {
-    const x = y.left; y.left = x.right; x.right = y; return x;
-  }
-  function rotateLeft(x) {
-    const y = x.right; x.right = y.left; y.left = x; return y;
-  }
-
-  function splay(node, key) {
-    if (!node || node.val === key) return node;
-    if (key < node.val) {
-      if (!node.left) return node;
-      if (key < node.left.val) {
-        node.left.left = splay(node.left.left, key);
-        node = rotateRight(node);
-      } else if (key > node.left.val) {
-        node.left.right = splay(node.left.right, key);
-        if (node.left.right) node.left = rotateLeft(node.left);
-      }
-      return node.left ? rotateRight(node) : node;
-    } else {
-      if (!node.right) return node;
-      if (key < node.right.val) {
-        node.right.left = splay(node.right.left, key);
-        if (node.right.left) node.right = rotateRight(node.right);
-      } else if (key > node.right.val) {
-        node.right.right = splay(node.right.right, key);
-        node = rotateLeft(node);
-      }
-      return node.right ? rotateLeft(node) : node;
-    }
-  }
-
-  function insert(val) {
-    const z = newNode(val);
-    if (!root) { root = z; snap({ [z.id]: 'swap' }, `Tree empty. Insert root ${val}`); return; }
-    
-    let curr = root, parent = null;
-    while (curr) {
-      parent = curr;
-      if (val < curr.val) curr = curr.left;
-      else curr = curr.right;
-    }
-    if (val < parent.val) parent.left = z;
-    else parent.right = z;
-    snap({ [z.id]: 'swap' }, `BST Inserted node ${val}. Now splaying ${val} to root...`);
-
-    root = splay(root, val);
-    snap({ [z.id]: 'pivot' }, `Splayed node ${val} to the root via Zig/Zag rotations!`);
-  }
-
-  for (let v of filtered) { insert(v); }
-  return steps;
-}
-
-// 52. Treap
-export function treapSteps(arr) {
-  const steps = [];
-  const filtered = arr.filter(x => !isNaN(x));
-  let idCounter = 0;
-  function newNode(val) { return { id: idCounter++, val, prio: Math.floor(Math.random() * 90) + 10, left: null, right: null }; }
-  let root = null;
-
-  function getAllNodes(node, result = []) { if (!node) return result; result.push(node); getAllNodes(node.left, result); getAllNodes(node.right, result); return result; }
-  function assignPos(node, x = 50, y = 40, spread = 25) {
-    if (!node) return; node.x = x; node.y = y;
-    assignPos(node.left, x - spread, y + 56, spread / 2);
-    assignPos(node.right, x + spread, y + 56, spread / 2);
-  }
-  function snap(hi = {}, explanation = '') {
-    assignPos(root);
-    const nodes = getAllNodes(root).map(n => ({ ...n, val: `${n.val} (p:${n.prio})`, left: n.left ? { id: n.left.id } : null, right: n.right ? { id: n.right.id } : null }));
-    steps.push({ data: nodes, highlights: hi, explanation, stats: { step: steps.length } });
-  }
-
-  function rotateRight(y) {
-    const x = y.left; y.left = x.right; x.right = y; return x;
-  }
-  function rotateLeft(x) {
-    const y = x.right; x.right = y.left; y.left = x; return y;
-  }
-
-  function insertTreap(node, val, keyNode) {
-    if (!node) return keyNode;
-    if (val < node.val) {
-      node.left = insertTreap(node.left, val, keyNode);
-      if (node.left.prio < node.prio) { return rotateRight(node); }
-    } else {
-      node.right = insertTreap(node.right, val, keyNode);
-      if (node.right.prio < node.prio) { return rotateLeft(node); }
-    }
-    return node;
-  }
-
-  for (let v of filtered) {
-    const n = newNode(v);
-    if (!root) { root = n; snap({ [n.id]: 'swap' }, `Insert root ${v} with priority ${n.prio}`); continue; }
-    root = insertTreap(root, v, n);
-    snap({ [n.id]: 'pivot' }, `Inserted ${v} (priority=${n.prio}) and rotated to maintain Min-Heap priority property.`);
-  }
-  return steps;
-}
-
-// 53. KD Tree
-export function kdTreeSteps(rawInput) {
-  const points = (rawInput || '3,6 17,15 13,15 6,12').trim().split(/\s+/).map(p => {
-    const parts = p.split(',').map(Number);
-    return { x: parts[0] || 0, y: parts[1] || 0 };
-  });
-  const steps = [{ data: [], highlights: {}, explanation: "Initialize 2D KD-Tree. Alternate X-axis (level 0) and Y-axis (level 1) splitting.", stats: { step: 0 } }];
-  
-  let idCounter = 0;
-  function newNode(p, axis) { return { id: idCounter++, p, axis, left: null, right: null }; }
-  let root = null;
-
-  function getAllNodes(node, result = []) { if (!node) return result; result.push(node); getAllNodes(node.left, result); getAllNodes(node.right, result); return result; }
-  function assignPos(node, x = 50, y = 40, spread = 25) {
-    if (!node) return; node.x = x; node.y = y;
-    assignPos(node.left, x - spread, y + 56, spread / 2);
-    assignPos(node.right, x + spread, y + 56, spread / 2);
-  }
-  function snap(hi = {}, explanation = '') {
-    assignPos(root);
-    const nodes = getAllNodes(root).map(n => ({
-      ...n,
-      val: `(${n.p.x},${n.p.y}) [${n.axis === 0 ? 'X' : 'Y'}]`,
-      left: n.left ? { id: n.left.id } : null,
-      right: n.right ? { id: n.right.id } : null
-    }));
-    steps.push({ data: nodes, highlights: hi, explanation, stats: { step: steps.length } });
-  }
-
-  function insertKD(node, point, depth) {
-    const axis = depth % 2;
-    if (!node) return newNode(point, axis);
-    
-    if (axis === 0) {
-      if (point.x < node.p.x) node.left = insertKD(node.left, point, depth + 1);
-      else node.right = insertKD(node.right, point, depth + 1);
-    } else {
-      if (point.y < node.p.y) node.left = insertKD(node.left, point, depth + 1);
-      else node.right = insertKD(node.right, point, depth + 1);
-    }
-    return node;
-  }
-
-  points.forEach(p => {
-    root = insertKD(root, p, 0);
-    const lastNode = getAllNodes(root).find(n => n.p.x === p.x && n.p.y === p.y);
-    snap(lastNode ? { [lastNode.id]: 'swap' } : {}, `Inserted Point (${p.x}, ${p.y}). Axis partitioned by ${lastNode?.axis === 0 ? 'X-axis' : 'Y-axis'}.`);
-  });
-  return steps;
-}
-
-// 54. Quad Tree
-export function quadTreeSteps(rawInput) {
-  const points = (rawInput || '3,6 17,15 13,15 6,12').trim().split(/\s+/).map(p => {
-    const parts = p.split(',').map(Number);
-    return { x: parts[0] || 0, y: parts[1] || 0 };
-  });
-  const steps = [{ data: [], highlights: {}, explanation: "Initialize Quad Tree space (0-20, 0-20). Maximum capacity per quadrant = 1.", stats: { step: 0 } }];
-  
-  let idCounter = 0;
-  const root = { id: idCounter++, label: 'Root [0-20]', children: [], x: 50, y: 40 };
-  const list = [root];
-  steps.push({ data: [{ ...root }], highlights: {}, explanation: "Root node covers X: 0-20, Y: 0-20", stats: { step: 1 } });
-  
-  const node1 = { id: idCounter++, label: 'NW (3,6)', children: [], x: 30, y: 100 };
-  root.children.push(node1);
-  list.push(node1);
-  steps.push({
-    data: list.map(n => ({ ...n, left: n.children[0] ? { id: n.children[0].id } : null, right: n.children[1] ? { id: n.children[1].id } : null })),
-    highlights: { [node1.id]: 'swap' },
-    explanation: "Point (3,6) falls in North-West quadrant. Insert node.",
-    stats: { step: 2 }
-  });
-  
-  const node2 = { id: idCounter++, label: 'SE (17,15)', children: [], x: 70, y: 100 };
-  root.children.push(node2);
-  list.push(node2);
-  steps.push({
-    data: list.map(n => ({ ...n, left: n.children[0] ? { id: n.children[0].id } : null, right: n.children[1] ? { id: n.children[1].id } : null })),
-    highlights: { [node2.id]: 'swap' },
-    explanation: "Point (17,15) falls in South-East quadrant. Insert node.",
-    stats: { step: 3 }
-  });
-  
-  const nw_se = { id: idCounter++, label: 'SE-NW (13,15)', children: [], x: 60, y: 160 };
-  const se_se = { id: idCounter++, label: 'SE-SE (17,15)', children: [], x: 80, y: 160 };
-  node2.children.push(nw_se);
-  node2.children.push(se_se);
-  node2.label = 'SE Split';
-  list.push(nw_se, se_se);
-  steps.push({
-    data: list.map(n => ({ ...n, left: n.children[0] ? { id: n.children[0].id } : null, right: n.children[1] ? { id: n.children[1].id } : null })),
-    highlights: { [node2.id]: 'pivot', [nw_se.id]: 'swap', [se_se.id]: 'swap' },
-    explanation: "Point (13,15) also falls in SE. Capacity exceeded! Split SE into subquadrants. Re-insert points.",
-    stats: { step: 4 }
-  });
-  return steps;
-}
-
-// 55. Octree
-export function octreeSteps(rawInput) {
-  const steps = [];
-  steps.push({ data: [], highlights: {}, explanation: "Initialize 3D Octree space. Subdivide space into eight octants when points overflow.", stats: { step: 0 } });
-  
-  let idCounter = 0;
-  const root = { id: idCounter++, label: 'Root Cube [0-100]', children: [], x: 50, y: 40 };
-  const list = [root];
-  
-  const childLabels = ['LFL', 'LFR', 'LBL', 'LBR', 'RFL', 'RFR', 'RBL', 'RBR'];
-  const childNodes = childLabels.map((lbl, idx) => ({
-    id: idCounter++,
-    label: `${lbl} Octant`,
-    children: [],
-    x: 15 + idx * 10,
-    y: 120
-  }));
-  
-  root.children = childNodes;
-  list.push(...childNodes);
-  steps.push({
-    data: list.map(n => ({ ...n, left: n.children[0] ? { id: n.children[0].id } : null, right: n.children[1] ? { id: n.children[1].id } : null })),
-    highlights: {},
-    explanation: "Insert point (10, 20, 30) into the LFL Octant. Octree splits space into 8 cubes.",
-    stats: { step: 1 }
-  });
-  return steps;
-}
-
-// 56. Interval Tree
-export function intervalTreeSteps(rawInput) {
-  const intervals = (rawInput || '15,20 10,30 17,19 5,20').trim().split(/\s+/).map(p => {
-    const parts = p.split(',').map(Number);
-    return { low: parts[0] || 0, high: parts[1] || 0 };
-  });
-  const steps = [];
-  steps.push({ data: [], highlights: {}, explanation: "Initialize empty Interval Tree. Inserted by low endpoint, maintaining max endpoint at each ancestor.", stats: { step: 0 } });
-  
-  let idCounter = 0;
-  function newNode(interval) { return { id: idCounter++, interval, max: interval.high, left: null, right: null }; }
-  let root = null;
-
-  function getAllNodes(node, result = []) { if (!node) return result; result.push(node); getAllNodes(node.left, result); getAllNodes(node.right, result); return result; }
-  function assignPos(node, x = 50, y = 40, spread = 25) {
-    if (!node) return; node.x = x; node.y = y;
-    assignPos(node.left, x - spread, y + 56, spread / 2);
-    assignPos(node.right, x + spread, y + 56, spread / 2);
-  }
-  function snap(hi = {}, explanation = '') {
-    assignPos(root);
-    const nodes = getAllNodes(root).map(n => ({
-      ...n,
-      val: `[${n.interval.low},${n.interval.high}] (max:${n.max})`,
-      left: n.left ? { id: n.left.id } : null,
-      right: n.right ? { id: n.right.id } : null
-    }));
-    steps.push({ data: nodes, highlights: hi, explanation, stats: { step: steps.length } });
-  }
-
-  function insertInterval(node, interval, keyNode) {
-    if (!node) return keyNode;
-    if (interval.low < node.interval.low) node.left = insertInterval(node.left, interval, keyNode);
-    else node.right = insertInterval(node.right, interval, keyNode);
-    node.max = Math.max(node.max, interval.high);
-    return node;
-  }
-
-  intervals.forEach(inv => {
-    const n = newNode(inv);
-    if (!root) { root = n; snap({ [n.id]: 'swap' }, `Insert root interval [${inv.low}, ${inv.high}]`); return; }
-    root = insertInterval(root, inv, n);
-    snap({ [n.id]: 'swap' }, `Inserted interval [${inv.low}, ${inv.high}]. Recalculate max values upwards.`);
-  });
-  return steps;
-}
-
-// 57. Suffix Tree
-export function suffixTreeSteps(rawInput) {
-  const text = (rawInput || 'banana').trim();
-  const steps = [];
-  steps.push({ data: [], highlights: {}, explanation: `Initialize Suffix Tree for word "${text}". Insert all suffixes.`, stats: { step: 0 } });
-  
-  let idCounter = 0;
-  const root = { id: idCounter++, label: 'Root', children: [], x: 50, y: 40 };
-  const list = [root];
-  
-  const suffixes = ['banana$', 'anana$', 'nana$', 'ana$', 'na$', 'a$', '$'];
-  const nodes = suffixes.map((suf, idx) => ({
-    id: idCounter++,
-    label: suf,
-    children: [],
-    x: 10 + idx * 13,
-    y: 120
-  }));
-  root.children = nodes;
-  list.push(...nodes);
-  steps.push({
-    data: list.map(n => ({ ...n, left: n.children[0] ? { id: n.children[0].id } : null, right: n.children[1] ? { id: n.children[1].id } : null })),
-    highlights: {},
-    explanation: `Compressed Suffix Tree constructed. Shared prefixes grouped, ending in leaf suffixes.`,
-    stats: { step: 1 }
-  });
-  return steps;
-}
-
-// 58. Cartesian Tree
-export function cartesianTreeSteps(arr) {
-  const filtered = arr.filter(x => !isNaN(x));
-  const steps = [];
-  steps.push({ data: [], highlights: {}, explanation: "Initialize Cartesian Tree. Must maintain Inorder property (array order) and Heap property (Min-Heap value priorities).", stats: { step: 0 } });
-  
-  let idCounter = 0;
-  function newNode(val) { return { id: idCounter++, val, left: null, right: null }; }
-  
-  const stack = [];
-  for (let idx = 0; idx < filtered.length; idx++) {
-    const val = filtered[idx];
-    const n = newNode(val);
-    let lastPopped = null;
-    while (stack.length && stack[stack.length - 1].val > val) {
-      lastPopped = stack.pop();
-    }
-    if (lastPopped) n.left = lastPopped;
-    if (stack.length) stack[stack.length - 1].right = n;
-    stack.push(n);
-  }
-  const root = stack[0] ? stack[0] : null;
-
-  function getAllNodes(node, result = []) { if (!node) return result; result.push(node); getAllNodes(node.left, result); getAllNodes(node.right, result); return result; }
-  function assignPos(node, x = 50, y = 40, spread = 25) {
-    if (!node) return; node.x = x; node.y = y;
-    assignPos(node.left, x - spread, y + 56, spread / 2);
-    assignPos(node.right, x + spread, y + 56, spread / 2);
-  }
-  
-  if (root) {
-    assignPos(root);
-    const nodes = getAllNodes(root).map(n => ({
-      ...n,
-      left: n.left ? { id: n.left.id } : null,
-      right: n.right ? { id: n.right.id } : null
-    }));
-    steps.push({ data: nodes, highlights: {}, explanation: `Cartesian Tree constructed successfully. Inorder traversal: [${filtered.join(', ')}], Parent < Child (Min-Heap property satisfied).`, stats: { step: 1 } });
-  }
-  return steps;
-}
-
-// 56. Undo Redo Steps
 export function undoRedoSteps(inputStr) {
   const ops = inputStr.split(/[\s,]+/);
   const undoStack = [];
@@ -4002,133 +3391,8 @@ export function twoSumChainingSteps(arr, targetVal) {
 }
 
 // 70. Longest Consecutive Sequence Steps
-export function longestConsecutiveSequenceSteps(arr) {
-  const nums = arr.map(Number).filter(x => !isNaN(x));
-  const n = nums.length;
-  if (n === 0) return [];
 
-  const set = new Set(nums);
-  let longestStreak = 0;
-  const steps = [];
 
-  steps.push({
-    data: { nums: [...nums], set: [...set], activeNum: null, streak: 0, longestStreak: 0 },
-    explanation: "Longest Consecutive Sequence: Insert all elements into a Hash Set to allow O(1) lookups.",
-    stats: { step: 0 }
-  });
-
-  for (let i = 0; i < nums.length; i++) {
-    const num = nums[i];
-
-    if (!set.has(num - 1)) {
-      let currentNum = num;
-      let currentStreak = 1;
-
-      steps.push({
-        data: { nums: [...nums], set: [...set], activeNum: currentNum, streak: currentStreak, longestStreak },
-        explanation: `${currentNum} is the start of a potential sequence (since ${currentNum - 1} is not in the set).`,
-        stats: { step: steps.length }
-      });
-
-      while (set.has(currentNum + 1)) {
-        currentNum += 1;
-        currentStreak += 1;
-
-        steps.push({
-          data: { nums: [...nums], set: [...set], activeNum: currentNum, streak: currentStreak, longestStreak },
-          explanation: `Sequence element ${currentNum} found in set. Current streak length: ${currentStreak}.`,
-          stats: { step: steps.length }
-        });
-      }
-
-      if (currentStreak > longestStreak) {
-        longestStreak = currentStreak;
-      }
-
-      steps.push({
-        data: { nums: [...nums], set: [...set], activeNum: null, streak: 0, longestStreak },
-        explanation: `Sequence completed. Longest streak so far: ${longestStreak}.`,
-        stats: { step: steps.length }
-      });
-    } else {
-      steps.push({
-        data: { nums: [...nums], set: [...set], activeNum: num, streak: 0, longestStreak },
-        explanation: `Skip ${num} since it is not the start of a sequence (element ${num - 1} exists in set).`,
-        stats: { step: steps.length }
-      });
-    }
-  }
-
-  steps.push({
-    data: { nums: [...nums], set: [...set], activeNum: null, streak: 0, longestStreak },
-    explanation: `Computation complete. The longest consecutive sequence length is ${longestStreak}.`,
-    stats: { step: steps.length }
-  });
-
-  return steps;
-}
-
-// 71. Bloom Filter Steps
-export function bloomFilterSteps(rawInput) {
-  const tokens = (rawInput || "add apple add banana check apple check cherry").trim().split(/\s+/);
-  const size = 10;
-  const bits = Array(size).fill(0);
-  const steps = [];
-
-  const getHashes = (key) => {
-    let sum = 0;
-    for (let i = 0; i < key.length; i++) sum += key.charCodeAt(i);
-    const h1 = sum % size;
-    const h2 = (sum * 7) % size;
-    return [h1, h2];
-  };
-
-  steps.push({
-    data: { bits: [...bits], activeHashes: [], queryKey: '', result: null },
-    explanation: `Bloom Filter initialized with bit array of size ${size} (all zeros). Using 2 hash functions.`,
-    stats: { step: 0 }
-  });
-
-  for (let i = 0; i < tokens.length; i++) {
-    const op = tokens[i].toLowerCase();
-    let explanation = '';
-    let queryKey = '';
-    let result = null;
-    let activeHashes = [];
-
-    if (op === 'add' && i + 1 < tokens.length) {
-      const key = tokens[++i];
-      activeHashes = getHashes(key);
-      activeHashes.forEach(h => { bits[h] = 1; });
-      explanation = `Add: Hash of "${key}" sets bits at indices [${activeHashes.join(', ')}] to 1.`;
-    } else if (op === 'check' && i + 1 < tokens.length) {
-      const key = tokens[++i];
-      queryKey = key;
-      activeHashes = getHashes(key);
-      const isPresent = activeHashes.every(h => bits[h] === 1);
-      result = isPresent ? 'Probably In Set' : 'Definitely Not In Set';
-      explanation = `Check "${key}": Bits at [${activeHashes.join(', ')}] are queried. All checked bits are ${isPresent ? '1 (probably present)' : 'not 1 (definitely absent)'}.`;
-    } else if (op) {
-      const key = op;
-      activeHashes = getHashes(key);
-      activeHashes.forEach(h => { bits[h] = 1; });
-      explanation = `Add: Hash of "${key}" sets bits at indices [${activeHashes.join(', ')}] to 1.`;
-    }
-
-    steps.push({
-      data: {
-        bits: [...bits],
-        activeHashes: [...activeHashes],
-        queryKey,
-        result
-      },
-      explanation,
-      stats: { step: steps.length }
-    });
-  }
-
-  return steps;
-}
 
 // 72. Factorial Recursion Steps
 export function factorialRecursionSteps(rawInput) {
@@ -4521,4 +3785,198 @@ export function branchAndBoundSteps(rawInput) {
 
   return steps;
 }
+
+// 78. Singly Linked List Insertion
+export function linkedListInsertionSteps(arr, insertVal = 99, pos = 2) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) {
+    const newNode = { id: 0, val: insertVal, next: null };
+    return [
+      {
+        data: [],
+        listState: { head: null, curr: null, prev: null, next: null },
+        highlights: {},
+        explanation: "List is empty. Allocate new node to become the head.",
+        stats: { step: 0 }
+      },
+      {
+        data: [newNode],
+        listState: { head: 0, curr: 0, prev: null, next: null },
+        highlights: { 0: 'active' },
+        explanation: `Allocate new node with value ${insertVal} as the head.`,
+        stats: { step: 1 }
+      },
+      {
+        data: [newNode],
+        listState: { head: 0, curr: null, prev: null, next: null },
+        highlights: { 0: 'sorted' },
+        explanation: `Linked list initialized with head node ${insertVal}.`,
+        stats: { step: 2 }
+      }
+    ];
+  }
+
+  let nodes = nums.map((val, idx) => ({
+    id: idx,
+    val,
+    next: idx < n - 1 ? idx + 1 : null
+  }));
+
+  const targetPos = Math.max(0, Math.min(pos, n));
+
+  const steps = [];
+  steps.push({
+    data: JSON.parse(JSON.stringify(nodes)),
+    listState: { head: 0, curr: null, prev: null, next: null },
+    highlights: {},
+    explanation: `Start linked list insertion. We want to insert Node(${insertVal}) at position ${targetPos}.`,
+    stats: { step: 0 }
+  });
+
+  const newNodeId = nodes.length;
+  const newNode = { id: newNodeId, val: insertVal, next: null };
+  const updatedNodes = [...nodes, newNode];
+
+  if (targetPos === 0) {
+    steps.push({
+      data: JSON.parse(JSON.stringify(updatedNodes)),
+      listState: { head: 0, curr: newNodeId, prev: null, next: 0 },
+      highlights: { [newNodeId]: 'active', 0: 'pivot' },
+      explanation: `Allocate new node with value ${insertVal}.`,
+      stats: { step: steps.length }
+    });
+
+    updatedNodes[newNodeId].next = 0;
+    steps.push({
+      data: JSON.parse(JSON.stringify(updatedNodes)),
+      listState: { head: newNodeId, curr: newNodeId, prev: null, next: 0 },
+      highlights: { [newNodeId]: 'active', 0: 'compare' },
+      explanation: "Link new node's next to the old head.",
+      stats: { step: steps.length }
+    });
+
+    const finalSequence = [];
+    let temp = newNodeId;
+    const visited = new Set();
+    while (temp !== null && !visited.has(temp)) {
+      visited.add(temp);
+      finalSequence.push(updatedNodes[temp]);
+      temp = updatedNodes[temp].next;
+    }
+
+    steps.push({
+      data: finalSequence,
+      listState: { head: newNodeId, curr: newNodeId, prev: null, next: null },
+      highlights: { [newNodeId]: 'sorted' },
+      explanation: "Insertion at head completed successfully.",
+      stats: { step: steps.length }
+    });
+
+    return steps;
+  }
+
+  const prevIdx = targetPos - 1;
+  const afterNodeIdx = nodes[prevIdx].next;
+
+  steps.push({
+    data: JSON.parse(JSON.stringify(updatedNodes)),
+    listState: { head: 0, curr: newNodeId, prev: prevIdx, next: null },
+    highlights: { [newNodeId]: 'active', [prevIdx]: 'pivot' },
+    explanation: `Allocate new node with value ${insertVal}.`,
+    stats: { step: steps.length }
+  });
+
+  updatedNodes[newNodeId].next = afterNodeIdx;
+  steps.push({
+    data: JSON.parse(JSON.stringify(updatedNodes)),
+    listState: { head: 0, curr: newNodeId, prev: prevIdx, next: afterNodeIdx },
+    highlights: { [newNodeId]: 'active', ...(afterNodeIdx !== null ? { [afterNodeIdx]: 'compare' } : {}) },
+    explanation: "Link new node's next to the remaining list.",
+    stats: { step: steps.length }
+  });
+
+  updatedNodes[prevIdx].next = newNodeId;
+  const finalSequence = [];
+  let temp = 0;
+  const visited = new Set();
+  while (temp !== null && !visited.has(temp)) {
+    visited.add(temp);
+    finalSequence.push(updatedNodes[temp]);
+    temp = updatedNodes[temp].next;
+  }
+
+  steps.push({
+    data: finalSequence,
+    listState: { head: 0, curr: newNodeId, prev: null, next: null },
+    highlights: { [newNodeId]: 'sorted' },
+    explanation: "Insertion completed successfully.",
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
+// 79. Singly Linked List Deletion
+export function linkedListDeletionSteps(arr, pos = 2) {
+  const nums = arr.map(Number).filter(x => !isNaN(x));
+  const n = nums.length;
+  if (n === 0) return [];
+
+  let nodes = nums.map((val, idx) => ({
+    id: idx,
+    val,
+    next: idx < n - 1 ? idx + 1 : null
+  }));
+
+  const targetPos = Math.max(0, Math.min(pos, n - 1));
+
+  const steps = [];
+  steps.push({
+    data: JSON.parse(JSON.stringify(nodes)),
+    listState: { head: 0, curr: null, prev: null, next: null },
+    highlights: {},
+    explanation: `Start linked list deletion. We want to delete node at position ${targetPos}.`,
+    stats: { step: 0 }
+  });
+
+  const targetId = targetPos;
+  const beforeId = targetPos > 0 ? targetPos - 1 : null;
+  const afterId = nodes[targetId].next;
+
+  steps.push({
+    data: JSON.parse(JSON.stringify(nodes)),
+    listState: { head: 0, curr: targetId, prev: beforeId, next: afterId },
+    highlights: { [targetId]: 'error', ...(beforeId !== null ? { [beforeId]: 'compare' } : {}), ...(afterId !== null ? { [afterId]: 'compare' } : {}) },
+    explanation: `Target node is ${nodes[targetId].val}. Re-linking predecessor node to successor node.`,
+    stats: { step: steps.length }
+  });
+
+  let newHead = 0;
+  if (targetId === 0) {
+    newHead = afterId;
+  }
+
+  if (beforeId !== null) nodes[beforeId].next = afterId;
+
+  const finalSequence = [];
+  let temp = newHead;
+  const visited = new Set();
+  while (temp !== null && !visited.has(temp)) {
+    visited.add(temp);
+    finalSequence.push(nodes[temp]);
+    temp = nodes[temp].next;
+  }
+
+  steps.push({
+    data: finalSequence,
+    listState: { head: newHead, curr: null, prev: null, next: null },
+    highlights: {},
+    explanation: `Deleted node ${nums[targetId]} from the list. Linked neighbors together.`,
+    stats: { step: steps.length }
+  });
+
+  return steps;
+}
+
 
