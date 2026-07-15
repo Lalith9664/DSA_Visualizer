@@ -9188,12 +9188,12 @@ const VisualizerCanvas = ({
 
   return (
     <div
-      className={`skeuo-screen w-full select-none relative group transition-all duration-300 ${isExpanded ? "h-[calc(100vh-420px)] min-h-[350px]" : ""}`}
+      className={`skeuo-screen w-full select-none relative group transition-all duration-300 ${isExpanded ? "h-full min-h-[450px] flex items-center justify-center" : ""}`}
     >
       <div className="skeuo-screen-overlay" />
 
       {/* Render canvas or loading/empty state */}
-      <div className={isExpanded ? "h-full" : ""}>{getCanvasContent()}</div>
+      <div className={isExpanded ? "w-full flex items-center justify-center" : ""}>{getCanvasContent()}</div>
 
       {/* Full screen toggle button */}
       <button
