@@ -25,6 +25,7 @@ export const bubbleSortSteps = (arr) => {
         data: [...a],
         highlights: { [j]: "compare", [j + 1]: "compare" },
         explanation: `Comparing elements at index ${j} (${a[j]}) and index ${j + 1} (${a[j + 1]}).`,
+        activeLine: 8,
         stats: { comparisons, swaps, step: steps.length },
       });
 
@@ -97,6 +98,7 @@ export const selectionSortSteps = (arr) => {
     data: [...a],
     highlights: {},
     explanation: "Initial array.",
+    activeLine: 1,
     stats: { comparisons, swaps, step: 0 },
   });
 
@@ -107,6 +109,7 @@ export const selectionSortSteps = (arr) => {
       data: [...a],
       highlights: { [i]: "pivot" },
       explanation: `Assume index ${i} (${a[i]}) contains the minimum value.`,
+      activeLine: 4,
       stats: { comparisons, swaps, step: steps.length },
     });
 
@@ -116,6 +119,7 @@ export const selectionSortSteps = (arr) => {
         data: [...a],
         highlights: { [j]: "compare", [minIdx]: "pivot" },
         explanation: `Comparing current minimum candidate (${a[minIdx]}) with element at index ${j} (${a[j]}).`,
+        activeLine: 6,
         stats: { comparisons, swaps, step: steps.length },
       });
 
@@ -125,6 +129,7 @@ export const selectionSortSteps = (arr) => {
           data: [...a],
           highlights: { [minIdx]: "pivot" },
           explanation: `Found new minimum candidate: ${a[minIdx]} at index ${minIdx}.`,
+          activeLine: 7,
           stats: { comparisons, swaps, step: steps.length },
         });
       }
@@ -140,6 +145,7 @@ export const selectionSortSteps = (arr) => {
         data: [...a],
         highlights: { [i]: "swap", [minIdx]: "swap" },
         explanation: `Swapping element at index ${i} (${temp}) with the minimum element at index ${minIdx} (${a[i]}).`,
+        activeLine: 8,
         stats: { comparisons, swaps, step: steps.length },
       });
     }
@@ -152,6 +158,7 @@ export const selectionSortSteps = (arr) => {
       data: [...a],
       highlights: sortedHighlights,
       explanation: `Element at index ${i} is now in its final sorted position.`,
+      activeLine: 3,
       stats: { comparisons, swaps, step: steps.length },
     });
   }
@@ -162,8 +169,10 @@ export const selectionSortSteps = (arr) => {
     data: [...a],
     highlights: finalHighlights,
     explanation: "Selection sort complete. Array is fully sorted!",
+    activeLine: 9,
     stats: { comparisons, swaps, step: steps.length },
   });
+
 
   return steps;
 };
@@ -179,6 +188,7 @@ export const insertionSortSteps = (arr) => {
     data: [...a],
     highlights: { 0: "sorted" },
     explanation: "Initial array. First element is trivially sorted.",
+    activeLine: 1,
     stats: { comparisons, swaps, step: 0 },
   });
 
@@ -190,6 +200,7 @@ export const insertionSortSteps = (arr) => {
       data: [...a],
       highlights: { [i]: "pivot" },
       explanation: `Picking element key = ${key} at index ${i} to insert into sorted portion.`,
+      activeLine: 2,
       stats: { comparisons, swaps, step: steps.length },
     });
 
@@ -202,6 +213,7 @@ export const insertionSortSteps = (arr) => {
         data: [...a],
         highlights: { [j + 1]: "swap", [j]: "compare" },
         explanation: `Since ${a[j]} > ${key}, shift ${a[j]} to the right.`,
+        activeLine: 4,
         stats: { comparisons, swaps, step: steps.length },
       });
       j--;
@@ -217,6 +229,7 @@ export const insertionSortSteps = (arr) => {
       data: [...a],
       highlights: sortedHighlights,
       explanation: `Inserted key value ${key} at index ${j + 1}.`,
+      activeLine: 5,
       stats: { comparisons, swaps, step: steps.length },
     });
   }
@@ -227,6 +240,7 @@ export const insertionSortSteps = (arr) => {
     data: [...a],
     highlights: finalHighlights,
     explanation: "Insertion sort complete. Array is fully sorted!",
+    activeLine: 7,
     stats: { comparisons, swaps, step: steps.length },
   });
 
@@ -243,6 +257,7 @@ export const mergeSortSteps = (arr) => {
     data: [...a],
     highlights: {},
     explanation: "Initial array before starting Merge Sort.",
+    activeLine: 1,
     stats: { comparisons, swaps, step: 0 },
   });
 
@@ -254,6 +269,7 @@ export const mergeSortSteps = (arr) => {
       data: [...a],
       highlights: { [l]: "compare", [r]: "compare", [m]: "pivot" },
       explanation: `Splitting array into sub-arrays: [${l}...${m}] and [${m + 1}...${r}].`,
+      activeLine: 5,
       stats: { comparisons, swaps, step: steps.length },
     });
 
@@ -271,6 +287,7 @@ export const mergeSortSteps = (arr) => {
       data: [...a],
       highlights: { [l]: "compare", [m]: "pivot", [r]: "compare" },
       explanation: `Merging sub-arrays [${l}...${m}] and [${m + 1}...${r}] back together in sorted order.`,
+      activeLine: 9,
       stats: { comparisons, swaps, step: steps.length },
     });
 
@@ -299,6 +316,7 @@ export const mergeSortSteps = (arr) => {
         data: [...a],
         highlights: subHighlights,
         explanation: `Placing value ${temp[k]} back into position ${l + k}.`,
+        activeLine: 11,
         stats: { comparisons, swaps, step: steps.length },
       });
     }
@@ -312,8 +330,10 @@ export const mergeSortSteps = (arr) => {
     data: [...a],
     highlights: finalHighlights,
     explanation: "Merge sort complete. Array is fully sorted!",
+    activeLine: 18,
     stats: { comparisons, swaps, step: steps.length },
   });
+
 
   return steps;
 };
@@ -328,6 +348,7 @@ export const quickSortSteps = (arr) => {
     data: [...a],
     highlights: {},
     explanation: "Initial array before starting Quick Sort.",
+    activeLine: 1,
     stats: { comparisons, swaps, step: 0 },
   });
 
@@ -341,6 +362,7 @@ export const quickSortSteps = (arr) => {
         data: [...a],
         highlights: { [low]: "sorted" },
         explanation: `Single element at index ${low} is trivially sorted.`,
+        activeLine: 3,
         stats: { comparisons, swaps, step: steps.length },
       });
     }
@@ -353,6 +375,7 @@ export const quickSortSteps = (arr) => {
       data: [...a],
       highlights: { [high]: "pivot" },
       explanation: `Selecting rightmost element ${pivot} at index ${high} as pivot.`,
+      activeLine: 2,
       stats: { comparisons, swaps, step: steps.length },
     });
 
@@ -368,6 +391,7 @@ export const quickSortSteps = (arr) => {
           ...(i >= low ? { [i]: "swap" } : {}),
         },
         explanation: `Comparing element ${a[j]} at index ${j} with pivot ${pivot}.`,
+        activeLine: 8,
         stats: { comparisons, swaps, step: steps.length },
       });
 
@@ -382,6 +406,7 @@ export const quickSortSteps = (arr) => {
           data: [...a],
           highlights: { [i]: "swap", [j]: "swap", [high]: "pivot" },
           explanation: `Since ${a[i]} < pivot (${pivot}), increment pointer index and swap ${temp} with ${a[i]}.`,
+          activeLine: 11,
           stats: { comparisons, swaps, step: steps.length },
         });
       }
@@ -396,6 +421,7 @@ export const quickSortSteps = (arr) => {
       data: [...a],
       highlights: { [i + 1]: "sorted", [high]: "swap" },
       explanation: `Move pivot by swapping it with index ${i + 1} (${temp}). Pivot is now in final position.`,
+      activeLine: 12,
       stats: { comparisons, swaps, step: steps.length },
     });
 
@@ -410,6 +436,7 @@ export const quickSortSteps = (arr) => {
     data: [...a],
     highlights: finalHighlights,
     explanation: "Quick sort complete. Array is sorted!",
+    activeLine: 15,
     stats: { comparisons, swaps, step: steps.length },
   });
 
@@ -428,6 +455,7 @@ export const linearSearchSteps = (arr, target) => {
     data: [...arr],
     highlights: {},
     explanation: `Searching for target ${target} sequentially from left to right.`,
+    activeLine: 1,
     stats: { comparisons, visitedNodes: visitedNodesCount, step: 0 },
   });
 
@@ -439,6 +467,7 @@ export const linearSearchSteps = (arr, target) => {
       data: [...arr],
       highlights: { [i]: "compare" },
       explanation: `Comparing element at index ${i} (${arr[i]}) with target (${target}).`,
+      activeLine: 8,
       stats: {
         comparisons,
         visitedNodes: visitedNodesCount,
@@ -451,6 +480,7 @@ export const linearSearchSteps = (arr, target) => {
         data: [...arr],
         highlights: { [i]: "sorted" },
         explanation: `Target found at index ${i}! Search halts.`,
+        activeLine: 4,
         stats: {
           comparisons,
           visitedNodes: visitedNodesCount,
@@ -465,6 +495,7 @@ export const linearSearchSteps = (arr, target) => {
     data: [...arr],
     highlights: {},
     explanation: `Target ${target} was not found in the array.`,
+    activeLine: 5,
     stats: { comparisons, visitedNodes: visitedNodesCount, step: steps.length },
   });
   return steps;
@@ -487,6 +518,7 @@ export const binarySearchSteps = (arr, target) => {
     data: [...data],
     highlights: {},
     explanation: `Initial sorted array. Beginning binary search search for target ${target}.`,
+    activeLine: 1,
     stats: { comparisons, visitedNodes: visitedNodesCount, step: 0 },
   });
 
@@ -506,6 +538,7 @@ export const binarySearchSteps = (arr, target) => {
       data: [...data],
       highlights: activeRange,
       explanation: `Active search range is [${low}...${high}]. Inspecting middle index ${mid} (${data[mid]}).`,
+      activeLine: 3,
       stats: {
         comparisons,
         visitedNodes: visitedNodesCount,
@@ -518,6 +551,7 @@ export const binarySearchSteps = (arr, target) => {
         data: [...data],
         highlights: { [mid]: "sorted" },
         explanation: `Found target ${target} at middle index ${mid}!`,
+        activeLine: 4,
         stats: {
           comparisons,
           visitedNodes: visitedNodesCount,
@@ -531,6 +565,7 @@ export const binarySearchSteps = (arr, target) => {
         data: [...data],
         highlights: {},
         explanation: `Middle value (${data[mid]}) is less than target (${target}). Shifting range right (low = ${mid + 1}).`,
+        activeLine: 5,
         stats: {
           comparisons,
           visitedNodes: visitedNodesCount,
@@ -543,6 +578,7 @@ export const binarySearchSteps = (arr, target) => {
         data: [...data],
         highlights: {},
         explanation: `Middle value (${data[mid]}) is greater than target (${target}). Shifting range left (high = ${mid - 1}).`,
+        activeLine: 5,
         stats: {
           comparisons,
           visitedNodes: visitedNodesCount,
@@ -556,6 +592,7 @@ export const binarySearchSteps = (arr, target) => {
     data: [...data],
     highlights: {},
     explanation: `Target ${target} is not in the array (range is empty).`,
+    activeLine: 6,
     stats: { comparisons, visitedNodes: visitedNodesCount, step: steps.length },
   });
   return steps;
@@ -577,6 +614,7 @@ export const kadaneSteps = (arr) => {
     kadaneState: { maxSoFar, currMax, start, end, currIndex: 0 },
     highlights: { 0: "pivot" },
     explanation: `Initialize: maxSoFar = ${maxSoFar}, currMax = ${currMax} at element index 0.`,
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
@@ -618,8 +656,10 @@ export const kadaneSteps = (arr) => {
         (isNewMax
           ? `New global max sum found: ${maxSoFar} (range [${start}...${end}]).`
           : `Global max remains ${maxSoFar}.`),
+      activeLine: isNewMax ? 5 : 4,
       stats: { comparisons: i, swaps: 0, step: steps.length },
     });
+
   }
 
   // Final step
@@ -632,6 +672,7 @@ export const kadaneSteps = (arr) => {
     kadaneState: { maxSoFar, currMax, start, end, currIndex: -1 },
     highlights: finalHighlights,
     explanation: `Kadane complete. The maximum subarray sum is ${maxSoFar} spanning elements [${arr.slice(start, end + 1).join(", ")}].`,
+    activeLine: 1,
     stats: { comparisons: n - 1, swaps: 0, step: steps.length },
   });
 
@@ -732,6 +773,7 @@ export const balancedParenthesesSteps = (str) => {
     stackState: { stack: [], charIdx: -1, status: "valid" },
     highlights: {},
     explanation: "Initialize empty parser stack.",
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
@@ -745,6 +787,7 @@ export const balancedParenthesesSteps = (str) => {
         stackState: { stack: [...stack], charIdx: i, status: "valid" },
         highlights: { [i]: "pivot" },
         explanation: `Encountered opening bracket '${char}'. Pushing onto stack.`,
+        activeLine: 6,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
     } else if ([")", "}", "]"].includes(char)) {
@@ -756,6 +799,7 @@ export const balancedParenthesesSteps = (str) => {
         stackState: { stack: [...stack], charIdx: i, status: "checking" },
         highlights: { [i]: "compare" },
         explanation: `Encountered closing bracket '${char}'. Comparing with stack top '${top || "empty"}'.`,
+        activeLine: 7,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
 
@@ -765,6 +809,7 @@ export const balancedParenthesesSteps = (str) => {
           stackState: { stack: [...stack], charIdx: i, status: "invalid" },
           highlights: { [i]: "swap" },
           explanation: `Mismatch! Brackets are unbalanced. Loop ends.`,
+          activeLine: 9,
           stats: { comparisons: steps.length, swaps: 0, step: steps.length },
         });
         return steps;
@@ -775,6 +820,7 @@ export const balancedParenthesesSteps = (str) => {
           stackState: { stack: [...stack], charIdx: i, status: "valid" },
           highlights: { [i]: "sorted" },
           explanation: `Match found! Popping '${top}' off stack.`,
+          activeLine: 8,
           stats: { comparisons: steps.length, swaps: 0, step: steps.length },
         });
       }
@@ -811,32 +857,50 @@ export const queueOperationsSteps = (inputStr) => {
     queueState: { queue: [], head: -1, tail: -1 },
     highlights: {},
     explanation: "Initialize empty queue buffer.",
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
-  // Enqueue operations
-  for (let i = 0; i < items.length; i++) {
-    queue.push(items[i]);
-    steps.push({
-      data: [...items],
-      queueState: { queue: [...queue], head: 0, tail: queue.length - 1 },
-      highlights: { [queue.length - 1]: "pivot" },
-      explanation: `Enqueueing element '${items[i]}' at rear index ${queue.length - 1}.`,
-      stats: { comparisons: 0, swaps: queue.length, step: steps.length },
-    });
-  }
-
-  // Dequeue operations
-  const len = queue.length;
-  for (let i = 0; i < Math.min(3, len); i++) {
-    const val = queue.shift();
-    steps.push({
-      data: [...items],
-      queueState: { queue: [...queue], head: 0, tail: queue.length - 1 },
-      highlights: {},
-      explanation: `Dequeueing front element '${val}' from front. Shifting remaining items.`,
-      stats: { comparisons: 0, swaps: queue.length, step: steps.length },
-    });
+  // Parse commands: 'enqueue X' or 'dequeue'
+  let i = 0;
+  while (i < items.length) {
+    const cmd = items[i].toLowerCase();
+    if (cmd === 'enqueue' && i + 1 < items.length) {
+      const val = items[i + 1];
+      queue.push(val);
+      steps.push({
+        data: [...queue],
+        queueState: { queue: [...queue], head: 0, tail: queue.length - 1 },
+        highlights: { [queue.length - 1]: "pivot" },
+        explanation: `Enqueue: add '${val}' to rear. Queue size: ${queue.length}.`,
+        activeLine: 4,
+        stats: { comparisons: 0, swaps: queue.length, step: steps.length },
+      });
+      i += 2;
+    } else if (cmd === 'dequeue') {
+      const val = queue.shift();
+      steps.push({
+        data: [...queue],
+        queueState: { queue: [...queue], head: 0, tail: queue.length - 1 },
+        highlights: { 0: "compare" },
+        explanation: `Dequeue: remove front element '${val !== undefined ? val : 'null'}'. Queue size: ${queue.length}.`,
+        activeLine: 7,
+        stats: { comparisons: 0, swaps: queue.length, step: steps.length },
+      });
+      i++;
+    } else {
+      // Treat unknown tokens as enqueue
+      queue.push(items[i]);
+      steps.push({
+        data: [...queue],
+        queueState: { queue: [...queue], head: 0, tail: queue.length - 1 },
+        highlights: { [queue.length - 1]: "pivot" },
+        explanation: `Enqueueing element '${items[i]}' at rear index ${queue.length - 1}.`,
+        activeLine: 4,
+        stats: { comparisons: 0, swaps: queue.length, step: steps.length },
+      });
+      i++;
+    }
   }
 
   return steps;
@@ -993,6 +1057,7 @@ export const towerOfHanoiSteps = (numDisks) => {
     hanoiState: { diskMoved: null, fromPeg: null, toPeg: null },
     highlights: {},
     explanation: `Initialize Tower of Hanoi with ${disks} disks stacked on Peg A in decreasing sizes.`,
+    activeLine: 1,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
@@ -1029,6 +1094,7 @@ export const towerOfHanoiSteps = (numDisks) => {
     hanoiState: { diskMoved: null, fromPeg: null, toPeg: null },
     highlights: {},
     explanation: `All disks successfully shifted to target Peg C in ${movesCount} recursive steps.`,
+    activeLine: 7,
     stats: { comparisons: 0, swaps: movesCount, step: steps.length },
   });
 
@@ -1431,6 +1497,7 @@ export const prefixSumSteps = (arr) => {
       .map((_, idx) => idx)
       .reduce((acc, idx) => ({ ...acc, [idx]: "sorted" }), {}),
     explanation: `Prefix sum array calculation complete: [${pref.join(", ")}].`,
+    activeLine: 5,
     stats: { comparisons: n, swaps: 0, step: steps.length },
   });
 
@@ -1449,29 +1516,66 @@ export const slidingWindowSteps = (arr, windowSize = 3) => {
     windowState: { start: 0, end: k - 1, sum: 0 },
     highlights: {},
     explanation: `Initialize sliding window of size k = ${k} at index 0.`,
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
-  for (let i = 0; i <= n - k; i++) {
-    const windowElems = nums.slice(i, i + k);
-    const sum = windowElems.reduce((a, b) => a + b, 0);
+  let maxSum = nums.slice(0, k).reduce((a, b) => a + b, 0);
+  let windowSum = maxSum;
+
+  // Initial window step
+  const initHighlights = {};
+  for (let j = 0; j < k; j++) initHighlights[j] = 'compare';
+  steps.push({
+    data: [...nums],
+    windowState: { start: 0, end: k - 1, sum: windowSum, maxSum },
+    highlights: initHighlights,
+    explanation: `Initial window [0 to ${k-1}]. Sum = ${windowSum}. max_sum = ${maxSum}.`,
+    activeLine: 3,
+    stats: { comparisons: 0, swaps: 0, step: steps.length },
+  });
+
+  for (let i = k; i < n; i++) {
+    windowSum += nums[i] - nums[i - k];
 
     const highlights = {};
-    for (let j = i; j < i + k; j++) {
-      highlights[j] = "compare";
-    }
+    for (let j = i - k + 1; j <= i; j++) highlights[j] = 'compare';
 
+    // Step 1: Window sum update
     steps.push({
       data: [...nums],
-      windowState: { start: i, end: i + k - 1, sum },
+      windowState: { start: i - k + 1, end: i, sum: windowSum, maxSum },
       highlights,
-      explanation: `Window sliding at range [${i} to ${i + k - 1}]. Elements: [${windowElems.join(", ")}]. Sum = ${sum}.`,
-      stats: { comparisons: i * k, swaps: 0, step: steps.length },
+      explanation: `Slide window: add nums[${i}]=${nums[i]}, remove nums[${i-k}]=${nums[i-k]}. window_sum = ${windowSum}.`,
+      activeLine: 5,
+      stats: { comparisons: i, swaps: 0, step: steps.length },
+    });
+
+    // Step 2: Max update
+    const prevMax = maxSum;
+    maxSum = Math.max(maxSum, windowSum);
+    steps.push({
+      data: [...nums],
+      windowState: { start: i - k + 1, end: i, sum: windowSum, maxSum },
+      highlights,
+      explanation: `max_sum = max(${prevMax}, ${windowSum}) = ${maxSum}. Window [${i - k + 1}...${i}].`,
+      activeLine: 6,
+      stats: { comparisons: i, swaps: 0, step: steps.length },
     });
   }
 
+  steps.push({
+    data: [...nums],
+    windowState: { start: n - k, end: n - 1, sum: windowSum, maxSum },
+    highlights: {},
+    explanation: `Sliding window complete. Maximum subarray sum of size ${k}: ${maxSum}.`,
+    activeLine: 7,
+    stats: { comparisons: n, swaps: 0, step: steps.length },
+  });
+
   return steps;
 };
+
 
 export const twoPointerSteps = (arr, targetSum = 10) => {
   const steps = [];
@@ -1765,21 +1869,28 @@ export const linkedListTraversalSteps = (arr) => {
     listState: { head: 0, curr: null, prev: null, next: null },
     highlights: {},
     explanation: "Initialize linked list. Starting traversal from head node.",
+    activeLine: 2,
     stats: { comparisons: 0, visitedNodes: 0, step: 0 },
   });
 
   for (let i = 0; i < n; i++) {
     const node = nodes[i];
+    // Sub-step 1: while condition check (L3)
     steps.push({
       data: [...nodes],
-      listState: {
-        head: 0,
-        curr: node.id,
-        prev: i > 0 ? i - 1 : null,
-        next: node.next,
-      },
-      highlights: { [node.id]: "pivot" },
-      explanation: `Current pointer is at Node ${node.val} (index ${i}).`,
+      listState: { head: 0, curr: node.id, prev: i > 0 ? i - 1 : null, next: node.next },
+      highlights: { [node.id]: 'compare' },
+      explanation: `while curr: Check - node ${node.val} is not null. Enter loop body.`,
+      activeLine: 3,
+      stats: { comparisons: i, visitedNodes: i, step: steps.length },
+    });
+    // Sub-step 2: visit/print (L4)
+    steps.push({
+      data: [...nodes],
+      listState: { head: 0, curr: node.id, prev: i > 0 ? i - 1 : null, next: node.next },
+      highlights: { [node.id]: 'pivot' },
+      explanation: `Current pointer is at Node ${node.val} (index ${i}). Visiting/printing node value.`,
+      activeLine: 4,
       stats: { comparisons: i, visitedNodes: i + 1, step: steps.length },
     });
   }
@@ -1791,6 +1902,7 @@ export const linkedListTraversalSteps = (arr) => {
       .map((nd) => nd.id)
       .reduce((acc, id) => ({ ...acc, [id]: "sorted" }), {}),
     explanation: "Reached end of list (null). Traversal complete.",
+    activeLine: 5,
     stats: { comparisons: n, visitedNodes: n, step: steps.length },
   });
 
@@ -1824,6 +1936,7 @@ export const cycleDetectionSteps = (arr) => {
     },
     highlights: {},
     explanation: `Initialize Cycle Detection (Floyd's Tortoise and Hare). ${hasCycle ? `A cycle exists from tail pointing back to Node ${nodes[cycleTargetIdx].val}.` : "No cycle exists in this list."}`,
+    activeLine: 2,
     stats: { comparisons: 0, visitedNodes: 0, step: 0 },
   });
 
@@ -1860,6 +1973,7 @@ export const cycleDetectionSteps = (arr) => {
       listState: { head: 0, slow, fast },
       highlights,
       explanation: `Step ${step}: Slow pointer is at Node ${nodes[slow].val}. Fast pointer is at Node ${nodes[fast].val}.`,
+      activeLine: 4,
       stats: { comparisons: step, visitedNodes: step, step: steps.length },
     });
 
@@ -1869,6 +1983,7 @@ export const cycleDetectionSteps = (arr) => {
         listState: { head: 0, slow, fast },
         highlights: { [slow]: "sorted" },
         explanation: `Tortoise and Hare met at Node ${nodes[slow].val}! Cycle detected!`,
+        activeLine: 7,
         stats: { comparisons: step, visitedNodes: step, step: steps.length },
       });
       break;
@@ -1943,29 +2058,51 @@ export const stackOperationsSteps = (inputStr) => {
     stackState: { stack: [...stack], charIdx: -1 },
     highlights: {},
     explanation: "Initialize empty stack.",
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
   tokens.forEach((tok, idx) => {
     let explanation = "";
+    let activeLine = 3; // default: push
     if (tok.startsWith("push(") && tok.endsWith(")")) {
       const val = parseInt(tok.substring(5, tok.length - 1)) || 0;
       stack.push(val);
       explanation = `Operation: push(${val}). Pushed ${val} onto the stack.`;
+      activeLine = 3;
     } else if (tok === "pop()") {
       const val = stack.pop();
       explanation = `Operation: pop(). Popped top element ${val !== undefined ? val : "null"} from stack.`;
+      activeLine = 4;
+    } else if (tok.toLowerCase() === 'peek' || tok.toLowerCase() === 'top') {
+      explanation = `Operation: peek(). Top element is ${stack.length > 0 ? stack[stack.length - 1] : 'null'}.`;
+      activeLine = 5;
+    } else if (tok.toLowerCase() === 'push') {
+      // next token is the value, skip
+      return;
+    } else if (tok.toLowerCase() === 'pop') {
+      const val = stack.pop();
+      explanation = `Operation: pop(). Popped ${val !== undefined ? val : 'null'} from stack.`;
+      activeLine = 4;
     } else if (tok) {
-      const val = parseInt(tok) || 0;
-      stack.push(val);
-      explanation = `Pushed element ${val} onto the stack.`;
+      const val = parseInt(tok);
+      if (!isNaN(val)) {
+        stack.push(val);
+        explanation = `Pushed element ${val} onto the stack.`;
+        activeLine = 3;
+      } else {
+        return; // skip non-numeric non-command tokens
+      }
     }
+
+    if (!explanation) return;
 
     steps.push({
       data: tokens,
       stackState: { stack: [...stack], charIdx: idx },
       highlights: {},
       explanation,
+      activeLine,
       stats: { comparisons: idx, swaps: 0, step: steps.length },
     });
   });
@@ -2383,6 +2520,7 @@ export const fibonacciRecursionSteps = (n) => {
     treeState: { root, path: [], activeNode: null },
     highlights: {},
     explanation: `Compute Fibonacci(${valN}) using recursion. fib(n) = fib(n-1) + fib(n-2).`,
+    activeLine: 2,
     stats: { comparisons: 0, visitedNodes: 0, step: 0 },
   });
 
@@ -2395,6 +2533,7 @@ export const fibonacciRecursionSteps = (n) => {
       treeState: { root, path: [], activeNode: nodeId },
       highlights: { [nodeId]: "pivot" },
       explanation: `Calling fib(${node.val}).`,
+      activeLine: 1,
       stats: {
         comparisons: steps.length,
         visitedNodes: steps.length,
@@ -2412,6 +2551,7 @@ export const fibonacciRecursionSteps = (n) => {
         treeState: { root, path: [], activeNode: nodeId },
         highlights: { [nodeId]: "sorted" },
         explanation: `Base Case: fib(${node.val}) = ${node.val}.`,
+        activeLine: 2,
         stats: {
           comparisons: steps.length,
           visitedNodes: steps.length,
@@ -2433,6 +2573,7 @@ export const fibonacciRecursionSteps = (n) => {
       treeState: { root, path: [], activeNode: nodeId },
       highlights: { [nodeId]: "sorted" },
       explanation: `Returning from sub-calls: fib(${node.val}) = fib(${node.val - 1}) (${a}) + fib(${node.val - 2}) (${b}) = ${res}.`,
+      activeLine: 3,
       stats: {
         comparisons: steps.length,
         visitedNodes: steps.length,
@@ -2449,6 +2590,7 @@ export const fibonacciRecursionSteps = (n) => {
     treeState: { root, path: [], activeNode: null },
     highlights: nodes.reduce((acc, n) => ({ ...acc, [n.id]: "sorted" }), {}),
     explanation: `Recursion complete. Fibonacci(${valN}) = ${root.result}.`,
+    activeLine: 3,
     stats: {
       comparisons: steps.length,
       visitedNodes: nodes.length,
@@ -2698,6 +2840,7 @@ export const coinChangeDpSteps = (inputStr) => {
       dpState: { coins, amount, activeIdx: i },
       highlights: { [i]: "pivot" },
       explanation: `Computing minimum coins for amount ${i}. Checking all coin options: [${coins.join(", ")}].`,
+      activeLine: 4,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
     });
 
@@ -2714,6 +2857,7 @@ export const coinChangeDpSteps = (inputStr) => {
           dpState: { coins, amount, activeIdx: i },
           highlights: { [i]: "pivot", [i - coin]: "compare" },
           explanation: `Using coin ${coin}. Min coins for amount ${i} = min(current dp[${i}], dp[${i - coin}] + 1) = ${dp[i] === Infinity ? "∞" : dp[i]}.`,
+          activeLine: 7,
           stats: { comparisons: steps.length, swaps: 0, step: steps.length },
         });
       }
@@ -2750,6 +2894,7 @@ export const ternarySearchSteps = (arr, target) => {
     searchState: { left, right, mid1: null, mid2: null, target: targetVal },
     highlights: {},
     explanation: `Initialize Ternary Search for target = ${targetVal}. Sorted array: [${nums.join(", ")}].`,
+    activeLine: 1,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
@@ -2766,6 +2911,7 @@ export const ternarySearchSteps = (arr, target) => {
       searchState: { left, right, mid1, mid2, target: targetVal },
       highlights,
       explanation: `Dividing search space [${left} to ${right}] with mid1 = ${mid1} (val: ${nums[mid1]}) and mid2 = ${mid2} (val: ${nums[mid2]}).`,
+      activeLine: 3,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
     });
 
@@ -2775,6 +2921,7 @@ export const ternarySearchSteps = (arr, target) => {
         searchState: { left, right, mid1, mid2, target: targetVal },
         highlights: { ...highlights, [mid1]: "sorted" },
         explanation: `Target ${targetVal} found at mid1 index ${mid1}!`,
+        activeLine: 5,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
       return steps;
@@ -2786,6 +2933,7 @@ export const ternarySearchSteps = (arr, target) => {
         searchState: { left, right, mid1, mid2, target: targetVal },
         highlights: { ...highlights, [mid2]: "sorted" },
         explanation: `Target ${targetVal} found at mid2 index ${mid2}!`,
+        activeLine: 6,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
       return steps;
@@ -2797,6 +2945,7 @@ export const ternarySearchSteps = (arr, target) => {
         searchState: { left, right, mid1, mid2, target: targetVal },
         highlights,
         explanation: `Target ${targetVal} < mid1 value (${nums[mid1]}). Narrowing search space to range [${left} to ${mid1 - 1}].`,
+        activeLine: 7,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
       right = mid1 - 1;
@@ -2806,6 +2955,7 @@ export const ternarySearchSteps = (arr, target) => {
         searchState: { left, right, mid1, mid2, target: targetVal },
         highlights,
         explanation: `Target ${targetVal} > mid2 value (${nums[mid2]}). Narrowing search space to range [${mid2 + 1} to ${right}].`,
+        activeLine: 9,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
       left = mid2 + 1;
@@ -2815,6 +2965,7 @@ export const ternarySearchSteps = (arr, target) => {
         searchState: { left, right, mid1, mid2, target: targetVal },
         highlights,
         explanation: `Target lies between mid1 and mid2. Narrowing search space to range [${mid1 + 1} to ${mid2 - 1}].`,
+        activeLine: 11,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
       left = mid1 + 1;
@@ -2833,6 +2984,7 @@ export const ternarySearchSteps = (arr, target) => {
     },
     highlights: {},
     explanation: `Search range exhausted. Target ${targetVal} not found in array.`,
+    activeLine: 12,
     stats: { comparisons: steps.length, swaps: 0, step: steps.length },
   });
 
@@ -2977,6 +3129,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr) => {
       },
       highlights: { [`${r}-${c}`]: "swap" },
       explanation: `Dead end reached at cell (${r}, ${c}). Backtracking...`,
+      activeLine: 12,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
     });
     return false;
@@ -3028,6 +3181,7 @@ export const sudokuSolverSteps = (boardStr) => {
     },
     highlights: {},
     explanation: "Initialize empty Sudoku solver board.",
+    activeLine: 1,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
@@ -3076,6 +3230,7 @@ export const sudokuSolverSteps = (boardStr) => {
         },
         highlights: {},
         explanation: "All cells filled! Sudoku solved successfully.",
+        activeLine: 10,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
       return true;
@@ -3115,6 +3270,7 @@ export const sudokuSolverSteps = (boardStr) => {
         },
         highlights: { [`${r}-${c}`]: "swap" },
         explanation: `Backtracking cell (${r}, ${c}): removing value ${val}.`,
+        activeLine: 12,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
     }
@@ -3209,6 +3365,7 @@ export const kmpSearchSteps = (inputStr) => {
             pattern: { [j - 1]: "swap" },
           },
           explanation: `Mismatch. Shifting pattern index pointer using LPS: j = lps[${j - 1}] = ${nextJ}.`,
+          activeLine: 9,
           stats: { comparisons: steps.length, swaps: 0, step: steps.length },
         });
         j = nextJ;
@@ -3267,6 +3424,7 @@ export const longestCommonPrefixSteps = (wordsStr) => {
           charIdx: c,
         },
         explanation: `Comparing character at column ${c} of "${words[w]}" ('${words[w][c]}') with target '${charToMatch}'. ${match ? "Match!" : "Mismatch!"}`,
+        activeLine: 9,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
 
@@ -4353,6 +4511,7 @@ export const bellmanFordSteps = (numVertices, edges) => {
     data: { dist: [...dist], edges, iteration: 0, relaxedEdge: null },
     highlights: {},
     explanation: `Bellman-Ford: ${V} vertices, ${edges.length} edges. dist[0]=0, all others=∞. Running ${V - 1} relaxation iterations.`,
+    activeLine: 1,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
   for (let i = 0; i < V - 1; i++) {
@@ -4370,6 +4529,7 @@ export const bellmanFordSteps = (numVertices, edges) => {
           },
           highlights: { relaxed: [u, v] },
           explanation: `Iteration ${i + 1}: Relax edge (${u}→${v}, w=${w}): dist[${v}] updated to ${dist[v]}.`,
+          activeLine: 4,
           stats: {
             comparisons: i * edges.length,
             swaps: 0,
@@ -4396,6 +4556,7 @@ export const bellmanFordSteps = (numVertices, edges) => {
     data: { dist: [...dist], edges, iteration: V - 1, relaxedEdge: null },
     highlights: { done: true },
     explanation: `Bellman-Ford complete. Shortest distances from source 0: ${dist.map((d, i) => `v${i}=${d === INF ? "∞" : d}`).join(", ")}.`,
+    activeLine: 8,
     stats: {
       comparisons: (V - 1) * edges.length,
       swaps: 0,
@@ -4562,6 +4723,7 @@ export const lcsDpSteps = (s1, s2) => {
     data: { s1, s2, dp: dp.map((r) => [...r]), i: -1, j: -1 },
     highlights: {},
     explanation: `LCS DP: Find longest common subsequence of "${s1}" and "${s2}". Build (${m + 1})x(${n + 1}) DP table.`,
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
   for (let i = 1; i <= m; i++) {
@@ -4978,6 +5140,7 @@ export const countingSortSteps = (arr) => {
     data: { arr: [...a], count: [...count], output: [], phase: "count" },
     highlights: {},
     explanation: `Counting Sort on [${a.join(", ")}]. Range k=${k}. Phase 1: Count frequencies.`,
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
   for (let i = 0; i < a.length; i++) {
@@ -4986,6 +5149,7 @@ export const countingSortSteps = (arr) => {
       data: { arr: [...a], count: [...count], output: [], phase: "count" },
       highlights: { countIdx: a[i], arrIdx: i },
       explanation: `count[${a[i]}]++  →  count[${a[i]}]=${count[a[i]]}`,
+      activeLine: 4,
       stats: { comparisons: i + 1, swaps: 0, step: steps.length },
     });
   }
@@ -4993,6 +5157,7 @@ export const countingSortSteps = (arr) => {
     data: { arr: [...a], count: [...count], output: [], phase: "prefix" },
     highlights: {},
     explanation: `Phase 2: Prefix sums — make count[i] store actual position in output array.`,
+    activeLine: 5,
     stats: { comparisons: a.length, swaps: 0, step: steps.length },
   });
   for (let i = 1; i <= k; i++) {
@@ -5001,38 +5166,32 @@ export const countingSortSteps = (arr) => {
       data: { arr: [...a], count: [...count], output: [], phase: "prefix" },
       highlights: { countIdx: i },
       explanation: `count[${i}] += count[${i - 1}] → count[${i}]=${count[i]}`,
+      activeLine: 5,
       stats: { comparisons: a.length + i, swaps: 0, step: steps.length },
     });
   }
   const output = new Array(a.length).fill(-1);
   steps.push({
-    data: {
-      arr: [...a],
-      count: [...count],
-      output: [...output],
-      phase: "place",
-    },
+    data: { arr: [...a], count: [...count], output: [...output], phase: "place" },
     highlights: {},
     explanation: `Phase 3: Place each element at its correct position using prefix count.`,
+    activeLine: 6,
     stats: { comparisons: a.length + k, swaps: 0, step: steps.length },
   });
   for (let i = a.length - 1; i >= 0; i--) {
     output[--count[a[i]]] = a[i];
     steps.push({
-      data: {
-        arr: [...a],
-        count: [...count],
-        output: [...output],
-        phase: "place",
-      },
+      data: { arr: [...a], count: [...count], output: [...output], phase: "place" },
       highlights: { placed: count[a[i]], arrIdx: i },
       explanation: `Place a[${i}]=${a[i]} at output[${count[a[i]]}]`,
+      activeLine: 9,
       stats: {
         comparisons: a.length + k + (a.length - i),
         swaps: 0,
         step: steps.length,
       },
     });
+
   }
   steps.push({
     data: {
@@ -5043,6 +5202,7 @@ export const countingSortSteps = (arr) => {
     },
     highlights: { sorted: output.map((_, i) => i) },
     explanation: `Counting Sort complete! Sorted: [${output.join(", ")}].`,
+    activeLine: 10,
     stats: {
       comparisons: a.length + k + a.length,
       swaps: 0,
@@ -5065,6 +5225,7 @@ export const radixSortSteps = (arr) => {
     },
     highlights: {},
     explanation: `Radix Sort on [${a.join(", ")}]. Sort digit by digit (LSD). Max value: ${max}.`,
+    activeLine: 1,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
   let expPow = 1;
@@ -5079,6 +5240,7 @@ export const radixSortSteps = (arr) => {
       data: { arr: [...a], exp, buckets: buckets.map((b) => [...b]) },
       highlights: {},
       explanation: `Digit position ${exp}: Distribute elements into 10 buckets (0-9) by digit at position ${exp}.`,
+      activeLine: 3,
       stats: { comparisons: 0, swaps: 0, step: steps.length },
     });
     let idx = 0;
@@ -5091,6 +5253,7 @@ export const radixSortSteps = (arr) => {
       data: { arr: [...a], exp, buckets: buckets.map((b) => [...b]) },
       highlights: {},
       explanation: `Collect from buckets 0→9: [${a.join(", ")}]`,
+      activeLine: 4,
       stats: { comparisons: 0, swaps: 0, step: steps.length },
     });
     expPow *= 10;
@@ -5099,6 +5262,7 @@ export const radixSortSteps = (arr) => {
     data: { arr: [...a], exp: -1, buckets: [] },
     highlights: { sorted: a.map((_, i) => i) },
     explanation: `Radix Sort complete! Sorted: [${a.join(", ")}]`,
+    activeLine: 6,
     stats: { comparisons: 0, swaps: 0, step: steps.length },
   });
   return steps;
@@ -5256,42 +5420,49 @@ export const trappingRainWaterSteps = (heights) => {
     },
     highlights: { left: l, right: r },
     explanation: `Trapping Rain Water: [${h.join(",")}]. Two pointers l=${l}, r=${r}. lMax=0, rMax=0.`,
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
   while (l < r) {
     if (h[l] <= h[r]) {
+      // Step 1: Condition check - L5
+      steps.push({
+        data: { heights: h, water, left: l, right: r, leftMax: lm, rightMax: rm },
+        highlights: { left: l, right: r },
+        explanation: `Checking: h[${l}]=${h[l]} ≤ h[${r}]=${h[r]}: process left side.`,
+        activeLine: 5,
+        stats: { comparisons: l + 1, swaps: 0, step: steps.length },
+      });
       lm = Math.max(lm, h[l]);
       const trapped = lm - h[l];
       water += trapped;
+      // Step 2: Left update - L6/L7/L8
       steps.push({
-        data: {
-          heights: h,
-          water,
-          left: l,
-          right: r,
-          leftMax: lm,
-          rightMax: rm,
-        },
+        data: { heights: h, water, left: l, right: r, leftMax: lm, rightMax: rm },
         highlights: { left: l, right: r, trapped: l },
-        explanation: `h[${l}]=${h[l]} ≤ h[${r}]=${h[r]}: process left. lMax=${lm}. Water trapped at ${l}: ${lm}-${h[l]}=${trapped}. Total=${water}.`,
+        explanation: `Update left: lMax=${lm}. Water trapped at ${l}: ${lm}-${h[l]}=${trapped}. Total=${water}. Advance l.`,
+        activeLine: l < r - 1 ? 7 : 8,
         stats: { comparisons: l + 1, swaps: 0, step: steps.length },
       });
       l++;
     } else {
+      // Step 1: Condition check - L9
+      steps.push({
+        data: { heights: h, water, left: l, right: r, leftMax: lm, rightMax: rm },
+        highlights: { left: l, right: r },
+        explanation: `Checking: h[${l}]=${h[l]} > h[${r}]=${h[r]}: process right side.`,
+        activeLine: 9,
+        stats: { comparisons: l + 1, swaps: 0, step: steps.length },
+      });
       rm = Math.max(rm, h[r]);
       const trapped = rm - h[r];
       water += trapped;
+      // Step 2: Right update - L10/L11/L12
       steps.push({
-        data: {
-          heights: h,
-          water,
-          left: l,
-          right: r,
-          leftMax: lm,
-          rightMax: rm,
-        },
+        data: { heights: h, water, left: l, right: r, leftMax: lm, rightMax: rm },
         highlights: { left: l, right: r, trapped: r },
-        explanation: `h[${l}]=${h[l]} > h[${r}]=${h[r]}: process right. rMax=${rm}. Water trapped at ${r}: ${rm}-${h[r]}=${trapped}. Total=${water}.`,
+        explanation: `Update right: rMax=${rm}. Water trapped at ${r}: ${rm}-${h[r]}=${trapped}. Total=${water}. Advance r.`,
+        activeLine: 11,
         stats: { comparisons: l + 1, swaps: 0, step: steps.length },
       });
       r--;
@@ -5301,10 +5472,12 @@ export const trappingRainWaterSteps = (heights) => {
     data: { heights: h, water, left: l, right: r, leftMax: lm, rightMax: rm },
     highlights: { done: true },
     explanation: `Pointers met. Total trapped water: ${water} units.`,
+    activeLine: 13,
     stats: { comparisons: h.length, swaps: 0, step: steps.length },
   });
   return steps;
 };
+
 
 // --- FLOYD WARSHALL ---
 export const floydWarshallSteps = (matrix) => {
@@ -5318,6 +5491,7 @@ export const floydWarshallSteps = (matrix) => {
     data: { dist: dist.map((r) => [...r]), k: -1, i: -1, j: -1, V },
     highlights: {},
     explanation: `Floyd-Warshall: All-pairs shortest path on ${V}×${V} matrix. Will try each vertex as intermediate.`,
+    activeLine: 2,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
   for (let k = 0; k < V; k++) {
@@ -5325,6 +5499,7 @@ export const floydWarshallSteps = (matrix) => {
       data: { dist: dist.map((r) => [...r]), k, i: -1, j: -1, V },
       highlights: { intermediate: k },
       explanation: `Intermediate vertex k=${k}: Check if going through vertex ${k} shortens any path.`,
+      activeLine: 3,
       stats: { comparisons: k * V * V, swaps: 0, step: steps.length },
     });
     for (let i = 0; i < V; i++) {
@@ -5340,6 +5515,7 @@ export const floydWarshallSteps = (matrix) => {
             data: { dist: dist.map((r) => [...r]), k, i, j, V },
             highlights: { updated: [i, j], via: k },
             explanation: `Relax (${i}→${j}) via ${k}: ${old === INF ? "∞" : old} → ${dist[i][j]}. Path ${i}→${k}→${j} is shorter.`,
+            activeLine: 6,
             stats: {
               comparisons: k * V * V + i * V + j,
               swaps: 0,
@@ -5354,6 +5530,7 @@ export const floydWarshallSteps = (matrix) => {
     data: { dist: dist.map((r) => [...r]), k: V, i: -1, j: -1, V },
     highlights: { done: true },
     explanation: `Floyd-Warshall complete! dist[i][j] now holds shortest path length between every pair (i,j).`,
+    activeLine: 8,
     stats: { comparisons: V * V * V, swaps: 0, step: steps.length },
   });
   return steps;
@@ -5377,6 +5554,7 @@ export const twoSumTwoPointerSteps = (arr, target) => {
       data: { arr: a, left: l, right: r, target },
       highlights: { left: l, right: r, sum },
       explanation: `a[${l}]=${a[l]} + a[${r}]=${a[r]} = ${sum}. ${sum === target ? "✅ Found target!" : sum < target ? `${sum} < ${target}: move left pointer right →` : `${sum} > ${target}: move right pointer left ←`}`,
+      activeLine: 4,
       stats: { comparisons: l + 1, swaps: 0, step: steps.length },
     });
     if (sum === target) {
@@ -5486,6 +5664,293 @@ function cloneNodes(nodes) {
   });
   return Array.from(map.values());
 }
+
+// ============================================================
+// NEW BITWISE STEP GENERATORS
+// ============================================================
+
+export const bitmaskAndSteps = (arrOrVal) => {
+  const steps = [];
+  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
+  const n = isNaN(parts[0]) ? 29 : parts[0];
+  const mask = isNaN(parts[1]) ? 15 : parts[1];
+  const andResult = n & mask;
+  
+  steps.push({
+    data: { n, mask, result: andResult },
+    bitState: { operation: 'AND', phase: 'init' },
+    activeLine: 1,
+    explanation: `Bitwise AND: n & mask. Each output bit is 1 only if both input bits are 1.`,
+    stats: { step: 0 }
+  });
+  
+  steps.push({
+    data: { n, mask, result: andResult },
+    bitState: { operation: 'AND', phase: 'done' },
+    activeLine: 2,
+    explanation: `Calculated: ${n} & ${mask} = ${andResult}. Binary: ${n.toString(2).padStart(8, '0')} & ${mask.toString(2).padStart(8, '0')} = ${andResult.toString(2).padStart(8, '0')}.`,
+    stats: { step: 1 }
+  });
+  
+  return steps;
+};
+
+export const bitmaskOrSteps = (arrOrVal) => {
+  const steps = [];
+  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
+  const n = isNaN(parts[0]) ? 29 : parts[0];
+  const mask = isNaN(parts[1]) ? 15 : parts[1];
+  const orResult = n | mask;
+  
+  steps.push({
+    data: { n, mask, result: orResult },
+    bitState: { operation: 'OR', phase: 'init' },
+    activeLine: 1,
+    explanation: `Bitwise OR: n | mask. Each output bit is 1 if at least one input bit is 1.`,
+    stats: { step: 0 }
+  });
+  
+  steps.push({
+    data: { n, mask, result: orResult },
+    bitState: { operation: 'OR', phase: 'done' },
+    activeLine: 2,
+    explanation: `Calculated: ${n} | ${mask} = ${orResult}. Binary: ${n.toString(2).padStart(8, '0')} | ${mask.toString(2).padStart(8, '0')} = ${orResult.toString(2).padStart(8, '0')}.`,
+    stats: { step: 1 }
+  });
+  
+  return steps;
+};
+
+export const bitmaskXorSteps = (arrOrVal) => {
+  const steps = [];
+  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
+  const n = isNaN(parts[0]) ? 29 : parts[0];
+  const mask = isNaN(parts[1]) ? 15 : parts[1];
+  const xorResult = n ^ mask;
+  
+  steps.push({
+    data: { n, mask, result: xorResult },
+    bitState: { operation: 'XOR', phase: 'init' },
+    activeLine: 1,
+    explanation: `Bitwise XOR: n ^ mask. Each output bit is 1 if input bits are different.`,
+    stats: { step: 0 }
+  });
+  
+  steps.push({
+    data: { n, mask, result: xorResult },
+    bitState: { operation: 'XOR', phase: 'done' },
+    activeLine: 2,
+    explanation: `Calculated: ${n} ^ ${mask} = ${xorResult}. Binary: ${n.toString(2).padStart(8, '0')} ^ ${mask.toString(2).padStart(8, '0')} = ${xorResult.toString(2).padStart(8, '0')}.`,
+    stats: { step: 1 }
+  });
+  
+  return steps;
+};
+
+export const bitmaskNotSteps = (nVal) => {
+  const steps = [];
+  const n = parseInt(nVal) || 29;
+  const notResult = ~n;
+  
+  steps.push({
+    data: { n, result: notResult },
+    bitState: { operation: 'NOT', phase: 'init' },
+    activeLine: 1,
+    explanation: `Bitwise NOT: ~n. Inverts all the bits of the binary representation.`,
+    stats: { step: 0 }
+  });
+  
+  steps.push({
+    data: { n, result: notResult },
+    bitState: { operation: 'NOT', phase: 'done' },
+    activeLine: 2,
+    explanation: `Calculated: ~${n} = ${notResult}. Binary: ~(${n.toString(2).padStart(8, '0')}) = ${(notResult & 0xff).toString(2).padStart(8, '0')} (showing lowest 8 bits).`,
+    stats: { step: 1 }
+  });
+  
+  return steps;
+};
+
+export const bitLeftShiftSteps = (arrOrVal) => {
+  const steps = [];
+  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
+  const n = isNaN(parts[0]) ? 5 : parts[0];
+  const shift = isNaN(parts[1]) ? 2 : parts[1];
+  const shiftResult = n << shift;
+  
+  steps.push({
+    data: { n, shift, result: shiftResult },
+    bitState: { operation: 'LEFT_SHIFT', phase: 'init' },
+    activeLine: 1,
+    explanation: `Bitwise Left Shift: n << shift. Shifts bits left, filling empty spaces on the right with zeros. Equivalent to multiplying by 2^shift.`,
+    stats: { step: 0 }
+  });
+  
+  steps.push({
+    data: { n, shift, result: shiftResult },
+    bitState: { operation: 'LEFT_SHIFT', phase: 'done' },
+    activeLine: 2,
+    explanation: `Calculated: ${n} << ${shift} = ${shiftResult}. Binary: ${n.toString(2).padStart(8, '0')} << ${shift} = ${shiftResult.toString(2).padStart(12, '0')}.`,
+    stats: { step: 1 }
+  });
+  
+  return steps;
+};
+
+export const bitRightShiftSteps = (arrOrVal) => {
+  const steps = [];
+  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
+  const n = isNaN(parts[0]) ? 20 : parts[0];
+  const shift = isNaN(parts[1]) ? 2 : parts[1];
+  const shiftResult = n >> shift;
+  
+  steps.push({
+    data: { n, shift, result: shiftResult },
+    bitState: { operation: 'RIGHT_SHIFT', phase: 'init' },
+    activeLine: 1,
+    explanation: `Bitwise Right Shift: n >> shift. Shifts bits right, discarding bits shifted off. Equivalent to integer division by 2^shift.`,
+    stats: { step: 0 }
+  });
+  
+  steps.push({
+    data: { n, shift, result: shiftResult },
+    bitState: { operation: 'RIGHT_SHIFT', phase: 'done' },
+    activeLine: 2,
+    explanation: `Calculated: ${n} >> ${shift} = ${shiftResult}. Binary: ${n.toString(2).padStart(8, '0')} >> ${shift} = ${shiftResult.toString(2).padStart(8, '0')}.`,
+    stats: { step: 1 }
+  });
+  
+  return steps;
+};
+
+export const bitGrayCodeSteps = (nVal) => {
+  const steps = [];
+  const n = parseInt(nVal) || 10;
+  const shifted = n >> 1;
+  const result = n ^ shifted;
+  
+  steps.push({
+    data: { n, shifted: null, result: null },
+    bitState: { operation: 'GRAY_CODE', phase: 'init' },
+    activeLine: 1,
+    explanation: `Gray Code: n ^ (n >> 1). We shift the number right by 1, and XOR the result with the original number.`,
+    stats: { step: 0 }
+  });
+  
+  steps.push({
+    data: { n, shifted, result: null },
+    bitState: { operation: 'GRAY_CODE', phase: 'shifting' },
+    activeLine: 1,
+    explanation: `Shifting ${n} right by 1 bit: n >> 1 = ${shifted}. Binary: ${n.toString(2).padStart(8, '0')} >> 1 = ${shifted.toString(2).padStart(8, '0')}.`,
+    stats: { step: 1 }
+  });
+  
+  steps.push({
+    data: { n, shifted, result },
+    bitState: { operation: 'GRAY_CODE', phase: 'done' },
+    activeLine: 2,
+    explanation: `XORing n and n>>1: ${n} ^ ${shifted} = ${result}. Binary: ${n.toString(2).padStart(8, '0')} ^ ${shifted.toString(2).padStart(8, '0')} = ${result.toString(2).padStart(8, '0')}.`,
+    stats: { step: 2 }
+  });
+  
+  return steps;
+};
+
+export const bitmaskingConceptSteps = (nVal) => {
+  const steps = [];
+  const n = parseInt(nVal) || 29;
+  
+  steps.push({
+    data: { n, operation: 'init', mask: 0, val: 0 },
+    bitState: { operation: 'CONCEPT', phase: 'init' },
+    activeLine: 1,
+    explanation: `Demonstrating get, set, and clear bit concepts on n = ${n} (Binary: ${n.toString(2).padStart(8, '0')}).`,
+    stats: { step: 0 }
+  });
+  
+  // 1. Get bit at index 2
+  const getIdx = 2;
+  const getMask = 1 << getIdx;
+  const getVal = (n & getMask) !== 0 ? 1 : 0;
+  steps.push({
+    data: { n, operation: 'get', mask: getMask, val: getVal, bitIdx: getIdx },
+    bitState: { operation: 'CONCEPT', phase: 'get' },
+    activeLine: 3,
+    explanation: `Get bit at index ${getIdx}: (n & (1 << ${getIdx})) != 0. Mask = ${getMask} (${getMask.toString(2).padStart(8, '0')}). Bit is ${getVal}.`,
+    stats: { step: 1 }
+  });
+  
+  // 2. Set bit at index 1
+  const setIdx = 1;
+  const setMask = 1 << setIdx;
+  const setVal = n | setMask;
+  steps.push({
+    data: { n, operation: 'set', mask: setMask, val: setVal, bitIdx: setIdx },
+    bitState: { operation: 'CONCEPT', phase: 'set' },
+    activeLine: 6,
+    explanation: `Set bit at index ${setIdx}: n | (1 << ${setIdx}). Mask = ${setMask} (${setMask.toString(2).padStart(8, '0')}). Result = ${setVal} (${setVal.toString(2).padStart(8, '0')}).`,
+    stats: { step: 2 }
+  });
+  
+  // 3. Clear bit at index 3
+  const clearIdx = 3;
+  const clearMask = ~(1 << clearIdx);
+  const clearVal = n & clearMask;
+  steps.push({
+    data: { n, operation: 'clear', mask: clearMask, val: clearVal, bitIdx: clearIdx },
+    bitState: { operation: 'CONCEPT', phase: 'clear' },
+    activeLine: 9,
+    explanation: `Clear bit at index ${clearIdx}: n & ~(1 << ${clearIdx}). Mask = ${(clearMask & 0xff).toString(2).padStart(8, '0')}. Result = ${clearVal} (${clearVal.toString(2).padStart(8, '0')}).`,
+    stats: { step: 3 }
+  });
+  
+  return steps;
+};
+
+export const generateSubsetsUsingBitmaskSteps = (arr) => {
+  const steps = [];
+  const items = Array.isArray(arr) ? arr : String(arr).trim().split(/\s+/).filter(Boolean);
+  const n = items.length;
+  const totalSubsets = 1 << n;
+  
+  steps.push({
+    data: { items, currentMask: null, currentSubset: [], subsets: [] },
+    bitState: { operation: 'SUBSETS', phase: 'init' },
+    activeLine: 2,
+    explanation: `Generate subsets of [${items.join(', ')}]. A set of size ${n} has 2^${n} = ${totalSubsets} subsets, mapping to binary counters from 0 to ${totalSubsets - 1}.`,
+    stats: { step: 0 }
+  });
+  
+  const subsets = [];
+  for (let i = 0; i < totalSubsets; i++) {
+    const subset = [];
+    for (let j = 0; j < n; j++) {
+      if (i & (1 << j)) {
+        subset.push(items[j]);
+      }
+    }
+    subsets.push([...subset]);
+    
+    steps.push({
+      data: { items, currentMask: i, currentSubset: [...subset], subsets: subsets.map(s => `[${s.join(',')}]`) },
+      bitState: { operation: 'SUBSETS', phase: 'generating' },
+      activeLine: 5,
+      explanation: `Mask i = ${i} (Binary: ${i.toString(2).padStart(n, '0')}). Selects elements: [${subset.join(', ')}]. Add to subsets list.`,
+      stats: { step: steps.length }
+    });
+  }
+  
+  steps.push({
+    data: { items, currentMask: null, currentSubset: [], subsets: subsets.map(s => `[${s.join(',')}]`) },
+    bitState: { operation: 'SUBSETS', phase: 'done' },
+    activeLine: 9,
+    explanation: `Subset generation complete! Total ${subsets.length} subsets generated.`,
+    stats: { step: steps.length }
+  });
+  
+  return steps;
+};
+
 
 // ============================================================
 // BST INSERT

@@ -140,6 +140,7 @@ export const bstTraversalSteps = (arr, traversalOrder = "inorder") => {
     treeState: { root, path: [], activeNode: null },
     highlights: {},
     explanation: `Constructed Binary Search Tree from inputs. Starting ${traversalOrder} traversal path.`,
+    activeLine: 1,
     stats: { comparisons: 0, visitedNodes: 0, step: 0 },
   });
 
@@ -177,14 +178,21 @@ export const bstTraversalSteps = (arr, traversalOrder = "inorder") => {
     });
     highlights[node.id] = "pivot";
 
+    // Alternate between visiting left subtree (L4), visiting node (L5), visiting right subtree (L7)
+    // For inorder: L4 (go left) -> L5 (visit) -> L7 (go right)
+    const linePattern = [4, 5, 7];
+    const activeLine = linePattern[idx % linePattern.length];
+
     steps.push({
       data: JSON.parse(JSON.stringify(bstNodes)),
       treeState: { root, path: [...traversalPath], activeNode: node.id },
       highlights,
       explanation: `Visiting Node ${node.val}. Path: [${traversalPath.join(", ")}].`,
+      activeLine,
       stats: { comparisons: idx, visitedNodes: idx + 1, step: steps.length },
     });
   });
+
 
   return steps;
 };
@@ -256,6 +264,7 @@ export const bstSearchSteps = (arr, target) => {
     treeState: { root, path: [], activeNode: null },
     highlights: {},
     explanation: `Constructed BST. Searching for target value ${targetVal}.`,
+    activeLine: 1,
     stats: { comparisons: 0, visitedNodes: 0, step: 0 },
   });
 
@@ -276,6 +285,7 @@ export const bstSearchSteps = (arr, target) => {
       treeState: { root, path: [...path], activeNode: currId },
       highlights: { ...highlights, [currId]: "pivot" },
       explanation: `Comparing current node value ${curr.val} with target ${targetVal}.`,
+      activeLine: 3,
       stats: {
         comparisons: path.length,
         visitedNodes: path.length,
@@ -290,6 +300,7 @@ export const bstSearchSteps = (arr, target) => {
         treeState: { root, path: [...path], activeNode: currId },
         highlights,
         explanation: `Target value ${targetVal} found in BST at node ${curr.val}!`,
+        activeLine: 3,
         stats: {
           comparisons: path.length,
           visitedNodes: path.length,
@@ -304,6 +315,7 @@ export const bstSearchSteps = (arr, target) => {
           treeState: { root, path: [...path], activeNode: currId },
           highlights,
           explanation: `${targetVal} < ${curr.val}. Moving left to child node ${curr.left.val}.`,
+          activeLine: 4,
           stats: {
             comparisons: path.length,
             visitedNodes: path.length,
@@ -317,6 +329,7 @@ export const bstSearchSteps = (arr, target) => {
           treeState: { root, path: [...path], activeNode: currId },
           highlights,
           explanation: `${targetVal} < ${curr.val}, but left child is null. Target not found in BST.`,
+          activeLine: 6,
           stats: {
             comparisons: path.length,
             visitedNodes: path.length,
@@ -332,6 +345,7 @@ export const bstSearchSteps = (arr, target) => {
           treeState: { root, path: [...path], activeNode: currId },
           highlights,
           explanation: `${targetVal} > ${curr.val}. Moving right to child node ${curr.right.val}.`,
+          activeLine: 5,
           stats: {
             comparisons: path.length,
             visitedNodes: path.length,
@@ -345,6 +359,7 @@ export const bstSearchSteps = (arr, target) => {
           treeState: { root, path: [...path], activeNode: currId },
           highlights,
           explanation: `${targetVal} > ${curr.val}, but right child is null. Target not found in BST.`,
+          activeLine: 6,
           stats: {
             comparisons: path.length,
             visitedNodes: path.length,

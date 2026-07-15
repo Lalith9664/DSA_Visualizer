@@ -29,6 +29,7 @@ const VisualizerCanvas = lazy(
   () => import("../components/visualizer/VisualizerCanvas"),
 );
 const CodePanel = lazy(() => import("../components/visualizer/CodePanel"));
+const FinalOutputPanel = lazy(() => import("../components/visualizer/FinalOutputPanel"));
 
 // Trees category algorithms list
 const TREE_ALGOS = new Set([
@@ -705,6 +706,15 @@ const VisualizerPage = () => {
         radixSortSteps,
         countSetBitsSteps,
         xorOperationsSteps,
+        bitmaskAndSteps,
+        bitmaskOrSteps,
+        bitmaskXorSteps,
+        bitmaskNotSteps,
+        bitLeftShiftSteps,
+        bitRightShiftSteps,
+        bitGrayCodeSteps,
+        bitmaskingConceptSteps,
+        generateSubsetsUsingBitmaskSteps,
         fastExponentiationSteps,
         pascalTriangleSteps,
         trappingRainWaterSteps,
@@ -945,6 +955,9 @@ const VisualizerPage = () => {
               break;
             case "xor-operations":
               computedSteps = xorOperationsSteps(arr);
+              break;
+            case "generate-subsets-using-bitmask":
+              computedSteps = generateSubsetsUsingBitmaskSteps(arr);
               break;
             case "two-sum-two-pointer":
               computedSteps = twoSumTwoPointerSteps(arr, target);
@@ -1591,9 +1604,14 @@ const VisualizerPage = () => {
             computedSteps = countSetBitsSteps(parseInt(rawInput) || 13);
           } else if (
             algo.id === "gray-code" ||
-            algo.id === "gray-code-concept"
+            algo.id === "gray-code-concept" ||
+            algo.id === "bit-gray-code"
           ) {
-            computedSteps = grayCodeSteps(parseInt(rawInput) || 3);
+            computedSteps = bitGrayCodeSteps(parseInt(rawInput) || 10);
+          } else if (algo.id === "bitmask-not") {
+            computedSteps = bitmaskNotSteps(rawInput);
+          } else if (algo.id === "bitmasking-concept") {
+            computedSteps = bitmaskingConceptSteps(rawInput);
           } else {
             computedSteps = powerOfTwoSteps(rawInput);
           }
@@ -1603,6 +1621,16 @@ const VisualizerPage = () => {
             const base = parseInt(parts[0]) || 2;
             const exp = parseInt(parts[1] || rawTarget) || 10;
             computedSteps = fastExponentiationSteps(base, exp);
+          } else if (algo.id === "bitmask-and") {
+            computedSteps = bitmaskAndSteps(rawInput);
+          } else if (algo.id === "bitmask-or") {
+            computedSteps = bitmaskOrSteps(rawInput);
+          } else if (algo.id === "bitmask-xor") {
+            computedSteps = bitmaskXorSteps(rawInput);
+          } else if (algo.id === "bit-left-shift") {
+            computedSteps = bitLeftShiftSteps(rawInput);
+          } else if (algo.id === "bit-right-shift") {
+            computedSteps = bitRightShiftSteps(rawInput);
           } else if (algo.id === "lcm" || algo.id === "lcm-algorithm") {
             computedSteps = lcmSteps(rawInput);
           } else {
@@ -1759,21 +1787,17 @@ const VisualizerPage = () => {
       }
     }
 
-    // Pre-populate customInput with default array for lists so it is not empty
-    if (isList) {
-      setCustomInput(initialInput.split("\n")[0]);
-    } else {
-      setCustomInput("");
-    }
+    // Start with completely blank custom inputs
+    setCustomInput("");
     setTargetInput("");
     setDeleteInput("");
 
-    // Compile the initial canvas steps using fallback default values
-    generateSteps(initialInput, isList ? "" : initialTarget).finally(() => {
-      if (!cancelled) {
-        setTimeout(() => setIsNavigating(false), 250);
-      }
-    });
+    // Clear visualization steps on load so it starts empty
+    setSteps([]);
+
+    if (!cancelled) {
+      setTimeout(() => setIsNavigating(false), 250);
+    }
 
     return () => {
       cancelled = true;
@@ -1796,16 +1820,14 @@ const VisualizerPage = () => {
     let finalTarget = targetInput;
 
     if (isInsertion && targetInput.trim() !== "") {
-      const current = (customInput || "").trim() || algo.defaultInput.trim();
+      const current = (customInput || "").trim();
       const nextVal = targetInput.trim();
       finalInput = current ? `${current} ${nextVal}` : nextVal;
       finalTarget = "";
       setCustomInput(finalInput);
       setTargetInput("");
     } else if (isDeletion && targetInput.trim() !== "") {
-      const current = (
-        (customInput || "").trim() || algo.defaultInput.trim()
-      ).split(/\s+/);
+      const current = ((customInput || "").trim()).split(/\s+/).filter(Boolean);
       const removeVal = targetInput.trim();
       finalInput = current.filter((x) => x !== removeVal).join(" ");
       finalTarget = "";
@@ -1816,9 +1838,7 @@ const VisualizerPage = () => {
       const val = parts[0];
       const idx = parseInt(parts[1]);
       if (val && !isNaN(idx)) {
-        const arr = (
-          (customInput || "").trim() || algo.defaultInput.trim()
-        ).split(/\s+/);
+        const arr = ((customInput || "").trim()).split(/\s+/).filter(Boolean);
         arr.splice(idx, 0, val);
         finalInput = arr.join(" ");
         finalTarget = "";
@@ -1828,15 +1848,19 @@ const VisualizerPage = () => {
     } else if (isArrayDelete && targetInput.trim() !== "") {
       const idx = parseInt(targetInput.trim());
       if (!isNaN(idx)) {
-        const arr = (
-          (customInput || "").trim() || algo.defaultInput.trim()
-        ).split(/\s+/);
+        const arr = ((customInput || "").trim()).split(/\s+/).filter(Boolean);
         arr.splice(idx, 1);
         finalInput = arr.join(" ");
         finalTarget = "";
         setCustomInput(finalInput);
         setTargetInput("");
       }
+    }
+
+    // Check if input is empty before visualizing
+    if (finalInput.trim() === "") {
+      alert("Please enter input values before rebuilding the visualization!");
+      return;
     }
 
     generateSteps(finalInput, finalTarget);
@@ -2316,9 +2340,13 @@ const VisualizerPage = () => {
                 className="flex-1"
               />
               <Button
-                onClick={() =>
-                  generateSteps(customInput || algo.defaultInput, "")
-                }
+                onClick={() => {
+                  if (!customInput.trim()) {
+                    alert("Please enter input values before rebuilding the visualization!");
+                    return;
+                  }
+                  generateSteps(customInput, "");
+                }}
                 variant="default"
                 className="font-bold flex-shrink-0 clay-btn w-auto text-xs px-3"
               >
@@ -2409,8 +2437,12 @@ const VisualizerPage = () => {
                 <div className="flex bg-[#f3f4f6]/5 dark:bg-white/5 border border-black/5 dark:border-white/10 p-0.5 rounded-lg w-full">
                   <button
                     onClick={() => {
+                      if (!customInput.trim()) {
+                        alert("Please enter a maze grid before searching paths!");
+                        return;
+                      }
                       setTargetInput("D R");
-                      generateSteps(customInput || algo.defaultInput, "D R", false, true);
+                      generateSteps(customInput, "D R", false, true);
                     }}
                     className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition-all duration-200 ${
                       targetInput === "D R"
@@ -2422,8 +2454,12 @@ const VisualizerPage = () => {
                   </button>
                   <button
                     onClick={() => {
+                      if (!customInput.trim()) {
+                        alert("Please enter a maze grid before searching paths!");
+                        return;
+                      }
                       setTargetInput("D R U L");
-                      generateSteps(customInput || algo.defaultInput, "D R U L", false, true);
+                      generateSteps(customInput, "D R U L", false, true);
                     }}
                     className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition-all duration-200 ${
                       targetInput !== "D R"
@@ -2550,6 +2586,13 @@ const VisualizerPage = () => {
               </Suspense>
             </div>
 
+            {/* Final Output Block in Fullscreen — appears on last step */}
+            <Suspense fallback={null}>
+              <div className="px-1 mb-2">
+                <FinalOutputPanel algorithm={algo} />
+              </div>
+            </Suspense>
+
             {/* Floating Control Cockpit and Input Panel at the bottom */}
             <div className="w-full mt-4 z-10 flex flex-col md:flex-row gap-4 items-stretch">
               {/* Left side: Custom Input Panel */}
@@ -2586,7 +2629,7 @@ const VisualizerPage = () => {
 
           {/* Sliding Drawer Container (shrinks and slides side-by-side) */}
           <div
-            className={`h-full z-40 bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-2xl border-l border-white/20 dark:border-white/5 transition-all duration-300 flex flex-col p-6 overflow-y-auto gap-4 flex-shrink-0 ${isDrawerOpen ? "w-[420px] opacity-100" : "w-0 opacity-0 pointer-events-none p-0 border-l-0"}`}
+            className={`relative h-full z-40 bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-2xl border-l border-white/20 dark:border-white/5 transition-all duration-300 flex flex-col p-6 overflow-y-auto gap-4 flex-shrink-0 ${isDrawerOpen ? "w-[420px] opacity-100" : "w-0 opacity-0 pointer-events-none p-0 border-l-0"}`}
           >
             {isDrawerOpen && (
               <div className="flex flex-col gap-4 animate-fadeIn">
@@ -2636,10 +2679,15 @@ const VisualizerPage = () => {
 
             {/* Real-time description terminal logs */}
             <ExplanationPanel />
+
+            {/* Final Output Block — appears on last step */}
+            <Suspense fallback={null}>
+              <FinalOutputPanel algorithm={algo} />
+            </Suspense>
           </div>
 
           {/* RIGHT BLOCK: Reference info — scrolls independently */}
-          <div className="flex flex-col gap-4 lg:overflow-y-auto lg:pr-1">
+          <div className="relative flex flex-col gap-4 lg:overflow-y-auto lg:pr-1">
             {rightBlockContent}
           </div>
         </div>

@@ -4728,6 +4728,278 @@ const VisualizerCanvas = ({
     );
   };
 
+  const renderBitRow = (label, value, colorClass, width = 8) => {
+    const binary = (value ?? 0).toString(2).padStart(width, '0').slice(-width);
+    return (
+      <div className="flex items-center justify-between gap-4 w-full max-w-sm">
+        <span className="w-20 text-xs font-extrabold text-text-secondary text-right uppercase tracking-wider select-none">{label}:</span>
+        <div className="flex gap-1">
+          {binary.split('').map((bit, idx) => (
+            <span key={idx} className={`w-7 h-7 rounded-md flex items-center justify-center font-black text-xs border transition-all duration-300 shadow-sm ${
+              bit === '1'
+                ? 'bg-primary/20 border-primary/40 text-primary dark:text-purple-300 dark:bg-purple-900/30'
+                : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60'
+            }`}>
+              {bit}
+            </span>
+          ))}
+        </div>
+        <span className={`w-12 text-xs font-mono font-black text-left ${colorClass}`}>({value})</span>
+      </div>
+    );
+  };
+
+  const renderBitwiseOpCanvas = () => {
+    const { n, mask, result } = data || {};
+    const { operation, phase } = currentSnap.bitState || {};
+    
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
+        <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
+          Bitwise {operation} Operation
+        </span>
+        
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+          {renderBitRow('Number n', n, 'text-accent')}
+          {renderBitRow('Mask', mask, 'text-purple-400')}
+          
+          <div className="w-full max-w-sm h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
+            <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary uppercase">
+              {operation === 'AND' ? '& (AND)' : operation === 'OR' ? '| (OR)' : '^ (XOR)'}
+            </span>
+          </div>
+          
+          {phase === 'done' ? (
+            renderBitRow('Result', result, 'text-green-500')
+          ) : (
+            <div className="flex items-center justify-between gap-4 w-full max-w-sm h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
+              Click next to apply {operation}...
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBitwiseNotCanvas = () => {
+    const { n, result } = data || {};
+    const { phase } = currentSnap.bitState || {};
+    
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
+        <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
+          Bitwise NOT Operation
+        </span>
+        
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+          {renderBitRow('Number n', n, 'text-accent')}
+          
+          <div className="w-full max-w-sm h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
+            <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary">
+              ~ (NOT)
+            </span>
+          </div>
+          
+          {phase === 'done' ? (
+            renderBitRow('~n Result', result & 0xff, 'text-green-500')
+          ) : (
+            <div className="flex items-center justify-between gap-4 w-full max-w-sm h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
+              Click next to invert bits...
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBitwiseShiftCanvas = () => {
+    const { n, shift, result } = data || {};
+    const { operation, phase } = currentSnap.bitState || {};
+    
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
+        <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
+          Bitwise {operation === 'LEFT_SHIFT' ? 'Left Shift' : 'Right Shift'}
+        </span>
+        
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+          {renderBitRow('Number n', n, 'text-accent')}
+          
+          <div className="flex justify-between w-full max-w-sm px-1.5 text-xs font-bold text-text-secondary">
+            <span>Shift Positions:</span>
+            <span className="text-primary font-mono">{shift} places ({operation === 'LEFT_SHIFT' ? '<<' : '>>'})</span>
+          </div>
+          
+          <div className="w-full max-w-sm h-px bg-slate-200 dark:bg-slate-800/60 my-1" />
+          
+          {phase === 'done' ? (
+            renderBitRow('Result', result, 'text-green-500', operation === 'LEFT_SHIFT' ? 12 : 8)
+          ) : (
+            <div className="flex items-center justify-between gap-4 w-full max-w-sm h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
+              Click next to shift bits...
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBitwiseGrayCodeCanvas = () => {
+    const { n, shifted, result } = data || {};
+    const { phase } = currentSnap.bitState || {};
+    
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
+        <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
+          Binary to Gray Code Conversion
+        </span>
+        
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+          {renderBitRow('n (Binary)', n, 'text-accent')}
+          
+          {phase !== 'init' && renderBitRow('n >> 1', shifted, 'text-purple-400')}
+          
+          {phase !== 'init' && (
+            <div className="w-full max-w-sm h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
+              <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary">
+                ^ (XOR)
+              </span>
+            </div>
+          )}
+          
+          {phase === 'done' ? (
+            renderBitRow('Gray Code', result, 'text-green-500')
+          ) : (
+            <div className="flex items-center justify-between gap-4 w-full max-w-sm h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16 animate-pulse">
+              {phase === 'init' ? 'Click next to shift...' : 'Click next to XOR...'}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBitmaskingConceptCanvas = () => {
+    const { n, operation, mask, val, bitIdx } = data || {};
+    
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
+        <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
+          Bitmasking operations: Get, Set, Clear
+        </span>
+        
+        <div className="flex flex-col gap-3 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+          {renderBitRow('Number n', n, 'text-accent')}
+          
+          {operation !== 'init' && (
+            <div className="w-full max-w-sm flex flex-col gap-2 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-3">
+              <div className="flex justify-between items-center text-xs font-bold text-text-secondary">
+                <span>Operation:</span>
+                <span className="text-primary font-mono uppercase tracking-wider">{operation} Bit at position {bitIdx}</span>
+              </div>
+              
+              {renderBitRow('Mask', mask, 'text-purple-400')}
+              
+              <div className="w-full h-px bg-slate-200 dark:bg-slate-800/60 my-1" />
+              
+              {operation === 'get' ? (
+                <div className="flex justify-between items-center text-xs font-bold w-full max-w-sm px-1">
+                  <span className="text-emerald-600 dark:text-emerald-400">Bit is Set?</span>
+                  <span className="font-mono bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full font-black">
+                    {val === 1 ? 'YES (1)' : 'NO (0)'}
+                  </span>
+                </div>
+              ) : (
+                renderBitRow('New n', val, 'text-green-500')
+              )}
+            </div>
+          )}
+          
+          {operation === 'init' && (
+            <div className="text-xs text-text-secondary italic text-center animate-pulse pt-2">
+              Click next to demonstrate operations step-by-step...
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderBitwiseSubsetsCanvas = () => {
+    const { items, currentMask, currentSubset, subsets } = data || {};
+    const { phase } = currentSnap.bitState || {};
+    
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
+        <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest">
+          Subsets Generation using Binary Masking
+        </span>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mt-1">
+          {/* Left panel: Active generator state */}
+          <div className="flex flex-col gap-3 p-4 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-md justify-between">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Set Elements</span>
+              <div className="flex gap-2 mt-1.5 flex-wrap">
+                {items?.map((item, idx) => (
+                  <span key={idx} className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-text-primary">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            {phase === 'generating' && (
+              <div className="border-t border-slate-100 dark:border-slate-800/60 pt-3 flex flex-col gap-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-text-secondary">Binary Mask Index:</span>
+                  <span className="font-mono text-accent font-black">i = {currentMask}</span>
+                </div>
+                {renderBitRow('Mask Bits', currentMask, 'text-purple-400', items.length)}
+                
+                <div className="flex justify-between items-center text-xs mt-1 bg-primary/5 border border-primary/10 rounded-xl p-2.5">
+                  <span className="font-bold text-primary">Selected Subset:</span>
+                  <span className="font-mono text-primary font-black">[{currentSubset?.join(', ')}]</span>
+                </div>
+              </div>
+            )}
+            
+            {phase === 'init' && (
+              <div className="text-xs text-text-secondary italic text-center animate-pulse py-4">
+                Click next to start subset iteration...
+              </div>
+            )}
+            {phase === 'done' && (
+              <div className="text-xs text-green-500 font-bold text-center py-4 bg-green-500/10 rounded-xl border border-green-500/20">
+                🎉 All subsets generated successfully!
+              </div>
+            )}
+          </div>
+          
+          {/* Right panel: Subsets list scroll view */}
+          <div className="flex flex-col gap-2 p-4 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-md max-h-[220px] overflow-y-auto">
+            <div className="flex justify-between items-center pb-1.5 border-b border-slate-100 dark:border-slate-850">
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Generated Subsets</span>
+              <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{subsets?.length || 0} items</span>
+            </div>
+            <div className="flex flex-col gap-1.5 mt-1 font-mono text-[11px] text-text-secondary">
+              {subsets && subsets.length > 0 ? (
+                subsets.map((sub, idx) => (
+                  <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-900/50 py-1 px-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
+                    <span className="text-slate-400 select-none">{idx}:</span>
+                    <span className="text-text-primary font-bold">{sub === '[]' ? '[ empty ]' : sub}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="text-slate-400 text-center py-12 italic">No subsets generated yet.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderMathGcdCanvas = () => {
     const { a, b } = data || {};
     const { r, phase } = currentSnap.mathState || {};
@@ -8732,6 +9004,12 @@ const VisualizerCanvas = ({
     if (resolvedId === "floyd-warshall") return renderFloydWarshallCanvas();
     if (resolvedId === "pascal-triangle") return renderPascalTriangleCanvas();
     if (resolvedId === "count-set-bits") return renderBitValueCanvas();
+    if (resolvedId === "bitmask-and" || resolvedId === "bitmask-or" || resolvedId === "bitmask-xor") return renderBitwiseOpCanvas();
+    if (resolvedId === "bitmask-not") return renderBitwiseNotCanvas();
+    if (resolvedId === "bit-left-shift" || resolvedId === "bit-right-shift") return renderBitwiseShiftCanvas();
+    if (resolvedId === "bit-gray-code") return renderBitwiseGrayCodeCanvas();
+    if (resolvedId === "bitmasking-concept") return renderBitmaskingConceptCanvas();
+    if (resolvedId === "generate-subsets-using-bitmask") return renderBitwiseSubsetsCanvas();
     if (resolvedId === "palindrome-check") return renderStringCharCanvas();
     if (resolvedId === "reverse-string") return renderStringCharCanvas();
     if (resolvedId === "generate-parentheses") return renderDpCanvas();

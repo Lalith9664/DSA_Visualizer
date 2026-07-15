@@ -336,29 +336,30 @@ export function splittingArraysSteps(arr, targetInputStr) {
 
 // 8. Spiral Matrix traversal
 export function spiralMatrixSteps(size) {
-  const n = Math.min(size || 4, 6);
+  const n = Math.min(typeof size === 'number' ? size : 4, 6);
   // Build n×n matrix filled 1..n*n
   const mat = [];
   for (let i = 0; i < n; i++) { mat[i] = []; for (let j = 0; j < n; j++) mat[i][j] = i * n + j + 1; }
   const steps = [];
   const order = [];
   let top = 0, bottom = n - 1, left = 0, right = n - 1;
-  steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r => [...r]), n, highlights: {} }, explanation: `Spiral Matrix ${n}×${n}. Start at top-left, traverse Right→Down→Left→Up.`, stats: { step: 0 } });
+  steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r => [...r]), n, highlights: {} }, explanation: `Spiral Matrix ${n}×${n}. Start at top-left, traverse Right→Down→Left→Up.`, activeLine: 2, stats: { step: 0 } });
   let step = 1;
   const hlMap = {};
   while (top <= bottom && left <= right) {
-    for (let c = left; c <= right; c++) { order.push([top, c]); hlMap[`${top},${c}`] = step++; steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r => [...r]), n, activeCell: [top, c], order: [...order], direction: 'right' }, explanation: `→ Right: visiting [${top}][${c}] = ${mat[top][c]}`, stats: { step: step - 1 } }); }
+    for (let c = left; c <= right; c++) { order.push([top, c]); hlMap[`${top},${c}`] = step++; steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r => [...r]), n, activeCell: [top, c], order: [...order], direction: 'right' }, explanation: `→ Right: visiting [${top}][${c}] = ${mat[top][c]}`, activeLine: 8, stats: { step: step - 1 } }); }
     top++;
-    for (let r = top; r <= bottom; r++) { order.push([r, right]); steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r2 => [...r2]), n, activeCell: [r, right], order: [...order], direction: 'down' }, explanation: `↓ Down: visiting [${r}][${right}] = ${mat[r][right]}`, stats: { step: step++ } }); }
+    for (let r = top; r <= bottom; r++) { order.push([r, right]); steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r2 => [...r2]), n, activeCell: [r, right], order: [...order], direction: 'down' }, explanation: `↓ Down: visiting [${r}][${right}] = ${mat[r][right]}`, activeLine: 11, stats: { step: step++ } }); }
     right--;
-    for (let c = right; c >= left; c--) { order.push([bottom, c]); steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r2 => [...r2]), n, activeCell: [bottom, c], order: [...order], direction: 'left' }, explanation: `← Left: visiting [${bottom}][${c}] = ${mat[bottom][c]}`, stats: { step: step++ } }); }
+    for (let c = right; c >= left; c--) { order.push([bottom, c]); steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r2 => [...r2]), n, activeCell: [bottom, c], order: [...order], direction: 'left' }, explanation: `← Left: visiting [${bottom}][${c}] = ${mat[bottom][c]}`, activeLine: 14, stats: { step: step++ } }); }
     bottom--;
-    for (let r = bottom; r >= top; r--) { order.push([r, left]); steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r2 => [...r2]), n, activeCell: [r, left], order: [...order], direction: 'up' }, explanation: `↑ Up: visiting [${r}][${left}] = ${mat[r][left]}`, stats: { step: step++ } }); }
+    for (let r = bottom; r >= top; r--) { order.push([r, left]); steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r2 => [...r2]), n, activeCell: [r, left], order: [...order], direction: 'up' }, explanation: `↑ Up: visiting [${r}][${left}] = ${mat[r][left]}`, activeLine: 17, stats: { step: step++ } }); }
     left++;
   }
-  steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r => [...r]), n, order, direction: 'done' }, explanation: `Spiral traversal complete. Visited all ${n * n} elements.`, stats: { step } });
+  steps.push({ data: mat.flat(), highlights: {}, matrixState: { matrix: mat.map(r => [...r]), n, order, direction: 'done' }, explanation: `Spiral traversal complete. Visited all ${n * n} elements.`, activeLine: 20, stats: { step } });
   return steps;
 }
+
 
 // 8B. Matrix Transpose
 export function transposeMatrixSteps(size) {
@@ -2090,21 +2091,22 @@ export function bucketSortSteps(arr) {
   const maxVal = Math.max(...arr);
   const bucketCount = Math.ceil(Math.sqrt(n));
   const buckets = Array.from({ length: bucketCount }, () => []);
-  const steps = [{ data: [...arr], highlights: {}, explanation: `Bucket Sort: distribute ${n} elements into ${bucketCount} buckets, sort each, concatenate.`, stats: { step: 0 } }];
+  const steps = [{ data: [...arr], highlights: {}, explanation: `Bucket Sort: distribute ${n} elements into ${bucketCount} buckets, sort each, concatenate.`, activeLine: 2, stats: { step: 0 } }];
   for (let i = 0; i < n; i++) {
     const bi = Math.min(Math.floor((arr[i] / (maxVal + 1)) * bucketCount), bucketCount - 1);
     buckets[bi].push(arr[i]);
-    steps.push({ data: [...arr], highlights: { [i]: 'active' }, explanation: `Element ${arr[i]} → bucket #${bi} (range ${Math.floor(bi * (maxVal + 1) / bucketCount)}–${Math.floor((bi + 1) * (maxVal + 1) / bucketCount) - 1}).`, stats: { step: i + 1, buckets: buckets.map(b => b.join(',')) } });
+    steps.push({ data: [...arr], highlights: { [i]: 'active' }, explanation: `Element ${arr[i]} → bucket #${bi} (range ${Math.floor(bi * (maxVal + 1) / bucketCount)}–${Math.floor((bi + 1) * (maxVal + 1) / bucketCount) - 1}).`, activeLine: 4, stats: { step: i + 1, buckets: buckets.map(b => b.join(',')) } });
   }
   const result = [];
   for (let bi = 0; bi < bucketCount; bi++) {
     buckets[bi].sort((a, b) => a - b);
-    if (buckets[bi].length) steps.push({ data: [...result, ...buckets[bi]], highlights: {}, explanation: `Sort bucket #${bi}: [${buckets[bi].join(', ')}]. Append to result.`, stats: { step: n + bi + 1, buckets: buckets.map(b => b.join(',')) } });
+    if (buckets[bi].length) steps.push({ data: [...result, ...buckets[bi]], highlights: {}, explanation: `Sort bucket #${bi}: [${buckets[bi].join(', ')}]. Append to result.`, activeLine: 7, stats: { step: n + bi + 1, buckets: buckets.map(b => b.join(',')) } });
     result.push(...buckets[bi]);
   }
-  steps.push({ data: [...result], highlights: {}, explanation: `Bucket sort complete: [${result.join(', ')}].`, stats: { step: n + bucketCount + 1 } });
+  steps.push({ data: [...result], highlights: {}, explanation: `Bucket sort complete: [${result.join(', ')}].`, activeLine: 12, stats: { step: n + bucketCount + 1 } });
   return steps;
 }
+
 
 // ─────────────────────────────────────────────────────────────
 // PHASE 6: BIT MANIPULATION & MATH

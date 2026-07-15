@@ -21,59 +21,37 @@ const guessActiveLine = (algoId, snap, codeLines) => {
     if (explanation.includes('computing')) return 5;
   }
   
-  // 2. Exact mappings for Coin Change DP:
+  // 2. Exact mappings for Coin Change DP (improved):
   if (algoId === 'coin-change-dp') {
-    if (explanation.includes('initialize') || explanation.includes('base case')) {
-      return codeLines.findIndex(line => line.includes('dp =') || line.includes('float(')) + 1 || 2;
-    }
-    if (explanation.includes('complete') || explanation.includes('result:')) {
-      return codeLines.findIndex(line => line.includes('return')) + 1 || codeLines.length;
-    }
-    if (explanation.includes('solving') || explanation.includes('computing')) {
-      return codeLines.findIndex(line => line.includes('min(') || line.includes('dp[i] =')) + 1 || 5;
-    }
+    if (explanation.includes('initialize') || explanation.includes('base case') || explanation.includes('dp[0] = 0')) return 2;
+    if (explanation.includes('computing minimum') || explanation.includes('for amount')) return 4;
+    if (explanation.includes('checking') || (explanation.includes('coin') && explanation.includes('option'))) return 6;
+    if (explanation.includes('using coin') || explanation.includes('min coins')) return 7;
+    if (explanation.includes('result') || explanation.includes('complete') || explanation.includes('minimum coins for')) return 8;
+    return 6;
   }
 
-  // 2B. Exact mappings for Counting Sort:
+  // 2B. Exact mappings for Counting Sort (improved):
   if (algoId === 'counting-sort') {
     const phase = snap.data?.phase || '';
-    if (explanation.includes('counting sort on') && explanation.includes('phase 1')) {
-      return 2;
-    }
-    if (phase === 'count') {
-      return 4;
-    }
-    if (phase === 'prefix') {
-      if (explanation.includes('phase 2') || explanation.includes('prefix sums')) {
-        return 5;
-      }
-      return 5;
-    }
-    if (phase === 'place') {
-      if (explanation.includes('phase 3') || explanation.includes('correct position')) {
-        return 6;
-      }
-      return 9;
-    }
-    if (phase === 'done') {
-      return 10;
-    }
+    if (explanation.includes('counting sort on') || explanation.includes('phase 1')) return 2;
+    if (phase === 'count' || (explanation.includes('count[') && explanation.includes('++'))) return 4;
+    if (phase === 'prefix' || explanation.includes('phase 2') || explanation.includes('prefix sum') || explanation.includes('cumulative')) return 5;
+    if (phase === 'place' || explanation.includes('phase 3') || explanation.includes('placing') || explanation.includes('correct position')) return 6;
+    if (explanation.includes('output[') || explanation.includes('placed at')) return 9;
+    if (phase === 'done' || explanation.includes('complete') || explanation.includes('final')) return 10;
+    return 4;
   }
 
-  // 2C. Exact mappings for Trapping Rain Water:
+  // 2C. Exact mappings for Trapping Rain Water (improved):
   if (algoId === 'trapping-rain-water') {
-    if (explanation.includes('trapping rain water:') || explanation.includes('start:')) {
-      return 2;
-    }
-    if (explanation.includes('process left')) {
-      return 5;
-    }
-    if (explanation.includes('process right')) {
-      return 7;
-    }
-    if (explanation.includes('pointers met') || explanation.includes('complete')) {
-      return 8;
-    }
+    if (explanation.includes('trapping rain water:') || explanation.includes('two pointers') || explanation.includes('start:')) return 2;
+    if (explanation.includes('lmax updated') || explanation.includes('lmax')) return 4;
+    if (explanation.includes('process left') || explanation.includes('left pointer') || explanation.includes('h[l]')) return 5;
+    if (explanation.includes('rmax updated') || explanation.includes('rmax')) return 6;
+    if (explanation.includes('process right') || explanation.includes('right pointer') || explanation.includes('h[r]')) return 7;
+    if (explanation.includes('pointers met') || explanation.includes('complete') || explanation.includes('total trapped')) return 8;
+    return 5;
   }
 
   // 2D. Exact mappings for Splitting Arrays:
@@ -172,18 +150,22 @@ const guessActiveLine = (algoId, snap, codeLines) => {
     }
   }
 
-  // 2J. Exact mappings for Spiral Matrix:
+  // 2J. Exact mappings for Spiral Matrix (improved with fallback):
   if (algoId === 'spiral-matrix') {
     const matrixState = snap.matrixState || {};
     const direction = matrixState.direction || '';
     const visitedCount = matrixState.order?.length || 0;
-
     if (visitedCount === 0) return 4;
     if (direction === 'right') return 10;
     if (direction === 'down') return 15;
     if (direction === 'left') return 21;
     if (direction === 'up') return 27;
-    if (direction === 'done') return 30;
+    if (direction === 'done' || explanation.includes('complete')) return 30;
+    if (explanation.includes('right') || explanation.includes('→')) return 10;
+    if (explanation.includes('down') || explanation.includes('↓')) return 15;
+    if (explanation.includes('left') || explanation.includes('←')) return 21;
+    if (explanation.includes('up') || explanation.includes('↑')) return 27;
+    return 4;
   }
 
   // 2K. Exact mappings for Transpose Matrix:
@@ -535,6 +517,317 @@ const guessActiveLine = (algoId, snap, codeLines) => {
     return 3;
   }
 
+  // ── SORTING ALGORITHMS ─────────────────────────────────────────────────────
+
+  if (algoId === 'selection-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initial') || explanation.includes('Selection Sort')) return 1;
+    if (explanation.includes('Finding minimum') || explanation.includes('Scanning')) return 3;
+    if (explanation.includes('minimum') && explanation.includes('found')) return 4;
+    if (explanation.includes('Swapping') || explanation.includes('swapped') || explanation.includes('swap')) return 8;
+    if (explanation.includes('already in place') || explanation.includes('no swap needed')) return 9;
+    if (explanation.includes('sorted') || explanation.includes('complete')) return 10;
+    return 3;
+  }
+
+  if (algoId === 'insertion-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initial') || explanation.includes('Insertion Sort')) return 1;
+    if (explanation.includes('Picking') || explanation.includes('key') && explanation.includes('index')) return 2;
+    if (explanation.includes('Shifting') || explanation.includes('shift') || explanation.includes('moving') || explanation.includes('move element')) return 4;
+    if (explanation.includes('Inserting') || explanation.includes('placed') || explanation.includes('insert key')) return 5;
+    if (explanation.includes('already') || explanation.includes('no shift')) return 6;
+    if (explanation.includes('sorted') || explanation.includes('complete')) return 7;
+    return 3;
+  }
+
+  if (algoId === 'merge-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initial') || explanation.includes('Merge Sort')) return 1;
+    if (explanation.includes('Splitting') || explanation.includes('split') || explanation.includes('divide') || explanation.includes('left half') || explanation.includes('right half')) return 5;
+    if (explanation.includes('Merging') || explanation.includes('merge') || explanation.includes('combining')) return 9;
+    if (explanation.includes('Comparing') || explanation.includes('compare')) return 11;
+    if (explanation.includes('Left element') || explanation.includes('placing left')) return 12;
+    if (explanation.includes('Right element') || explanation.includes('placing right')) return 13;
+    if (explanation.includes('Copying remaining left') || explanation.includes('remaining left')) return 15;
+    if (explanation.includes('Copying remaining right') || explanation.includes('remaining right')) return 17;
+    if (explanation.includes('sorted') || explanation.includes('complete')) return 18;
+    return 5;
+  }
+
+  if (algoId === 'quick-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initial') || explanation.includes('Quick Sort')) return 1;
+    if (explanation.includes('pivot') && (explanation.includes('Choosing') || explanation.includes('picked') || explanation.includes('selected'))) return 2;
+    if (explanation.includes('Partitioning') || explanation.includes('partition')) return 3;
+    if (explanation.includes('element') && (explanation.includes('less than') || explanation.includes('smaller') || explanation.includes('left of pivot'))) return 8;
+    if (explanation.includes('Swap') || explanation.includes('swapping') || explanation.includes('swapped')) return 11;
+    if (explanation.includes('Pivot placed') || explanation.includes('placed in position') || explanation.includes('pivot at index')) return 12;
+    if (explanation.includes('Recursing') || explanation.includes('Recurse') || explanation.includes('left sub') || explanation.includes('right sub')) return 14;
+    if (explanation.includes('sorted') || explanation.includes('complete')) return 15;
+    return 8;
+  }
+
+  if (algoId === 'heap-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Heap Sort')) return 1;
+    if (explanation.includes('Heapify') || explanation.includes('heapify')) return 3;
+    if (explanation.includes('largest') || explanation.includes('parent') && explanation.includes('children')) return 5;
+    if (explanation.includes('Swap root') || explanation.includes('Extracting max')) return 8;
+    if (explanation.includes('sorted') || explanation.includes('complete')) return 10;
+    return 3;
+  }
+
+  if (algoId === 'counting-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Counting Sort') || explanation.includes('Phase 1')) return 2;
+    if (explanation.includes('count[') && (explanation.includes('++') || explanation.includes('++'))) return 4;
+    if (explanation.includes('Phase 2') || explanation.includes('Prefix sum') || explanation.includes('Cumulative')) return 5;
+    if (explanation.includes('Phase 3') || explanation.includes('Placing') || explanation.includes('correct position')) return 6;
+    if (explanation.includes('output[') || explanation.includes('Placed at')) return 9;
+    if (explanation.includes('sorted') || explanation.includes('complete') || explanation.includes('Final')) return 10;
+    return 4;
+  }
+
+  if (algoId === 'bucket-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Bucket Sort') || explanation.includes('Initialize')) return 2;
+    if (explanation.includes('Distributing') || explanation.includes('bucket[') || explanation.includes('Assign')) return 4;
+    if (explanation.includes('Sorting bucket') || explanation.includes('sort each')) return 7;
+    if (explanation.includes('Collecting') || explanation.includes('concatenat') || explanation.includes('Appending from bucket')) return 11;
+    if (explanation.includes('sorted') || explanation.includes('complete')) return 12;
+    return 4;
+  }
+
+  if (algoId === 'radix-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Radix Sort') || explanation.includes('Initialize')) return 1;
+    if (explanation.includes('digit') || explanation.includes('Counting') || explanation.includes('place value')) return 3;
+    if (explanation.includes('sorted') || explanation.includes('complete')) return 6;
+    return 3;
+  }
+
+  if (algoId === 'shell-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Shell Sort') || explanation.includes('Initialize')) return 1;
+    if (explanation.includes('gap') && explanation.includes('reduced')) return 2;
+    if (explanation.includes('Comparing') || explanation.includes('compare') || explanation.includes('Inspecting')) return 5;
+    if (explanation.includes('Shift') || explanation.includes('shifting')) return 6;
+    if (explanation.includes('Inserted') || explanation.includes('placed') || explanation.includes('in position')) return 7;
+    if (explanation.includes('sorted') || explanation.includes('complete')) return 9;
+    return 5;
+  }
+
+  // ── SEARCH ALGORITHMS ─────────────────────────────────────────────────────
+
+  if (algoId === 'linear-search') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Linear Search') || explanation.includes('Initialize')) return 1;
+    if (explanation.includes('Checking') || explanation.includes('Compare') || explanation.includes('visiting index')) return 3;
+    if (explanation.includes('Found') || explanation.includes('match')) return 4;
+    if (explanation.includes('Not found') || explanation.includes('not found') || explanation.includes('exhausted')) return 5;
+    return 3;
+  }
+
+  if (algoId === 'ternary-search') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Ternary Search') || explanation.includes('Initialize')) return 1;
+    if (explanation.includes('mid1') || explanation.includes('mid2') || explanation.includes('Dividing')) return 3;
+    if (explanation.includes('Found at mid1') || explanation.includes('target is mid1')) return 5;
+    if (explanation.includes('Found at mid2') || explanation.includes('target is mid2')) return 6;
+    if (explanation.includes('target < arr[mid1]') || explanation.includes('search left third')) return 7;
+    if (explanation.includes('target > arr[mid2]') || explanation.includes('search right third')) return 9;
+    if (explanation.includes('search middle third')) return 11;
+    if (explanation.includes('Found') || explanation.includes('match')) return 7;
+    if (explanation.includes('Not found') || explanation.includes('not found')) return 12;
+    return 3;
+  }
+
+  // ── GRAPH ALGORITHMS ──────────────────────────────────────────────────────
+
+  if (algoId === 'floyd-warshall') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Floyd-Warshall') || explanation.includes('Initialize') || explanation.includes('All-pairs')) return 2;
+    if (explanation.includes('Intermediate') || explanation.includes('k=')) return 3;
+    if (explanation.includes('Check if going') || explanation.includes('trying intermediate')) return 4;
+    if (explanation.includes('Relax') || explanation.includes('Updated') || explanation.includes('shorter')) return 6;
+    if (explanation.includes('complete') || explanation.includes('done')) return 8;
+    return 4;
+  }
+
+  if (algoId === 'topological-sort') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Topological Sort') || explanation.includes('Initialize') || explanation.includes('in-degree')) return 2;
+    if (explanation.includes('queue') && (explanation.includes('enqueue') || explanation.includes('added') || explanation.includes('Push'))) return 4;
+    if (explanation.includes('Dequeue') || explanation.includes('Process node') || explanation.includes('Popped')) return 5;
+    if (explanation.includes('Decrement') || explanation.includes('neighbor') || explanation.includes('in-degree')) return 7;
+    if (explanation.includes('complete') || explanation.includes('sorted order') || explanation.includes('Result')) return 9;
+    return 5;
+  }
+
+  if (algoId === 'bellman-ford') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Bellman-Ford')) return 1;
+    if (explanation.includes('Relaxing') || explanation.includes('Relax edge')) return 4;
+    if (explanation.includes('Updated') || explanation.includes('shorter path')) return 5;
+    if (explanation.includes('Negative cycle') || explanation.includes('negative cycle')) return 7;
+    if (explanation.includes('complete') || explanation.includes('done')) return 8;
+    return 4;
+  }
+
+  // ── DP ALGORITHMS ─────────────────────────────────────────────────────────
+
+  if (algoId === 'coin-change-dp') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Base Case') || explanation.includes('dp[0] = 0')) return 2;
+    if (explanation.includes('Computing minimum') || explanation.includes('amount')) return 4;
+    if (explanation.includes('Checking') || explanation.includes('coin') && explanation.includes('option')) return 6;
+    if (explanation.includes('Using coin') || explanation.includes('Min coins')) return 7;
+    if (explanation.includes('Result') || explanation.includes('complete') || explanation.includes('minimum coins for')) return 8;
+    return 6;
+  }
+
+  if (algoId === 'kadane') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Kadane')) return 1;
+    if (explanation.includes('Visiting') || explanation.includes('Processing index') || explanation.includes('element')) return 3;
+    if (explanation.includes('current_sum') || explanation.includes('Extending') || explanation.includes('Add to')) return 4;
+    if (explanation.includes('Reset') || explanation.includes('Starting fresh') || explanation.includes('start new subarray')) return 5;
+    if (explanation.includes('Updated max') || explanation.includes('new max') || explanation.includes('max_sum')) return 6;
+    if (explanation.includes('complete') || explanation.includes('Maximum subarray')) return 7;
+    return 3;
+  }
+
+  if (algoId === 'trapping-rain-water') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Trapping Rain Water:') || explanation.includes('Two pointers')) return 2;
+    if (explanation.includes('process left') || explanation.includes('left pointer') || explanation.includes('h[l]')) return 5;
+    if (explanation.includes('lMax updated') || explanation.includes('lmax')) return 4;
+    if (explanation.includes('process right') || explanation.includes('right pointer') || explanation.includes('h[r]')) return 7;
+    if (explanation.includes('rMax updated') || explanation.includes('rmax')) return 6;
+    if (explanation.includes('Pointers met') || explanation.includes('complete') || explanation.includes('Total trapped')) return 8;
+    return 5;
+  }
+
+  if (algoId === 'lcs-dp') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('LCS')) return 2;
+    if (explanation.includes('Match') || explanation.includes('characters match')) return 5;
+    if (explanation.includes('No match') || explanation.includes('mismatch')) return 7;
+    if (explanation.includes('Result') || explanation.includes('complete')) return 9;
+    return 5;
+  }
+
+  // ── SLIDING WINDOW ────────────────────────────────────────────────────────
+
+  if (algoId === 'sliding-window') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('sliding window') && explanation.includes('size')) return 2;
+    if (explanation.includes('Window sliding') || explanation.includes('slide') || explanation.includes('Slide window')) return 4;
+    if (explanation.includes('window_sum') || explanation.includes('Add') || explanation.includes('remove element')) return 5;
+    if (explanation.includes('max_sum') || explanation.includes('Update max') || explanation.includes('new maximum')) return 6;
+    if (explanation.includes('complete') || explanation.includes('Max sum')) return 7;
+    return 4;
+  }
+
+  // ── LINKED LIST ───────────────────────────────────────────────────────────
+
+  if (algoId === 'linked-list-traversal') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Starting traversal')) return 2;
+    if (explanation.includes('pointer is at Node') || explanation.includes('Current pointer') || explanation.includes('Visiting Node')) return 3;
+    if (explanation.includes('Move to next') || explanation.includes('curr = curr.next') || explanation.includes('Advancing')) return 5;
+    if (explanation.includes('Reached end') || explanation.includes('null') || explanation.includes('complete')) return 6;
+    return 3;
+  }
+
+  if (algoId === 'cycle-detection') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Floyd') || explanation.includes('Tortoise')) return 2;
+    if (explanation.includes('Slow pointer') || explanation.includes('slow') && explanation.includes('fast')) return 3;
+    if (explanation.includes('slow = slow.next') || explanation.includes('Moving slow')) return 4;
+    if (explanation.includes('fast = fast.next') || explanation.includes('Moving fast')) return 5;
+    if (explanation.includes('met at') || explanation.includes('Cycle detected') || explanation.includes('slow == fast')) return 7;
+    if (explanation.includes('reached end') || explanation.includes('No cycle') || explanation.includes('null')) return 8;
+    return 3;
+  }
+
+  // ── STACK/QUEUE ──────────────────────────────────────────────────────────
+
+  if (algoId === 'balanced-parentheses') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('empty') && explanation.includes('stack')) return 2;
+    if (explanation.includes('opening bracket') || explanation.includes('open') && explanation.includes('push')) return 6;
+    if (explanation.includes('closing bracket') || explanation.includes('closing') && explanation.includes('bracket')) return 7;
+    if (explanation.includes('Match found') || explanation.includes('Popping') || explanation.includes('pop')) return 8;
+    if (explanation.includes('Mismatch') || explanation.includes('mismatch') || explanation.includes('unmatched')) return 9;
+    if (explanation.includes('Balanced') || explanation.includes('complete') || explanation.includes('All brackets')) return 10;
+    return 5;
+  }
+
+  // ── TREE ALGORITHMS ───────────────────────────────────────────────────────
+
+  if (algoId === 'bst-traversal') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Inorder') || explanation.includes('BST Traversal')) return 1;
+    if (explanation.includes('Visiting') || explanation.includes('Current node') || explanation.includes('Traversing')) return 3;
+    if (explanation.includes('left subtree') || explanation.includes('Go left')) return 4;
+    if (explanation.includes('right subtree') || explanation.includes('Go right')) return 7;
+    if (explanation.includes('visited') || explanation.includes('Output') || explanation.includes('Print')) return 5;
+    if (explanation.includes('null') || explanation.includes('Reached null') || explanation.includes('complete')) return 9;
+    return 3;
+  }
+
+  if (algoId === 'level-order-traversal') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Level-order') || explanation.includes('BFS')) return 2;
+    if (explanation.includes('Dequeue') || explanation.includes('Visiting node') || explanation.includes('Dequeued node')) return 5;
+    if (explanation.includes('Enqueue') || explanation.includes('Adding') || explanation.includes('left child') || explanation.includes('right child')) return 9;
+    if (explanation.includes('complete') || explanation.includes('Traversal done')) return 11;
+    return 5;
+  }
+
+  // ── RECURSION/BACKTRACKING ───────────────────────────────────────────────
+
+  if (algoId === 'fibonacci-recursion') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Base Case') || explanation.includes('fib(0)') || explanation.includes('fib(1)')) return 2;
+    if (explanation.includes('Calling') || explanation.includes('Computing') || explanation.includes('Compute Fibonacci')) return 2;
+    if (explanation.includes('Returning from') || explanation.includes('combines') || explanation.includes('= fib(')) return 3;
+    return 2;
+  }
+
+  if (algoId === 'tower-of-hanoi') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Tower of Hanoi')) return 1;
+    if (explanation.includes('disk 1') || (explanation.includes('n == 1') || explanation.includes('base'))) return 3;
+    if (explanation.includes('Moving disk') && !explanation.includes('disk 1')) return 6;
+    if (explanation.includes('sub-call') || explanation.includes('Recursive') || explanation.includes('Move smaller')) return 5;
+    if (explanation.includes('complete') || explanation.includes('successfully')) return 7;
+    return 3;
+  }
+
+  if (algoId === 'n-queens') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('N Queens') || explanation.includes('empty chessboard')) return 2;
+    if (explanation.includes('Testing') || explanation.includes('checking position') || explanation.includes('Check row') || explanation.includes('Is safe')) return 4;
+    if (explanation.includes('Position Safe') || explanation.includes('Locking Queen') || explanation.includes('Placing Queen')) return 10;
+    if (explanation.includes('Under Attack') || explanation.includes('Cannot place') || explanation.includes('unsafe') || explanation.includes('conflict')) return 6;
+    if (explanation.includes('Backtrack') || explanation.includes('removing queen') || explanation.includes('backtrack')) return 12;
+    if (explanation.includes('Solution found') || explanation.includes('complete') || explanation.includes('All queens')) return 13;
+    return 4;
+  }
+
+  if (algoId === 'sudoku-solver') {
+    const explanation = snap.explanation || '';
+    if (explanation.includes('Initialize') || explanation.includes('Sudoku')) return 1;
+    if (explanation.includes('Trying number') && explanation.includes('VALID')) return 9;
+    if (explanation.includes('Trying number') && explanation.includes('INVALID')) return 8;
+    if (explanation.includes('Backtracking') || explanation.includes('removing value') || explanation.includes('backtrack')) return 11;
+    if (explanation.includes('solved') || explanation.includes('complete')) return 10;
+    return 8;
+  }
+
   // 3. Fallback: Scoring-based heuristic mapping for all other algorithms
   const isInitial = explanation.includes('initial') || 
                     explanation.includes('start') || 
@@ -798,13 +1091,25 @@ const guessActiveLine = (algoId, snap, codeLines) => {
 
 const CodePanel = ({ algorithm }) => {
   const [copied, setCopied] = useState(false);
+  const [mazeDir, setMazeDir] = useState(2); // 2 or 4 directions for rat-in-a-maze
   const { currentStep, steps } = useVisualizer();
 
   if (!algorithm) return null;
 
-  const currentSnap = steps[currentStep] || {};
-  const codeContent = algorithm.code?.python || '# Code snippet not available';
+  const isRatMaze = algorithm.id === 'rat-in-a-maze';
+
+  // Pick the right code variant
+  let codeContent;
+  if (isRatMaze) {
+    codeContent = mazeDir === 2
+      ? (algorithm.code?.python2dir || algorithm.code?.python || '# Code not available')
+      : (algorithm.code?.python4dir || algorithm.code?.python || '# Code not available');
+  } else {
+    codeContent = algorithm.code?.python || '# Code snippet not available';
+  }
+
   const codeLines = codeContent.split('\n');
+  const currentSnap = steps[currentStep] || {};
 
   let activeLine = currentSnap.activeLine;
   if (activeLine === undefined) {
@@ -825,14 +1130,57 @@ const CodePanel = ({ algorithm }) => {
           <Terminal className="w-4 h-4 text-primary" />
           <span>Python Implementation</span>
         </div>
-        <button
-          onClick={handleCopy}
-          className="p-2 rounded-full hover:bg-primary/10 text-text-secondary hover:text-primary transition-all cursor-pointer"
-          title="Copy Code"
-        >
-          {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Direction toggle — only for Rat in a Maze */}
+          {isRatMaze && (
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-full p-0.5 border border-slate-200 dark:border-slate-700">
+              <button
+                onClick={() => setMazeDir(2)}
+                title="2-Direction: Right & Down only"
+                className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all duration-200 cursor-pointer ${
+                  mazeDir === 2
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-text-secondary hover:text-primary'
+                }`}
+              >
+                2-Dir
+              </button>
+              <button
+                onClick={() => setMazeDir(4)}
+                title="4-Direction: Right, Down, Left & Up"
+                className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all duration-200 cursor-pointer ${
+                  mazeDir === 4
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-text-secondary hover:text-primary'
+                }`}
+              >
+                4-Dir
+              </button>
+            </div>
+          )}
+          <button
+            onClick={handleCopy}
+            className="p-2 rounded-full hover:bg-primary/10 text-text-secondary hover:text-primary transition-all cursor-pointer"
+            title="Copy Code"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
+
+      {/* Direction label badge for rat-in-maze */}
+      {isRatMaze && (
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full ${
+            mazeDir === 2
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+              : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
+          }`}>
+            <span>{mazeDir === 2 ? '→↓' : '→↓←↑'}</span>
+            <span>{mazeDir === 2 ? '2 Directions (Right + Down)' : '4 Directions (Right + Down + Left + Up)'}</span>
+          </span>
+        </div>
+      )}
 
       {/* Code viewport terminal style */}
       <div className="relative led-bg rounded-2xl p-4 font-mono text-xs overflow-x-auto shadow-inner text-left max-h-[360px] overflow-y-auto border border-white/20 dark:border-transparent">
@@ -876,3 +1224,4 @@ const CodePanel = ({ algorithm }) => {
 };
 
 export default CodePanel;
+
