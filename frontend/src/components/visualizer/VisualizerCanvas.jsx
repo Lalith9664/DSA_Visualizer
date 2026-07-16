@@ -9,13 +9,13 @@ const VisualizerCanvas = ({
   isExpanded,
   onToggleExpand,
 }) => {
-  const { currentStep, steps } = useVisualizer();
+  const { currentStep, steps, theme } = useVisualizer();
 
   const getCanvasContent = () => {
     if (loading || !algorithm) {
       return (
         <div
-          className={`w-full flex flex-col items-center justify-center relative overflow-hidden bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-800 ${isExpanded ? "h-full" : "min-h-[320px] h-80"}`}
+          className={`w-full flex flex-col items-center justify-center relative overflow-hidden bg-white/80 dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 ${isExpanded ? "h-full" : "min-h-[320px] h-80"}`}
         >
           <div className="skeuo-screen-overlay absolute inset-0 z-0 opacity-30" />
           <div className="relative z-10 flex flex-col items-center gap-4">
@@ -23,17 +23,17 @@ const VisualizerCanvas = ({
               {/* Pulsing outer glow */}
               <div className="absolute inset-0 rounded-full bg-purple-500/20 animate-ping" />
               {/* Spinning gradient ring */}
-              <div className="absolute inset-0 rounded-full border-4 border-slate-800" />
+              <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800" />
               <div
                 className="absolute inset-0 rounded-full border-4 border-t-purple-500 border-r-cyan-500 animate-spin"
                 style={{ animationDuration: "0.9s" }}
               />
             </div>
             <div className="flex flex-col items-center gap-1 mt-2">
-              <span className="text-xs font-semibold tracking-widest text-slate-300 font-mono animate-pulse uppercase">
+              <span className="text-xs font-semibold tracking-widest text-slate-700 dark:text-slate-300 font-mono animate-pulse uppercase">
                 Initializing Engine
               </span>
-              <span className="text-[9px] font-bold text-slate-500 font-mono tracking-widest uppercase mt-0.5">
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 font-mono tracking-widest uppercase mt-0.5">
                 DSA Visualizer Console
               </span>
             </div>
@@ -45,18 +45,18 @@ const VisualizerCanvas = ({
     if (steps.length === 0) {
       return (
         <div
-          className={`w-full flex flex-col items-center justify-center relative overflow-hidden bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-800 ${isExpanded ? "h-full" : "min-h-[320px] h-80"}`}
+          className={`w-full flex flex-col items-center justify-center relative overflow-hidden bg-white/80 dark:bg-slate-950/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 ${isExpanded ? "h-full" : "min-h-[320px] h-80"}`}
         >
           <div className="skeuo-screen-overlay absolute inset-0 z-0 opacity-30" />
           <div className="relative z-10 flex flex-col items-center gap-2">
-            <div className="w-12 h-12 rounded-full border border-dashed border-slate-700 flex items-center justify-center text-slate-500/60 animate-pulse bg-slate-900/40">
+            <div className="w-12 h-12 rounded-full border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400/60 dark:text-slate-500/60 animate-pulse bg-slate-100/40 dark:bg-slate-900/40">
               <Play className="w-5 h-5 opacity-40" />
             </div>
             <div className="flex flex-col items-center gap-1 mt-2">
-              <span className="text-xs font-semibold tracking-widest text-slate-400 font-mono uppercase">
+              <span className="text-xs font-semibold tracking-widest text-slate-600 dark:text-slate-400 font-mono uppercase">
                 Canvas Cleared
               </span>
-              <span className="text-[9px] font-bold text-slate-600 font-mono tracking-widest uppercase mt-0.5">
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-600 font-mono tracking-widest uppercase mt-0.5">
                 Enter input to begin visualization
               </span>
             </div>
@@ -3341,124 +3341,163 @@ const VisualizerCanvas = ({
     });
 
     return (
-      <div className="w-full h-72 relative">
-        <svg className="w-full h-full absolute inset-0 z-0">
-          <defs>
-            <marker
-              id="arrow"
-              viewBox="0 0 10 10"
-              refX="20"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569" />
-            </marker>
-          </defs>
+      <div 
+        className="w-full min-h-[340px] flex flex-col justify-between items-center gap-4 p-6 font-sans text-left relative overflow-hidden bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-3xl select-none"
+        style={{
+          boxShadow: theme === "light" 
+            ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
+            : "10px 10px 25px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255, 255, 255, 0.05)"
+        }}
+      >
+        {/* Top Header */}
+        <div className="w-full flex items-center justify-between z-10 px-1">
+          <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+            Graph Network Topology
+          </span>
+          <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 uppercase font-mono tracking-wider">
+            {activeNode !== null ? `Active Node: ${activeNode}` : "Idle"}
+          </span>
+        </div>
 
-          {/* Draw connecting weight edges */}
-          {rawEdges.map((edge, idx) => {
-            const uCoord = nodeCoords[edge.u];
-            const vCoord = nodeCoords[edge.v];
-            if (!uCoord || !vCoord) return null;
+        {/* Graph Area */}
+        <div className="w-full h-64 relative flex-grow">
+          <svg className="w-full h-full absolute inset-0 z-0">
+            <style>{`
+              @keyframes graphFlow {
+                to {
+                  stroke-dashoffset: -20;
+                }
+              }
+              .edge-flow-active {
+                stroke-dasharray: 6 3;
+                animation: graphFlow 1s linear infinite;
+              }
+            `}</style>
+            <defs>
+              <marker
+                id="arrow"
+                viewBox="0 0 10 10"
+                refX="22"
+                refY="5"
+                markerWidth="5"
+                markerHeight="5"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" fill={theme === "light" ? "#94a3b8" : "#334155"} />
+              </marker>
+            </defs>
 
-            const isActiveEdge =
-              edge.active ||
-              (relaxingEdge &&
-                ((relaxingEdge.u === edge.u && relaxingEdge.v === edge.v) ||
-                  (relaxingEdge.u === edge.v && relaxingEdge.v === edge.u)));
-            const isMstEdge = edge.visited;
+            {/* Draw connecting weight edges */}
+            {rawEdges.map((edge, idx) => {
+              const uCoord = nodeCoords[edge.u];
+              const vCoord = nodeCoords[edge.v];
+              if (!uCoord || !vCoord) return null;
 
-            let strokeColor = "#475569";
-            let strokeWidth = "1.5";
-            let className = "";
+              const isActiveEdge =
+                edge.active ||
+                (relaxingEdge &&
+                  ((relaxingEdge.u === edge.u && relaxingEdge.v === edge.v) ||
+                    (relaxingEdge.u === edge.v && relaxingEdge.v === edge.u)));
+              const isMstEdge = edge.visited;
 
-            if (isActiveEdge) {
-              strokeColor = "#06b6d4";
-              strokeWidth = "3";
-              className = "animate-pulse";
-            } else if (isMstEdge) {
-              strokeColor = "#10b981"; // Green for MST
-              strokeWidth = "3";
-            }
+              let strokeColor = theme === "light" ? "rgba(203, 213, 225, 0.8)" : "rgba(51, 65, 85, 0.5)"; // Sleek slate
+              let strokeWidth = "1.5";
+              let className = "";
+
+              if (isActiveEdge) {
+                strokeColor = "#06b6d4"; // Vibrant Cyan
+                strokeWidth = "2.5";
+                className = "edge-flow-active";
+              } else if (isMstEdge) {
+                strokeColor = "#10b981"; // Vibrant Emerald
+                strokeWidth = "2.5";
+              }
+
+              return (
+                <g key={idx}>
+                  <line
+                    x1={`${uCoord.x}%`}
+                    y1={uCoord.y}
+                    x2={`${vCoord.x}%`}
+                    y2={vCoord.y}
+                    stroke={strokeColor}
+                    strokeWidth={strokeWidth}
+                    className={className}
+                  />
+                  {/* Weight Text Label with beautiful background badge */}
+                  {edge.w !== undefined && edge.w !== "" && (
+                    <g>
+                      <rect
+                        x={`${(uCoord.x + vCoord.x) / 2}%`}
+                        y={(uCoord.y + vCoord.y) / 2 - 11}
+                        transform="translate(-14, 0)"
+                        width="28"
+                        height="14"
+                        rx="6"
+                        fill={theme === "light" ? "#ffffff" : "#020617"} // Space background
+                        stroke={isActiveEdge ? "rgba(6, 182, 212, 0.4)" : isMstEdge ? "rgba(16, 185, 129, 0.4)" : theme === "light" ? "rgba(203, 213, 225, 0.8)" : "rgba(51, 65, 85, 0.4)"}
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={`${(uCoord.x + vCoord.x) / 2}%`}
+                        y={(uCoord.y + vCoord.y) / 2 - 1}
+                        textAnchor="middle"
+                        fill={isActiveEdge ? "#06b6d4" : isMstEdge ? "#10b981" : "#64748b"}
+                        className="font-mono text-[9px] font-black"
+                      >
+                        w:{edge.w}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* Nodes */}
+          {rawNodes.map((node) => {
+            const coord = nodeCoords[node];
+            if (!coord) return null;
+
+            const isActive = activeNode === node;
+            const isVisited = visited[node];
+            const nodeDist = dist[node] === Infinity ? "∞" : dist[node];
+            const label =
+              nodeLabels[node] !== undefined ? nodeLabels[node] : node;
+
+            let nodeClass = "bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 shadow-[0_4px_6px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.3)] hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white";
+            if (isActive)
+              nodeClass =
+                "bg-gradient-to-b from-cyan-500 to-blue-600 border-cyan-300 text-white shadow-[0_0_20px_rgba(6,182,212,0.6),inset_0_1px_2px_rgba(255,255,255,0.2)] scale-110";
+            else if (isVisited)
+              nodeClass =
+                "bg-gradient-to-b from-emerald-500 to-teal-600 border-emerald-300 text-white shadow-[0_0_20px_rgba(16,185,129,0.5),inset_0_1px_2px_rgba(255,255,255,0.2)]";
 
             return (
-              <g key={idx}>
-                <line
-                  x1={`${uCoord.x}%`}
-                  y1={uCoord.y}
-                  x2={`${vCoord.x}%`}
-                  y2={vCoord.y}
-                  stroke={strokeColor}
-                  strokeWidth={strokeWidth}
-                  className={className}
-                />
-                {/* Weight Text Label */}
-                {edge.w !== undefined && edge.w !== "" && (
-                  <text
-                    x={`${(uCoord.x + vCoord.x) / 2}%`}
-                    y={(uCoord.y + vCoord.y) / 2 - 6}
-                    fill={
-                      isActiveEdge
-                        ? "#06b6d4"
-                        : isMstEdge
-                          ? "#10b981"
-                          : "#94a3b8"
-                    }
-                    className="font-mono text-[9px] font-bold text-center"
+              <div
+                key={node}
+                style={{
+                  left: `${coord.x}%`,
+                  top: `${coord.y}px`,
+                  transform: "translate(-50%, -50%)",
+                }}
+                className={`
+                  absolute w-12 h-12 rounded-full border flex flex-col items-center justify-center font-sans font-bold z-10 transition-all duration-300 backdrop-blur-sm
+                  ${nodeClass}
+                `}
+              >
+                <span className="text-xs font-black tracking-wide leading-none">{label}</span>
+                {hasDist && (
+                  <span
+                    className={`text-[8px] font-black tracking-wider leading-none mt-1 font-mono uppercase ${isActive || isVisited ? "text-cyan-100" : "text-slate-500"}`}
                   >
-                    w:{edge.w}
-                  </text>
+                    d:{nodeDist}
+                  </span>
                 )}
-              </g>
+              </div>
             );
           })}
-        </svg>
-
-        {/* Nodes */}
-        {rawNodes.map((node) => {
-          const coord = nodeCoords[node];
-          if (!coord) return null;
-
-          const isActive = activeNode === node;
-          const isVisited = visited[node];
-          const nodeDist = dist[node] === Infinity ? "∞" : dist[node];
-          const label =
-            nodeLabels[node] !== undefined ? nodeLabels[node] : node;
-
-          let nodeClass = "bg-slate-800 border-slate-700 text-slate-400";
-          if (isActive)
-            nodeClass =
-              "bg-purple-600 border-purple-400 shadow-[0_0_10px_#8b5cf6] text-white";
-          else if (isVisited)
-            nodeClass =
-              "bg-emerald-600 border-emerald-500 shadow-[0_0_10px_#10b981] text-white";
-
-          return (
-            <div
-              key={node}
-              style={{
-                left: `${coord.x}%`,
-                top: `${coord.y}px`,
-                transform: "translate(-50%, -50%)",
-              }}
-              className={`
-                absolute min-w-10 px-2 h-10 rounded-full border-2 flex flex-col items-center justify-center font-mono font-bold z-10 transition-all duration-300
-                ${nodeClass}
-              `}
-            >
-              <span className="text-xs">{label}</span>
-              {hasDist && (
-                <span
-                  className={`text-[9px] font-bold leading-none mt-0.5 ${isActive || isVisited ? "text-white/90" : "text-slate-400"}`}
-                >
-                  d:{nodeDist}
-                </span>
-              )}
-            </div>
-          );
-        })}
+        </div>
       </div>
     );
   };
@@ -3477,14 +3516,15 @@ const VisualizerCanvas = ({
 
     return (
       <div
-        className="w-full min-h-[360px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl"
+        className="w-full min-h-[360px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl"
         style={{
-          boxShadow:
-            "10px 10px 25px rgba(0, 0, 0, 0.5), inset 4px 4px 10px rgba(255, 255, 255, 0.05), inset -4px -4px 10px rgba(0, 0, 0, 0.5)",
+          boxShadow: theme === "light"
+            ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
+            : "10px 10px 25px rgba(0, 0, 0, 0.5), inset 4px 4px 10px rgba(255, 255, 255, 0.05), inset -4px -4px 10px rgba(0, 0, 0, 0.5)",
         }}
       >
         <div className="w-full flex items-center justify-between z-10">
-          <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase">
+          <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
             {isFactorial
               ? "Linear Factorial Call Stack"
               : "Binary Recursion Tree"}
@@ -4682,6 +4722,99 @@ const VisualizerCanvas = ({
     );
   };
 
+  const renderXorAccumulatorCanvas = (isSingleNumber) => {
+    const arr = isSingleNumber
+      ? (Array.isArray(data) ? data : [])
+      : (data?.arr || []);
+    
+    const currentIdx = isSingleNumber
+      ? (currentSnap.bitState?.currentIdx ?? -1)
+      : (data?.index ?? -1);
+    
+    const xorSum = isSingleNumber
+      ? (currentSnap.bitState?.xorSum ?? 0)
+      : (data?.result ?? 0);
+
+    const currentVal = (currentIdx >= 0 && currentIdx < arr.length) ? arr[currentIdx] : null;
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
+        <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-1">
+          {isSingleNumber ? "Single Number (XOR Accumulator)" : "Cumulative XOR Operations"}
+        </span>
+
+        {/* Array horizontal display */}
+        <div className="flex gap-2 items-center justify-center flex-wrap max-w-xl mb-2">
+          {arr.map((val, idx) => {
+            const isCurrent = idx === currentIdx;
+            const isProcessed = idx < currentIdx;
+            return (
+              <div
+                key={idx}
+                className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center border font-mono transition-all duration-300 ${
+                  isCurrent
+                    ? "bg-primary/20 border-primary text-primary scale-110 shadow-md font-black"
+                    : isProcessed
+                      ? "bg-slate-100 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-text-secondary opacity-40"
+                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-text-primary dark:text-[#F4F7FE]"
+                }`}
+              >
+                <span className="text-xs font-extrabold">{val}</span>
+                <span className="text-[7px] text-slate-400 select-none">idx:{idx}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Bit calculations block */}
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
+          {renderBitRow('XOR Accumulator', xorSum, 'text-green-500')}
+          {currentVal !== null && renderBitRow('Current Element', currentVal, 'text-accent')}
+          
+          {currentVal !== null && (
+            <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
+              <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary">
+                ^ (XOR)
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCountSetBitsCanvas = () => {
+    const { num, count } = data || {};
+    const isDone = currentSnap.highlights?.done;
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
+        <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
+          Brian Kernighan's Set Bits Count
+        </span>
+        
+        <div className="flex flex-col gap-3 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-lg items-center">
+          {renderBitRow('Current n', num, 'text-accent', 16)}
+          
+          <div className="w-full max-w-md h-px bg-slate-200 dark:bg-slate-800/60 my-2" />
+          
+          <div className="flex justify-between items-center text-xs font-bold w-full max-w-md px-1.5">
+            <span className="text-slate-500">Set Bits Count:</span>
+            <span className="font-mono bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-3 py-1 rounded-full font-black text-sm">
+              {count}
+            </span>
+          </div>
+
+          {isDone && (
+            <div className="text-xs text-green-500 font-bold text-center py-2 bg-green-500/10 rounded-xl border border-green-500/20 w-full max-w-md mt-2">
+              🎉 Finished! Total set bits = {count}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderBitValueCanvas = () => {
     const { n, nMinusOne, andResult } = data || {};
     const { isPower } = currentSnap.bitState || {};
@@ -4730,12 +4863,15 @@ const VisualizerCanvas = ({
 
   const renderBitRow = (label, value, colorClass, width = 8) => {
     const binary = (value ?? 0).toString(2).padStart(width, '0').slice(-width);
+    const boxSize = width <= 8 ? 'w-7 h-7 text-xs' : 'w-5 h-5 sm:w-6 sm:h-6 text-[10px]';
+    const gapClass = width <= 8 ? 'gap-1' : 'gap-0.5 sm:gap-1';
+    
     return (
-      <div className="flex items-center justify-between gap-4 w-full max-w-sm">
-        <span className="w-20 text-xs font-extrabold text-text-secondary text-right uppercase tracking-wider select-none">{label}:</span>
-        <div className="flex gap-1">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 w-full">
+        <span className="w-full sm:w-32 text-center sm:text-right text-xs font-extrabold text-text-secondary uppercase tracking-wider select-none">{label}:</span>
+        <div className={`flex ${gapClass} flex-nowrap justify-center`}>
           {binary.split('').map((bit, idx) => (
-            <span key={idx} className={`w-7 h-7 rounded-md flex items-center justify-center font-black text-xs border transition-all duration-300 shadow-sm ${
+            <span key={idx} className={`${boxSize} rounded-md flex items-center justify-center font-black border transition-all duration-300 shadow-sm flex-shrink-0 ${
               bit === '1'
                 ? 'bg-primary/20 border-primary/40 text-primary dark:text-purple-300 dark:bg-purple-900/30'
                 : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60'
@@ -4744,7 +4880,7 @@ const VisualizerCanvas = ({
             </span>
           ))}
         </div>
-        <span className={`w-12 text-xs font-mono font-black text-left ${colorClass}`}>({value})</span>
+        <span className={`w-16 text-center sm:text-left text-xs font-mono font-black ${colorClass}`}>({value})</span>
       </div>
     );
   };
@@ -4759,11 +4895,11 @@ const VisualizerCanvas = ({
           Bitwise {operation} Operation
         </span>
         
-        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
           {renderBitRow('Number n', n, 'text-accent')}
           {renderBitRow('Mask', mask, 'text-purple-400')}
           
-          <div className="w-full max-w-sm h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
+          <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
             <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary uppercase">
               {operation === 'AND' ? '& (AND)' : operation === 'OR' ? '| (OR)' : '^ (XOR)'}
             </span>
@@ -4772,7 +4908,7 @@ const VisualizerCanvas = ({
           {phase === 'done' ? (
             renderBitRow('Result', result, 'text-green-500')
           ) : (
-            <div className="flex items-center justify-between gap-4 w-full max-w-sm h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
+            <div className="flex items-center justify-between gap-4 w-full max-w-lg h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
               Click next to apply {operation}...
             </div>
           )}
@@ -4791,10 +4927,10 @@ const VisualizerCanvas = ({
           Bitwise NOT Operation
         </span>
         
-        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
           {renderBitRow('Number n', n, 'text-accent')}
           
-          <div className="w-full max-w-sm h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
+          <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
             <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary">
               ~ (NOT)
             </span>
@@ -4803,7 +4939,7 @@ const VisualizerCanvas = ({
           {phase === 'done' ? (
             renderBitRow('~n Result', result & 0xff, 'text-green-500')
           ) : (
-            <div className="flex items-center justify-between gap-4 w-full max-w-sm h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
+            <div className="flex items-center justify-between gap-4 w-full max-w-lg h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
               Click next to invert bits...
             </div>
           )}
@@ -4822,20 +4958,20 @@ const VisualizerCanvas = ({
           Bitwise {operation === 'LEFT_SHIFT' ? 'Left Shift' : 'Right Shift'}
         </span>
         
-        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
           {renderBitRow('Number n', n, 'text-accent')}
           
-          <div className="flex justify-between w-full max-w-sm px-1.5 text-xs font-bold text-text-secondary">
+          <div className="flex justify-between w-full max-w-lg px-1.5 text-xs font-bold text-text-secondary">
             <span>Shift Positions:</span>
             <span className="text-primary font-mono">{shift} places ({operation === 'LEFT_SHIFT' ? '<<' : '>>'})</span>
           </div>
           
-          <div className="w-full max-w-sm h-px bg-slate-200 dark:bg-slate-800/60 my-1" />
+          <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1" />
           
           {phase === 'done' ? (
             renderBitRow('Result', result, 'text-green-500', operation === 'LEFT_SHIFT' ? 12 : 8)
           ) : (
-            <div className="flex items-center justify-between gap-4 w-full max-w-sm h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
+            <div className="flex items-center justify-between gap-4 w-full max-w-lg h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
               Click next to shift bits...
             </div>
           )}
@@ -4854,13 +4990,13 @@ const VisualizerCanvas = ({
           Binary to Gray Code Conversion
         </span>
         
-        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+        <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
           {renderBitRow('n (Binary)', n, 'text-accent')}
           
           {phase !== 'init' && renderBitRow('n >> 1', shifted, 'text-purple-400')}
           
           {phase !== 'init' && (
-            <div className="w-full max-w-sm h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
+            <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
               <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary">
                 ^ (XOR)
               </span>
@@ -4870,7 +5006,7 @@ const VisualizerCanvas = ({
           {phase === 'done' ? (
             renderBitRow('Gray Code', result, 'text-green-500')
           ) : (
-            <div className="flex items-center justify-between gap-4 w-full max-w-sm h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16 animate-pulse">
+            <div className="flex items-center justify-between gap-4 w-full max-w-lg h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16 animate-pulse">
               {phase === 'init' ? 'Click next to shift...' : 'Click next to XOR...'}
             </div>
           )}
@@ -4888,11 +5024,11 @@ const VisualizerCanvas = ({
           Bitmasking operations: Get, Set, Clear
         </span>
         
-        <div className="flex flex-col gap-3 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-md items-center">
+        <div className="flex flex-col gap-3 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
           {renderBitRow('Number n', n, 'text-accent')}
           
           {operation !== 'init' && (
-            <div className="w-full max-w-sm flex flex-col gap-2 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-3">
+            <div className="w-full max-w-lg flex flex-col gap-2 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-3">
               <div className="flex justify-between items-center text-xs font-bold text-text-secondary">
                 <span>Operation:</span>
                 <span className="text-primary font-mono uppercase tracking-wider">{operation} Bit at position {bitIdx}</span>
@@ -4903,7 +5039,7 @@ const VisualizerCanvas = ({
               <div className="w-full h-px bg-slate-200 dark:bg-slate-800/60 my-1" />
               
               {operation === 'get' ? (
-                <div className="flex justify-between items-center text-xs font-bold w-full max-w-sm px-1">
+                <div className="flex justify-between items-center text-xs font-bold w-full max-w-lg px-1">
                   <span className="text-emerald-600 dark:text-emerald-400">Bit is Set?</span>
                   <span className="font-mono bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full font-black">
                     {val === 1 ? 'YES (1)' : 'NO (0)'}
@@ -9003,7 +9139,9 @@ const VisualizerCanvas = ({
     if (resolvedId === "bellman-ford") return renderBellmanFordCanvas();
     if (resolvedId === "floyd-warshall") return renderFloydWarshallCanvas();
     if (resolvedId === "pascal-triangle") return renderPascalTriangleCanvas();
-    if (resolvedId === "count-set-bits") return renderBitValueCanvas();
+    if (resolvedId === "single-number") return renderXorAccumulatorCanvas(true);
+    if (resolvedId === "xor-operations") return renderXorAccumulatorCanvas(false);
+    if (resolvedId === "count-set-bits") return renderCountSetBitsCanvas();
     if (resolvedId === "bitmask-and" || resolvedId === "bitmask-or" || resolvedId === "bitmask-xor") return renderBitwiseOpCanvas();
     if (resolvedId === "bitmask-not") return renderBitwiseNotCanvas();
     if (resolvedId === "bit-left-shift" || resolvedId === "bit-right-shift") return renderBitwiseShiftCanvas();

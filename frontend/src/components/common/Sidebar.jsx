@@ -58,6 +58,7 @@ const DATA_STRUCTURES_CATEGORIES = [
   "queue",
   "hashing",
   "trees",
+  "heaps",
   "graphs",
   "monotonic",
   "union-find",

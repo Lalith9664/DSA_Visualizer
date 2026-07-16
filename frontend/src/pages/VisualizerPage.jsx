@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useVisualizer } from "../context/VisualizerContext";
 import { ALGORITHMS, CATEGORIES, COUNTERPARTS } from "../data/algorithmsData";
+import { traceExecutionPointer } from "../utils/debuggerTracer";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import ControlPanel from "../components/visualizer/ControlPanel";
@@ -1601,13 +1602,13 @@ const VisualizerPage = () => {
           computedSteps = fractionalKnapsackSteps(combined);
         } else if (algo.inputType === "bit-value") {
           if (algo.id === "count-set-bits") {
-            computedSteps = countSetBitsSteps(parseInt(rawInput) || 13);
+            computedSteps = countSetBitsSteps(parseInt(rawInput));
           } else if (
             algo.id === "gray-code" ||
             algo.id === "gray-code-concept" ||
             algo.id === "bit-gray-code"
           ) {
-            computedSteps = bitGrayCodeSteps(parseInt(rawInput) || 10);
+            computedSteps = bitGrayCodeSteps(parseInt(rawInput));
           } else if (algo.id === "bitmask-not") {
             computedSteps = bitmaskNotSteps(rawInput);
           } else if (algo.id === "bitmasking-concept") {
@@ -1747,7 +1748,7 @@ const VisualizerPage = () => {
       return computedSteps;
     })(resolvedAlgo);
 
-    setSteps(computedSteps);
+    setSteps(traceExecutionPointer(resolvedAlgo.id, resolvedAlgo.code?.python, computedSteps));
     if (autoPlay) {
       const startStep =
         baseStepsCount > 0 ? Math.max(0, baseStepsCount - 1) : 0;
@@ -2572,7 +2573,7 @@ const VisualizerPage = () => {
             <div className="flex-1 w-full flex items-center justify-center min-h-0 relative">
               <Suspense
                 fallback={
-                  <div className="skeuo-screen w-full flex items-center justify-center min-h-[320px] h-80 bg-slate-950/80 rounded-2xl border border-slate-800">
+                  <div className="skeuo-screen w-full flex items-center justify-center min-h-[320px] h-80 bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
                     <div className="animate-spin rounded-full h-10 w-10 border-4 border-t-purple-500 border-r-cyan-500 border-b-transparent border-l-transparent" />
                   </div>
                 }
@@ -2651,7 +2652,7 @@ const VisualizerPage = () => {
             {/* Main Visualizer screen */}
             <Suspense
               fallback={
-                <div className="skeuo-screen w-full flex items-center justify-center min-h-[320px] h-80 bg-slate-950/80 rounded-2xl border border-slate-800">
+                <div className="skeuo-screen w-full flex items-center justify-center min-h-[320px] h-80 bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
                   <div className="animate-spin rounded-full h-10 w-10 border-4 border-t-purple-500 border-r-cyan-500 border-b-transparent border-l-transparent" />
                 </div>
               }

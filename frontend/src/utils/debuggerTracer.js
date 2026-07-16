@@ -1,9 +1,227 @@
-import React, { useState } from 'react';
-import { Terminal, Copy, Check } from 'lucide-react';
-import { useVisualizer } from '../../context/VisualizerContext';
-import { guessActiveLine } from '../../utils/debuggerTracer';
+// Control flow analyzer and debugger tracer for Python execution pointer
 
-const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
+const parsePythonStructure = (codeContent) => {
+  const lines = codeContent.split('\n');
+  const statements = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const text = rawLine.trim();
+    if (!text || text.startsWith('#') || text.startsWith('"""') || text.startsWith("'''")) {
+      statements.push(null);
+      continue;
+    }
+    
+    const leadingSpaces = rawLine.match(/^\s*/)[0].length;
+    
+    let type = 'simple';
+    if (text.startsWith('def ')) type = 'def';
+    else if (text.startsWith('for ')) type = 'for';
+    else if (text.startsWith('while ')) type = 'while';
+    else if (text.startsWith('if ')) type = 'if';
+    else if (text.startsWith('elif ')) type = 'elif';
+    else if (text.startsWith('else:')) type = 'else';
+    else if (text.startsWith('return ') || text === 'return') type = 'return';
+    else if (text.startsWith('break ') || text === 'break') type = 'break';
+    else if (text.startsWith('continue ') || text === 'continue') type = 'continue';
+    
+    statements.push({
+      lineNum: i + 1,
+      indent: leadingSpaces,
+      text: text,
+      type: type
+    });
+  }
+  
+  // Build parent, sibling relationships
+  for (let i = 0; i < statements.length; i++) {
+    const stmt = statements[i];
+    if (!stmt) continue;
+    
+    let nextSibling = null;
+    for (let j = i + 1; j < statements.length; j++) {
+      const other = statements[j];
+      if (!other) continue;
+      if (other.indent < stmt.indent) {
+        break;
+      }
+      if (other.indent === stmt.indent) {
+        nextSibling = other;
+        break;
+      }
+    }
+    stmt.nextSibling = nextSibling;
+    
+    let parent = null;
+    for (let j = i - 1; j >= 0; j--) {
+      const other = statements[j];
+      if (!other) continue;
+      if (other.indent < stmt.indent) {
+        parent = other;
+        break;
+      }
+    }
+    stmt.parent = parent;
+  }
+  
+  return statements;
+};
+
+const getNextTransitions = (stmt, statements) => {
+  const transitions = [];
+  if (!stmt) return transitions;
+  
+  const indent = stmt.indent;
+  const lineNum = stmt.lineNum;
+  
+  if (stmt.type === 'return') {
+    statements.forEach(other => {
+      if (other && other.type === 'def') {
+        transitions.push(other.lineNum);
+      }
+    });
+    return transitions;
+  }
+  
+  if (stmt.type === 'break') {
+    let current = stmt.parent;
+    while (current && current.type !== 'for' && current.type !== 'while') {
+      current = current.parent;
+    }
+    if (current && current.nextSibling) {
+      transitions.push(current.nextSibling.lineNum);
+    } else if (current && current.parent) {
+      const loopParent = current.parent;
+      if (loopParent.type === 'for' || loopParent.type === 'while') {
+        transitions.push(loopParent.lineNum);
+      } else if (loopParent.nextSibling) {
+        transitions.push(loopParent.nextSibling.lineNum);
+      }
+    }
+    return transitions;
+  }
+  
+  if (stmt.type === 'continue') {
+    let current = stmt.parent;
+    while (current && current.type !== 'for' && current.type !== 'while') {
+      current = current.parent;
+    }
+    if (current) {
+      transitions.push(current.lineNum);
+    }
+    return transitions;
+  }
+  
+  if (stmt.type === 'for' || stmt.type === 'while') {
+    let firstBodyStmt = null;
+    for (let i = stmt.lineNum; i < statements.length; i++) {
+      const other = statements[i];
+      if (other && other.indent > indent) {
+        firstBodyStmt = other;
+        break;
+      }
+    }
+    if (firstBodyStmt) {
+      transitions.push(firstBodyStmt.lineNum);
+    }
+    
+    if (stmt.nextSibling) {
+      transitions.push(stmt.nextSibling.lineNum);
+    } else if (stmt.parent) {
+      if (stmt.parent.type === 'for' || stmt.parent.type === 'while') {
+        transitions.push(stmt.parent.lineNum);
+      } else if (stmt.parent.nextSibling) {
+        transitions.push(stmt.parent.nextSibling.lineNum);
+      }
+    }
+    return transitions;
+  }
+  
+  if (stmt.type === 'if' || stmt.type === 'elif' || stmt.type === 'else') {
+    let firstBodyStmt = null;
+    for (let i = stmt.lineNum; i < statements.length; i++) {
+      const other = statements[i];
+      if (other && other.indent > indent) {
+        firstBodyStmt = other;
+        break;
+      }
+    }
+    if (firstBodyStmt) {
+      transitions.push(firstBodyStmt.lineNum);
+    }
+    
+    if (stmt.nextSibling) {
+      transitions.push(stmt.nextSibling.lineNum);
+    } else if (stmt.parent) {
+      if (stmt.parent.type === 'for' || stmt.parent.type === 'while') {
+        transitions.push(stmt.parent.lineNum);
+      } else if (stmt.parent.nextSibling) {
+        transitions.push(stmt.parent.nextSibling.lineNum);
+      }
+    }
+    return transitions;
+  }
+  
+  if (stmt.nextSibling) {
+    transitions.push(stmt.nextSibling.lineNum);
+  } else if (stmt.parent) {
+    if (stmt.parent.type === 'for' || stmt.parent.type === 'while') {
+      transitions.push(stmt.parent.lineNum);
+    } else {
+      let curr = stmt.parent;
+      while (curr) {
+        if (curr.nextSibling) {
+          transitions.push(curr.nextSibling.lineNum);
+          break;
+        }
+        if (curr.parent && (curr.parent.type === 'for' || curr.parent.type === 'while')) {
+          transitions.push(curr.parent.lineNum);
+          break;
+        }
+        curr = curr.parent;
+      }
+    }
+  }
+  
+  statements.forEach(other => {
+    if (other && other.type === 'def') {
+      transitions.push(other.lineNum);
+    }
+  });
+  
+  return transitions;
+};
+
+const findExecutionPath = (startLine, endLine, statements) => {
+  if (startLine === endLine) return [];
+  
+  const queue = [[startLine]];
+  const visited = new Set([startLine]);
+  
+  while (queue.length > 0) {
+    const path = queue.shift();
+    const current = path[path.length - 1];
+    
+    if (current === endLine) {
+      return path.slice(1, -1);
+    }
+    
+    const stmt = statements[current - 1];
+    if (!stmt) continue;
+    
+    const nexts = getNextTransitions(stmt, statements);
+    for (const next of nexts) {
+      if (!visited.has(next)) {
+        visited.add(next);
+        queue.push([...path, next]);
+      }
+    }
+  }
+  
+  return [];
+};
+
+export const guessActiveLine = (algoId, snap, codeLines) => {
   const explanation = (snap.explanation || '').toLowerCase();
   
   // 1. Hardcoded exact mappings for Knapsack-DP:
@@ -22,7 +240,7 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     if (explanation.includes('computing')) return 5;
   }
   
-  // 2. Exact mappings for Coin Change DP (improved):
+  // 2. Exact mappings for Coin Change DP:
   if (algoId === 'coin-change-dp') {
     if (explanation.includes('initialize') || explanation.includes('base case') || explanation.includes('dp[0] = 0')) return 2;
     if (explanation.includes('computing minimum') || explanation.includes('for amount')) return 4;
@@ -32,7 +250,7 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return 6;
   }
 
-  // 2B. Exact mappings for Counting Sort (improved):
+  // 2B. Exact mappings for Counting Sort:
   if (algoId === 'counting-sort') {
     const phase = snap.data?.phase || '';
     if (explanation.includes('counting sort on') || explanation.includes('phase 1')) return 2;
@@ -44,7 +262,7 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return 4;
   }
 
-  // 2C. Exact mappings for Trapping Rain Water (improved):
+  // 2C. Exact mappings for Trapping Rain Water:
   if (algoId === 'trapping-rain-water') {
     if (explanation.includes('trapping rain water:') || explanation.includes('two pointers') || explanation.includes('start:')) return 2;
     if (explanation.includes('lmax updated') || explanation.includes('lmax')) return 4;
@@ -151,7 +369,7 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     }
   }
 
-  // 2J. Exact mappings for Spiral Matrix (improved with fallback):
+  // 2J. Exact mappings for Spiral Matrix:
   if (algoId === 'spiral-matrix') {
     const matrixState = snap.matrixState || {};
     const direction = matrixState.direction || '';
@@ -507,10 +725,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return 8;
   }
 
-  if (algoId === 'crossword-solver') {
-    return 4;
-  }
-
   if (algoId === 'branch-and-bound-concept') {
     const explanation = snap.explanation || '';
     if (explanation.includes('prune')) return 3;
@@ -518,8 +732,7 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return 3;
   }
 
-  // ── SORTING ALGORITHMS ─────────────────────────────────────────────────────
-
+  // ── SORTING ALGORITHMS ──
   if (algoId === 'selection-sort') {
     const explanation = snap.explanation || '';
     if (explanation.includes('Initial') || explanation.includes('Selection Sort')) return 1;
@@ -619,8 +832,7 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return 5;
   }
 
-  // ── SEARCH ALGORITHMS ─────────────────────────────────────────────────────
-
+  // ── SEARCH ALGORITHMS ──
   if (algoId === 'linear-search') {
     const explanation = snap.explanation || '';
     if (explanation.includes('Linear Search') || explanation.includes('Initialize')) return 1;
@@ -644,8 +856,7 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return 3;
   }
 
-  // ── GRAPH ALGORITHMS ──────────────────────────────────────────────────────
-
+  // ── GRAPH ALGORITHMS ──
   if (algoId === 'floyd-warshall') {
     const explanation = snap.explanation || '';
     if (explanation.includes('Floyd-Warshall') || explanation.includes('Initialize') || explanation.includes('All-pairs')) return 2;
@@ -676,38 +887,16 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return 4;
   }
 
-  // ── DP ALGORITHMS ─────────────────────────────────────────────────────────
-
-  if (algoId === 'coin-change-dp') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('Base Case') || explanation.includes('dp[0] = 0')) return 2;
-    if (explanation.includes('Computing minimum') || explanation.includes('amount')) return 4;
-    if (explanation.includes('Checking') || explanation.includes('coin') && explanation.includes('option')) return 6;
-    if (explanation.includes('Using coin') || explanation.includes('Min coins')) return 7;
-    if (explanation.includes('Result') || explanation.includes('complete') || explanation.includes('minimum coins for')) return 8;
-    return 6;
-  }
-
+  // ── DP ALGORITHMS ──
   if (algoId === 'kadane') {
     const explanation = snap.explanation || '';
     if (explanation.includes('Initialize') || explanation.includes('Kadane')) return 1;
     if (explanation.includes('Visiting') || explanation.includes('Processing index') || explanation.includes('element')) return 3;
-    if (explanation.includes('current_sum') || explanation.includes('Extending') || explanation.includes('Add to')) return 4;
+    if (explanation.includes('current_sum') || explanation.includes('Visualizing') || explanation.includes('Add to')) return 4;
     if (explanation.includes('Reset') || explanation.includes('Starting fresh') || explanation.includes('start new subarray')) return 5;
     if (explanation.includes('Updated max') || explanation.includes('new max') || explanation.includes('max_sum')) return 6;
     if (explanation.includes('complete') || explanation.includes('Maximum subarray')) return 7;
     return 3;
-  }
-
-  if (algoId === 'trapping-rain-water') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('Trapping Rain Water:') || explanation.includes('Two pointers')) return 2;
-    if (explanation.includes('process left') || explanation.includes('left pointer') || explanation.includes('h[l]')) return 5;
-    if (explanation.includes('lMax updated') || explanation.includes('lmax')) return 4;
-    if (explanation.includes('process right') || explanation.includes('right pointer') || explanation.includes('h[r]')) return 7;
-    if (explanation.includes('rMax updated') || explanation.includes('rmax')) return 6;
-    if (explanation.includes('Pointers met') || explanation.includes('complete') || explanation.includes('Total trapped')) return 8;
-    return 5;
   }
 
   if (algoId === 'lcs-dp') {
@@ -719,8 +908,7 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return 5;
   }
 
-  // ── SLIDING WINDOW ────────────────────────────────────────────────────────
-
+  // ── SLIDING WINDOW ──
   if (algoId === 'sliding-window') {
     const explanation = snap.explanation || '';
     if (explanation.includes('Initialize') || explanation.includes('sliding window') && explanation.includes('size')) return 2;
@@ -729,104 +917,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     if (explanation.includes('max_sum') || explanation.includes('Update max') || explanation.includes('new maximum')) return 6;
     if (explanation.includes('complete') || explanation.includes('Max sum')) return 7;
     return 4;
-  }
-
-  // ── LINKED LIST ───────────────────────────────────────────────────────────
-
-  if (algoId === 'linked-list-traversal') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('Starting traversal')) return 2;
-    if (explanation.includes('pointer is at Node') || explanation.includes('Current pointer') || explanation.includes('Visiting Node')) return 3;
-    if (explanation.includes('Move to next') || explanation.includes('curr = curr.next') || explanation.includes('Advancing')) return 5;
-    if (explanation.includes('Reached end') || explanation.includes('null') || explanation.includes('complete')) return 6;
-    return 3;
-  }
-
-  if (algoId === 'cycle-detection') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('Floyd') || explanation.includes('Tortoise')) return 2;
-    if (explanation.includes('Slow pointer') || explanation.includes('slow') && explanation.includes('fast')) return 3;
-    if (explanation.includes('slow = slow.next') || explanation.includes('Moving slow')) return 4;
-    if (explanation.includes('fast = fast.next') || explanation.includes('Moving fast')) return 5;
-    if (explanation.includes('met at') || explanation.includes('Cycle detected') || explanation.includes('slow == fast')) return 7;
-    if (explanation.includes('reached end') || explanation.includes('No cycle') || explanation.includes('null')) return 8;
-    return 3;
-  }
-
-  // ── STACK/QUEUE ──────────────────────────────────────────────────────────
-
-  if (algoId === 'balanced-parentheses') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('empty') && explanation.includes('stack')) return 2;
-    if (explanation.includes('opening bracket') || explanation.includes('open') && explanation.includes('push')) return 6;
-    if (explanation.includes('closing bracket') || explanation.includes('closing') && explanation.includes('bracket')) return 7;
-    if (explanation.includes('Match found') || explanation.includes('Popping') || explanation.includes('pop')) return 8;
-    if (explanation.includes('Mismatch') || explanation.includes('mismatch') || explanation.includes('unmatched')) return 9;
-    if (explanation.includes('Balanced') || explanation.includes('complete') || explanation.includes('All brackets')) return 10;
-    return 5;
-  }
-
-  // ── TREE ALGORITHMS ───────────────────────────────────────────────────────
-
-  if (algoId === 'bst-traversal') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('Inorder') || explanation.includes('BST Traversal')) return 1;
-    if (explanation.includes('Visiting') || explanation.includes('Current node') || explanation.includes('Traversing')) return 3;
-    if (explanation.includes('left subtree') || explanation.includes('Go left')) return 4;
-    if (explanation.includes('right subtree') || explanation.includes('Go right')) return 7;
-    if (explanation.includes('visited') || explanation.includes('Output') || explanation.includes('Print')) return 5;
-    if (explanation.includes('null') || explanation.includes('Reached null') || explanation.includes('complete')) return 9;
-    return 3;
-  }
-
-  if (algoId === 'level-order-traversal') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('Level-order') || explanation.includes('BFS')) return 2;
-    if (explanation.includes('Dequeue') || explanation.includes('Visiting node') || explanation.includes('Dequeued node')) return 5;
-    if (explanation.includes('Enqueue') || explanation.includes('Adding') || explanation.includes('left child') || explanation.includes('right child')) return 9;
-    if (explanation.includes('complete') || explanation.includes('Traversal done')) return 11;
-    return 5;
-  }
-
-  // ── RECURSION/BACKTRACKING ───────────────────────────────────────────────
-
-  if (algoId === 'fibonacci-recursion') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Base Case') || explanation.includes('fib(0)') || explanation.includes('fib(1)')) return 2;
-    if (explanation.includes('Calling') || explanation.includes('Computing') || explanation.includes('Compute Fibonacci')) return 2;
-    if (explanation.includes('Returning from') || explanation.includes('combines') || explanation.includes('= fib(')) return 3;
-    return 2;
-  }
-
-  if (algoId === 'tower-of-hanoi') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('Tower of Hanoi')) return 1;
-    if (explanation.includes('disk 1') || (explanation.includes('n == 1') || explanation.includes('base'))) return 3;
-    if (explanation.includes('Moving disk') && !explanation.includes('disk 1')) return 6;
-    if (explanation.includes('sub-call') || explanation.includes('Recursive') || explanation.includes('Move smaller')) return 5;
-    if (explanation.includes('complete') || explanation.includes('successfully')) return 7;
-    return 3;
-  }
-
-  if (algoId === 'n-queens') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('N Queens') || explanation.includes('empty chessboard')) return 2;
-    if (explanation.includes('Testing') || explanation.includes('checking position') || explanation.includes('Check row') || explanation.includes('Is safe')) return 4;
-    if (explanation.includes('Position Safe') || explanation.includes('Locking Queen') || explanation.includes('Placing Queen')) return 10;
-    if (explanation.includes('Under Attack') || explanation.includes('Cannot place') || explanation.includes('unsafe') || explanation.includes('conflict')) return 6;
-    if (explanation.includes('Backtrack') || explanation.includes('removing queen') || explanation.includes('backtrack')) return 12;
-    if (explanation.includes('Solution found') || explanation.includes('complete') || explanation.includes('All queens')) return 13;
-    return 4;
-  }
-
-  if (algoId === 'sudoku-solver') {
-    const explanation = snap.explanation || '';
-    if (explanation.includes('Initialize') || explanation.includes('Sudoku')) return 1;
-    if (explanation.includes('Trying number') && explanation.includes('VALID')) return 9;
-    if (explanation.includes('Trying number') && explanation.includes('INVALID')) return 8;
-    if (explanation.includes('Backtracking') || explanation.includes('removing value') || explanation.includes('backtrack')) return 11;
-    if (explanation.includes('solved') || explanation.includes('complete')) return 10;
-    return 8;
   }
 
   // 3. Fallback: Scoring-based heuristic mapping for all other algorithms
@@ -853,12 +943,10 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     const rawLine = codeLines[idx];
     const line = rawLine.trim();
 
-    // Skip empty lines and comments
     if (!line || line.startsWith('#') || line.startsWith('"""') || line.startsWith("'''")) continue;
 
     let score = 0;
 
-    // Relational/conditional checking (e.g. comparing, check, if)
     const isCompareWord = explanation.includes('compare') || 
                           explanation.includes('comparing') || 
                           explanation.includes('check') || 
@@ -879,7 +967,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     }
 
-    // Assignment/swap checking
     const isAssignWord = (explanation.includes('swap') || 
                           explanation.includes('swapped') || 
                           explanation.includes('place') || 
@@ -902,14 +989,12 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     if (isAssignWord) {
       if (line.includes('=') && !line.includes('==') && !line.includes('!=') && !line.includes('<=') && !line.includes('>=')) {
         score += 20;
-        // Destructuring swap gets extra points
         if (line.includes(',') && (line.includes('arr[') || line.includes('nums[') || line.includes('left') || line.includes('right'))) {
           score += 15;
         }
       }
     }
 
-    // Loop/iteration
     const isLoopWord = explanation.includes('loop') || 
                        explanation.includes('for') || 
                        explanation.includes('iterate') || 
@@ -924,7 +1009,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     }
 
-    // Push/insert operations
     const isPushWord = explanation.includes('push') || 
                        explanation.includes('append') || 
                        explanation.includes('add') || 
@@ -940,7 +1024,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     }
 
-    // Pop/remove operations
     const isPopWord = explanation.includes('pop') || 
                       explanation.includes('remove') || 
                       explanation.includes('delete') || 
@@ -953,7 +1036,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     }
 
-    // Recursive call
     const isRecursiveWord = explanation.includes('recursive') || 
                             explanation.includes('recursion') || 
                             explanation.includes('call') || 
@@ -974,21 +1056,18 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     }
 
-    // Initial / Setup lines priority
     if (isInitial) {
       if (line.startsWith('def ') || idx < 3) {
         score += 30;
       }
     }
 
-    // Complete / Return lines priority
     if (isComplete) {
       if (line.includes('return ') || line.includes('break')) {
         score += 40;
       }
     }
 
-    // Penalty for conditional/loop headers when we are performing a strong action
     const isActionStep = isAssignWord || isPushWord || isPopWord;
     if (isActionStep) {
       if (line.startsWith('if ') || line.startsWith('elif ') || line.startsWith('while ') || line.startsWith('for ')) {
@@ -996,7 +1075,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     }
 
-    // Pointer move priority rules
     const isPointerMove = explanation.includes('pointer') || 
                           explanation.includes('move') || 
                           explanation.includes('inward') || 
@@ -1014,14 +1092,12 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     }
 
-    // Penalize constant initialization lines during loop iterations
     if (!isInitial) {
       if (line.includes('left, right = 0') || line.includes('left = 0') || line.includes('right = len(') || line.includes('prev = None') || line.includes('swapped = False') || line.includes('swapped = True')) {
         score -= 45;
       }
     }
 
-    // State keys matching: match variables from the current snapshot state
     const snapKeys = Object.keys(snap);
     snapKeys.forEach(key => {
       if (['data', 'highlights', 'explanation', 'stats', 'step'].includes(key) || key.endsWith('State')) return;
@@ -1031,7 +1107,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     });
 
-    // Dynamically match any state keys ending in 'State' (e.g. mergeState, listState, dpState)
     snapKeys.forEach(ns => {
       if (ns.endsWith('State') && snap[ns] && typeof snap[ns] === 'object') {
         Object.keys(snap[ns]).forEach(key => {
@@ -1043,7 +1118,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       }
     });
 
-    // Explicit A/B array mapping heuristics
     const hasRefA = /\b(A|arr1|first)\b/i.test(explanation);
     const hasRefB = /\b(B|arr2|second)\b/i.test(explanation);
     if (hasRefA && line.includes('arr1')) {
@@ -1053,7 +1127,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       score += 25;
     }
 
-    // Custom frequency-counting and key-value mapping heuristics
     if (line.includes('freq') && (explanation.includes('frequency') || explanation.includes('freq'))) {
       score += 20;
     }
@@ -1061,7 +1134,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
       score += 20;
     }
 
-    // Match exact words from the explanation in the code line
     const words = explanation.split(/[^a-zA-Z0-9_]/);
     words.forEach(word => {
       if (word.length > 1 && !['and', 'the', 'for', 'with', 'this', 'that', 'from', 'into', 'then', 'index', 'value', 'node', 'element', 'array', 'list', 'each', 'step'].includes(word)) {
@@ -1082,7 +1154,6 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
     return bestLineIdx + 1;
   }
 
-  // Fallback to activeLine if set by step generator
   if (snap.activeLine !== undefined) {
     return snap.activeLine;
   }
@@ -1090,139 +1161,64 @@ const guessActiveLineDeprecated = (algoId, snap, codeLines) => {
   return null;
 };
 
-const CodePanel = ({ algorithm }) => {
-  const [copied, setCopied] = useState(false);
-  const [mazeDir, setMazeDir] = useState(2); // 2 or 4 directions for rat-in-a-maze
-  const { currentStep, steps } = useVisualizer();
-
-  if (!algorithm) return null;
-
-  const isRatMaze = algorithm.id === 'rat-in-a-maze';
-
-  // Pick the right code variant
-  let codeContent;
-  if (isRatMaze) {
-    codeContent = mazeDir === 2
-      ? (algorithm.code?.python2dir || algorithm.code?.python || '# Code not available')
-      : (algorithm.code?.python4dir || algorithm.code?.python || '# Code not available');
-  } else {
-    codeContent = algorithm.code?.python || '# Code snippet not available';
+export const traceExecutionPointer = (algoId, pythonCode, steps) => {
+  if (!pythonCode || steps.length === 0) return steps;
+  
+  const codeLines = pythonCode.split('\n');
+  const statements = parsePythonStructure(pythonCode);
+  const tracedSteps = [];
+  
+  const mappedSteps = steps.map(step => {
+    let line = step.activeLine;
+    if (line === undefined) {
+      line = guessActiveLine(algoId, step, codeLines);
+    }
+    return { ...step, activeLine: line };
+  });
+  
+  for (let i = 0; i < mappedSteps.length; i++) {
+    const currentStep = mappedSteps[i];
+    tracedSteps.push(currentStep);
+    
+    if (i < mappedSteps.length - 1) {
+      const nextStep = mappedSteps[i + 1];
+      const startLine = currentStep.activeLine;
+      const endLine = nextStep.activeLine;
+      
+      if (startLine && endLine && startLine !== endLine) {
+        const intermediateLines = findExecutionPath(startLine, endLine, statements);
+        
+        for (const line of intermediateLines) {
+          const stmt = statements[line - 1];
+          if (!stmt) continue;
+          
+          let expl = `Executing: ${stmt.text}`;
+          if (stmt.type === 'for' || stmt.type === 'while') {
+            expl = `Evaluating loop condition: ${stmt.text}`;
+          } else if (stmt.type === 'if' || stmt.type === 'elif') {
+            expl = `Evaluating conditional check: ${stmt.text}`;
+          } else if (stmt.type === 'else') {
+            expl = `Entering else branch.`;
+          } else if (stmt.type === 'return') {
+            expl = `Returning result: ${stmt.text}`;
+          } else if (stmt.type === 'def') {
+            expl = `Calling function: ${stmt.text}`;
+          } else if (stmt.type === 'break') {
+            expl = `Loop break encountered. Exiting loop.`;
+          } else if (stmt.type === 'continue') {
+            expl = `Loop continue encountered. Skipping to next iteration.`;
+          }
+          
+          tracedSteps.push({
+            ...currentStep,
+            activeLine: line,
+            explanation: expl,
+            isDebugTrace: true
+          });
+        }
+      }
+    }
   }
-
-  const codeLines = codeContent.split('\n');
-  const currentSnap = steps[currentStep] || {};
-
-  let activeLine = currentSnap.activeLine;
-  if (activeLine === undefined) {
-    activeLine = guessActiveLine(algorithm.id, currentSnap, codeLines);
-  }
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(codeContent);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className="clay-card bg-white dark:bg-[#161b26] p-6 flex flex-col gap-4">
-      {/* Header */}
-      <div className="flex items-center justify-between pb-1">
-        <div className="flex items-center gap-2 text-xs font-extrabold text-text-secondary opacity-75 uppercase tracking-wider">
-          <Terminal className="w-4 h-4 text-primary" />
-          <span>Python Implementation</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Direction toggle — only for Rat in a Maze */}
-          {isRatMaze && (
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-full p-0.5 border border-slate-200 dark:border-slate-700">
-              <button
-                onClick={() => setMazeDir(2)}
-                title="2-Direction: Right & Down only"
-                className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all duration-200 cursor-pointer ${
-                  mazeDir === 2
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-text-secondary hover:text-primary'
-                }`}
-              >
-                2-Dir
-              </button>
-              <button
-                onClick={() => setMazeDir(4)}
-                title="4-Direction: Right, Down, Left & Up"
-                className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all duration-200 cursor-pointer ${
-                  mazeDir === 4
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'text-text-secondary hover:text-primary'
-                }`}
-              >
-                4-Dir
-              </button>
-            </div>
-          )}
-          <button
-            onClick={handleCopy}
-            className="p-2 rounded-full hover:bg-primary/10 text-text-secondary hover:text-primary transition-all cursor-pointer"
-            title="Copy Code"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Direction label badge for rat-in-maze */}
-      {isRatMaze && (
-        <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full ${
-            mazeDir === 2
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-              : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-          }`}>
-            <span>{mazeDir === 2 ? '→↓' : '→↓←↑'}</span>
-            <span>{mazeDir === 2 ? '2 Directions (Right + Down)' : '4 Directions (Right + Down + Left + Up)'}</span>
-          </span>
-        </div>
-      )}
-
-      {/* Code viewport terminal style */}
-      <div className="relative led-bg rounded-2xl p-4 font-mono text-xs overflow-x-auto shadow-inner text-left max-h-[360px] overflow-y-auto border border-white/20 dark:border-transparent">
-        <div className="absolute top-0 left-0 right-0 h-4 bg-slate-900/10 dark:bg-slate-900/50 flex items-center px-4 justify-between">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-          </div>
-          <span className="text-[9px] text-text-secondary dark:text-slate-600 font-bold uppercase tracking-widest">python</span>
-        </div>
-        <div className="mt-4 flex flex-col font-mono leading-relaxed text-slate-700 dark:text-slate-300">
-          {codeLines.map((line, idx) => {
-            const lineNum = idx + 1;
-            const isActive = lineNum === activeLine;
-            return (
-              <div
-                key={idx}
-                className={`flex items-center -mx-4 px-4 py-0.5 transition-all duration-150 ${
-                  isActive 
-                    ? 'bg-primary/10 border-l-[3px] border-primary pl-[13px] dark:bg-primary/25' 
-                    : ''
-                }`}
-              >
-                <span className="w-8 text-right text-text-secondary dark:text-slate-600 pr-3.5 select-none font-bold opacity-60 flex items-center justify-end gap-1">
-                  {isActive && (
-                    <span className="text-primary text-[10px] animate-pulse">👉</span>
-                  )}
-                  <span>{lineNum}</span>
-                </span>
-                <span className={`whitespace-pre ${isActive ? 'text-primary dark:text-purple-400 font-extrabold' : ''}`}>
-                  {line}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
+  
+  return tracedSteps;
 };
-
-export default CodePanel;
-

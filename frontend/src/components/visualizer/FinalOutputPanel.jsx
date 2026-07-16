@@ -267,6 +267,34 @@ function deriveOutput(algoId, snap) {
     };
   }
 
+  // Power of Two check
+  if (algoId?.includes('power-of-two') && snap?.bitState) {
+    const isPower = snap.bitState.isPower;
+    return {
+      label: 'Power of Two Check',
+      value: isPower ? `${snap.data?.n} is a Power of 2 ✓` : `${snap.data?.n} is NOT a Power of 2 ✗`,
+      type: isPower ? 'success' : 'failure'
+    };
+  }
+
+  // Count Set Bits
+  if (algoId?.includes('count-set-bits') && snap?.data?.count !== undefined) {
+    return {
+      label: 'Set Bits Count',
+      value: `${snap.data.count} set bits`,
+      type: 'number'
+    };
+  }
+
+  // XOR Operations
+  if (algoId?.includes('xor-operations') && snap?.data?.result !== undefined) {
+    return {
+      label: 'XOR Result',
+      value: `${snap.data.result} (Binary: ${snap.data.result.toString(2).padStart(8, '0')})`,
+      type: 'success'
+    };
+  }
+
   // Bitwise binary operations (AND, OR, XOR)
   if (snap?.bitState && (algoId?.includes('bitmask-and') || algoId?.includes('bitmask-or') || algoId?.includes('bitmask-xor'))) {
     const { operation } = snap.bitState;

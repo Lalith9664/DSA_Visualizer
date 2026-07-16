@@ -1652,41 +1652,62 @@ export const twoPointerSteps = (arr, targetSum = 10) => {
 
 export const rotateArraySteps = (arr, k = 2) => {
   const steps = [];
-  const nums = arr.map(Number).filter((x) => !isNaN(x));
-  const n = nums.length;
+  const a = arr.map(Number).filter((x) => !isNaN(x));
+  const n = a.length;
   if (n === 0) return [];
+  
   const shift = k % n;
-
+  
+  // Initial state
   steps.push({
-    data: [...nums],
+    data: [...a],
     rotateState: { k: shift, phase: "initial" },
     highlights: {},
-    explanation: `Initialize array rotation by k = ${shift} positions.`,
-    stats: { comparisons: 0, swaps: 0, step: 0 },
+    explanation: `Initial array before rotation: [${a.join(", ")}]. We need to rotate by k = ${shift} positions.`,
+    activeLine: 1,
+    stats: { comparisons: 0, swaps: 0, step: 0 }
   });
 
-  let currentArr = [...nums];
-  for (let step = 1; step <= shift; step++) {
-    const last = currentArr.pop();
-    currentArr.unshift(last);
+  let swaps = 0;
 
-    steps.push({
-      data: [...currentArr],
-      rotateState: { k: shift, step, phase: "rotating" },
-      highlights: { 0: "pivot" },
-      explanation: `Rotation step ${step}: popped end element ${last} and placed at front.`,
-      stats: { comparisons: step, swaps: step, step: steps.length },
-    });
-  }
+  const reverse = (start, end) => {
+    while (start < end) {
+      swaps++;
+      const temp = a[start];
+      a[start] = a[end];
+      a[end] = temp;
+      
+      // Emit step for the swap
+      steps.push({
+        data: [...a],
+        rotateState: { k: shift, phase: "reversing", start, end },
+        highlights: { [start]: "swap", [end]: "swap" },
+        explanation: `Swapping elements at index ${start} (${a[start]}) and index ${end} (${a[end]}).`,
+        activeLine: 6,
+        stats: { comparisons: swaps, swaps: swaps, step: steps.length }
+      });
+      
+      start++;
+      end--;
+    }
+  };
+
+  // 1. Reverse entire array
+  reverse(0, n - 1);
+  
+  // 2. Reverse first k elements
+  reverse(0, shift - 1);
+  
+  // 3. Reverse remaining n-k elements
+  reverse(shift, n - 1);
 
   steps.push({
-    data: [...currentArr],
+    data: [...a],
     rotateState: { k: shift, phase: "complete" },
-    highlights: currentArr
-      .map((_, idx) => idx)
-      .reduce((acc, idx) => ({ ...acc, [idx]: "sorted" }), {}),
-    explanation: `Array rotation complete! Resulting array: [${currentArr.join(", ")}].`,
-    stats: { comparisons: shift, swaps: shift, step: steps.length },
+    highlights: a.map((_, idx) => idx).reduce((acc, idx) => ({ ...acc, [idx]: "sorted" }), {}),
+    explanation: `Array rotation complete! Resulting array: [${a.join(", ")}].`,
+    activeLine: 12,
+    stats: { comparisons: swaps, swaps: swaps, step: steps.length }
   });
 
   return steps;
@@ -3644,6 +3665,7 @@ export const singleNumberSteps = (arr) => {
     data: [...nums],
     bitState: { currentIdx: -1, xorSum: 0 },
     highlights: {},
+    activeLine: 2,
     explanation: "Initialize XOR accumulator (xorSum = 0).",
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
@@ -3658,6 +3680,7 @@ export const singleNumberSteps = (arr) => {
       data: [...nums],
       bitState: { currentIdx: i, xorSum },
       highlights: { [i]: "pivot" },
+      activeLine: 4,
       explanation: `XOR-ing element ${val} at index ${i}: xorSum = ${prev} ^ ${val} = ${xorSum} (Binary: ${xorSum.toString(2)}).`,
       stats: { comparisons: i, swaps: 0, step: steps.length },
     });
@@ -3667,6 +3690,7 @@ export const singleNumberSteps = (arr) => {
     data: [...nums],
     bitState: { currentIdx: -1, xorSum },
     highlights: {},
+    activeLine: 5,
     explanation: `Scan finished. The single non-duplicate number found is ${xorSum}.`,
     stats: { comparisons: nums.length, swaps: 0, step: steps.length },
   });
@@ -3676,12 +3700,14 @@ export const singleNumberSteps = (arr) => {
 
 export const powerOfTwoSteps = (nVal) => {
   const steps = [];
-  const n = parseInt(nVal) || 16;
+  const n = parseInt(nVal);
+  if (isNaN(n)) return [];
 
   steps.push({
     data: { n, nMinusOne: n - 1, andResult: null },
     bitState: { isPower: null, phase: "checking" },
     highlights: {},
+    activeLine: 1,
     explanation: `Check if n = ${n} is a power of 2 using bitwise clear: n & (n - 1) === 0.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
@@ -3691,6 +3717,7 @@ export const powerOfTwoSteps = (nVal) => {
       data: { n, nMinusOne: n - 1, andResult: null },
       bitState: { isPower: false, phase: "success" },
       highlights: {},
+      activeLine: 2,
       explanation: `Number ${n} is <= 0. Powers of 2 must be positive. Result: FALSE.`,
       stats: { comparisons: 1, swaps: 0, step: 1 },
     });
@@ -3705,6 +3732,7 @@ export const powerOfTwoSteps = (nVal) => {
     data: { n, nMinusOne, andResult },
     bitState: { isPower, phase: "success" },
     highlights: {},
+    activeLine: 2,
     explanation: `Calculated bitwise clear: ${n} & ${nMinusOne} = ${andResult}. (Binary: ${n.toString(2)} & ${nMinusOne.toString(2)} = ${andResult.toString(2)}). Result: ${isPower ? "TRUE (Power of 2)" : "FALSE (Not a power of 2)"}.`,
     stats: { comparisons: 1, swaps: 0, step: 1 },
   });
@@ -5276,6 +5304,7 @@ export const countSetBitsSteps = (n) => {
   steps.push({
     data: { num, binary: num.toString(2).padStart(16, "0"), count },
     highlights: {},
+    activeLine: 2,
     explanation: `Count set bits in ${n} (binary: ${num.toString(2)}). Using Brian Kernighan's algorithm: n &= (n-1) each step.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
@@ -5286,6 +5315,7 @@ export const countSetBitsSteps = (n) => {
     steps.push({
       data: { num, binary: num.toString(2).padStart(16, "0"), count },
       highlights: { cleared: count },
+      activeLine: 4,
       explanation: `${prev.toString(2)} & ${(prev - 1).toString(2)} = ${num.toString(2)}. Cleared lowest set bit. Count: ${count}.`,
       stats: { comparisons: count, swaps: 0, step: steps.length },
     });
@@ -5293,6 +5323,7 @@ export const countSetBitsSteps = (n) => {
   steps.push({
     data: { num: 0, binary: "0000000000000000", count },
     highlights: { done: true },
+    activeLine: 6,
     explanation: `n=0, done. Total set bits in ${n}: ${count}.`,
     stats: { comparisons: count, swaps: 0, step: steps.length },
   });
@@ -5306,6 +5337,7 @@ export const xorOperationsSteps = (arr) => {
   steps.push({
     data: { arr, result, index: -1 },
     highlights: {},
+    activeLine: 2,
     explanation: `XOR all elements of [${arr.join(", ")}]. result starts at 0. x^x=0, x^0=x.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
@@ -5315,6 +5347,7 @@ export const xorOperationsSteps = (arr) => {
     steps.push({
       data: { arr, result, index: i },
       highlights: { current: i },
+      activeLine: 3,
       explanation: `result = ${prev} XOR ${arr[i]} = ${result} (binary: ${result.toString(2)})`,
       stats: { comparisons: i + 1, swaps: 0, step: steps.length },
     });
@@ -5322,6 +5355,7 @@ export const xorOperationsSteps = (arr) => {
   steps.push({
     data: { arr, result, index: arr.length },
     highlights: { done: true },
+    activeLine: 3,
     explanation: `XOR complete! Result = ${result}. ${arr.filter((v, i, a) => a.filter((x) => x === v).length === 1).length ? `Unique element = ${result}` : `XOR of all = ${result}`}`,
     stats: { comparisons: arr.length, swaps: 0, step: steps.length },
   });
@@ -5672,8 +5706,9 @@ function cloneNodes(nodes) {
 export const bitmaskAndSteps = (arrOrVal) => {
   const steps = [];
   const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = isNaN(parts[0]) ? 29 : parts[0];
-  const mask = isNaN(parts[1]) ? 15 : parts[1];
+  const n = parts[0];
+  const mask = parts[1];
+  if (isNaN(n) || isNaN(mask)) return [];
   const andResult = n & mask;
   
   steps.push({
@@ -5698,8 +5733,9 @@ export const bitmaskAndSteps = (arrOrVal) => {
 export const bitmaskOrSteps = (arrOrVal) => {
   const steps = [];
   const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = isNaN(parts[0]) ? 29 : parts[0];
-  const mask = isNaN(parts[1]) ? 15 : parts[1];
+  const n = parts[0];
+  const mask = parts[1];
+  if (isNaN(n) || isNaN(mask)) return [];
   const orResult = n | mask;
   
   steps.push({
@@ -5724,8 +5760,9 @@ export const bitmaskOrSteps = (arrOrVal) => {
 export const bitmaskXorSteps = (arrOrVal) => {
   const steps = [];
   const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = isNaN(parts[0]) ? 29 : parts[0];
-  const mask = isNaN(parts[1]) ? 15 : parts[1];
+  const n = parts[0];
+  const mask = parts[1];
+  if (isNaN(n) || isNaN(mask)) return [];
   const xorResult = n ^ mask;
   
   steps.push({
@@ -5749,7 +5786,8 @@ export const bitmaskXorSteps = (arrOrVal) => {
 
 export const bitmaskNotSteps = (nVal) => {
   const steps = [];
-  const n = parseInt(nVal) || 29;
+  const n = parseInt(nVal);
+  if (isNaN(n)) return [];
   const notResult = ~n;
   
   steps.push({
@@ -5774,8 +5812,9 @@ export const bitmaskNotSteps = (nVal) => {
 export const bitLeftShiftSteps = (arrOrVal) => {
   const steps = [];
   const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = isNaN(parts[0]) ? 5 : parts[0];
-  const shift = isNaN(parts[1]) ? 2 : parts[1];
+  const n = parts[0];
+  const shift = parts[1];
+  if (isNaN(n) || isNaN(shift)) return [];
   const shiftResult = n << shift;
   
   steps.push({
@@ -5800,8 +5839,9 @@ export const bitLeftShiftSteps = (arrOrVal) => {
 export const bitRightShiftSteps = (arrOrVal) => {
   const steps = [];
   const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = isNaN(parts[0]) ? 20 : parts[0];
-  const shift = isNaN(parts[1]) ? 2 : parts[1];
+  const n = parts[0];
+  const shift = parts[1];
+  if (isNaN(n) || isNaN(shift)) return [];
   const shiftResult = n >> shift;
   
   steps.push({
@@ -5825,7 +5865,8 @@ export const bitRightShiftSteps = (arrOrVal) => {
 
 export const bitGrayCodeSteps = (nVal) => {
   const steps = [];
-  const n = parseInt(nVal) || 10;
+  const n = parseInt(nVal);
+  if (isNaN(n)) return [];
   const shifted = n >> 1;
   const result = n ^ shifted;
   
@@ -5858,7 +5899,8 @@ export const bitGrayCodeSteps = (nVal) => {
 
 export const bitmaskingConceptSteps = (nVal) => {
   const steps = [];
-  const n = parseInt(nVal) || 29;
+  const n = parseInt(nVal);
+  if (isNaN(n)) return [];
   
   steps.push({
     data: { n, operation: 'init', mask: 0, val: 0 },
