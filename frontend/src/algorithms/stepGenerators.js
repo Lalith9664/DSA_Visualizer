@@ -3012,22 +3012,32 @@ export const ternarySearchSteps = (arr, target) => {
   return steps;
 };
 
-export const ratInAMazeSteps = (mazeGridStr, directionOrderStr) => {
+export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, startC = 0, destR = null, destC = null) => {
   const steps = [];
-  const lines = mazeGridStr.trim().split("\n");
-  const size = 4;
-  const maze = Array.from({ length: size }, () => Array(size).fill(0));
-  for (let r = 0; r < size; r++) {
+  const lines = mazeGridStr.trim().split("\n").filter((l) => l.trim() !== "");
+  // Dynamically derive rows and cols from the input grid
+  const rows = Math.min(Math.max(lines.length || 4, 2), 8);
+  const firstRowParts = lines[0] ? lines[0].trim().split(/\s+/) : [];
+  const cols = Math.min(Math.max(firstRowParts.length || rows, 2), 8);
+  const size = rows; // keep size alias for backward compat (used in canvas via mazeSize)
+  const maze = Array.from({ length: rows }, () => Array(cols).fill(0));
+  for (let r = 0; r < rows; r++) {
     if (lines[r]) {
       const parts = lines[r].trim().split(/\s+/).map(Number);
-      for (let c = 0; c < size; c++) {
+      for (let c = 0; c < cols; c++) {
         maze[r][c] = isNaN(parts[c]) ? 0 : parts[c];
       }
     }
   }
 
-  const sol = Array.from({ length: size }, () => Array(size).fill(0));
-  const visited = Array.from({ length: size }, () => Array(size).fill(false));
+  // Clamp start and destination to grid bounds
+  const sr = Math.min(Math.max(parseInt(startR) || 0, 0), rows - 1);
+  const sc = Math.min(Math.max(parseInt(startC) || 0, 0), cols - 1);
+  const dr = destR !== null ? Math.min(Math.max(parseInt(destR), 0), rows - 1) : rows - 1;
+  const dc = destC !== null ? Math.min(Math.max(parseInt(destC), 0), cols - 1) : cols - 1;
+
+  const sol = Array.from({ length: rows }, () => Array(cols).fill(0));
+  const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
 
   // Parse custom direction order (e.g. "D R U L", "Right Down Left Up")
   const dirMap = {
@@ -3061,25 +3071,31 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr) => {
   steps.push({
     data: {
       maze,
-      path: Array.from({ length: size }, () => Array(size).fill(0)),
+      path: Array.from({ length: rows }, () => Array(cols).fill(0)),
     },
     gridState: {
       currentRow: -1,
       currentCol: -1,
-      mazeSize: size,
+      mazeRows: rows,
+      mazeCols: cols,
+      mazeSize: rows,
+      startRow: sr,
+      startCol: sc,
+      destRow: dr,
+      destCol: dc,
       phase: "searching",
     },
     highlights: {},
-    explanation: `Initialize maze search. Direction search order priority: ${dirs.map((d) => d[2]).join(" → ")}.`,
+    explanation: `Initialize ${rows}×${cols} maze. Start: (${sr},${sc}) → Destination: (${dr},${dc}). Search order: ${dirs.map((d) => d[2]).join(" → ")}.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
 
   const isSafe = (r, c) => {
     return (
       r >= 0 &&
-      r < size &&
+      r < rows &&
       c >= 0 &&
-      c < size &&
+      c < cols &&
       maze[r][c] === 0 &&
       !visited[r][c]
     );
@@ -3094,7 +3110,13 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr) => {
       gridState: {
         currentRow: r,
         currentCol: c,
-        mazeSize: size,
+        mazeRows: rows,
+        mazeCols: cols,
+        mazeSize: rows,
+        startRow: sr,
+        startCol: sc,
+        destRow: dr,
+        destCol: dc,
         phase: "searching",
       },
       highlights: { [`${r}-${c}`]: "pivot" },
@@ -3102,32 +3124,44 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr) => {
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
     });
 
-    if (r === size - 1 && c === size - 1) {
+    if (r === dr && c === dc) {
       steps.push({
         data: { maze, path: sol.map((row) => [...row]) },
         gridState: {
           currentRow: r,
           currentCol: c,
-          mazeSize: size,
+          mazeRows: rows,
+          mazeCols: cols,
+          mazeSize: rows,
+          startRow: sr,
+          startCol: sc,
+          destRow: dr,
+          destCol: dc,
           phase: "success",
         },
         highlights: { [`${r}-${c}`]: "sorted" },
-        explanation: "Reached destination (3, 3)! Path solved successfully.",
+        explanation: `Reached destination (${dr}, ${dc})! Path solved successfully.`,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
       return true;
     }
 
-    for (let [dr, dc, dirName] of dirs) {
-      const nr = r + dr;
-      const nc = c + dc;
+    for (let [ddR, ddC, dirName] of dirs) {
+      const nr = r + ddR;
+      const nc = c + ddC;
       if (isSafe(nr, nc)) {
         steps.push({
           data: { maze, path: sol.map((row) => [...row]) },
           gridState: {
             currentRow: nr,
             currentCol: nc,
-            mazeSize: size,
+            mazeRows: rows,
+            mazeCols: cols,
+            mazeSize: rows,
+            startRow: sr,
+            startCol: sc,
+            destRow: dr,
+            destCol: dc,
             phase: "searching",
           },
           highlights: { [`${nr}-${nc}`]: "pivot" },
@@ -3145,31 +3179,43 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr) => {
       gridState: {
         currentRow: r,
         currentCol: c,
-        mazeSize: size,
+        mazeRows: rows,
+        mazeCols: cols,
+        mazeSize: rows,
+        startRow: sr,
+        startCol: sc,
+        destRow: dr,
+        destCol: dc,
         phase: "backtrack",
       },
       highlights: { [`${r}-${c}`]: "swap" },
-      explanation: `Dead end reached at cell (${r}, ${c}). Backtracking...`,
+      explanation: `Dead end at (${r}, ${c}). Backtracking...`,
       activeLine: 12,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
     });
     return false;
   };
 
-  if (maze[0][0] === 0) {
-    solve(0, 0);
+  if (maze[sr][sc] === 0) {
+    solve(sr, sc);
   } else {
     steps.push({
       data: { maze, path: sol.map((row) => [...row]) },
       gridState: {
-        currentRow: 0,
-        currentCol: 0,
-        mazeSize: size,
+        currentRow: sr,
+        currentCol: sc,
+        mazeRows: rows,
+        mazeCols: cols,
+        mazeSize: rows,
+        startRow: sr,
+        startCol: sc,
+        destRow: dr,
+        destCol: dc,
         phase: "backtrack",
       },
-      highlights: { "0-0": "swap" },
+      highlights: { [`${sr}-${sc}`]: "swap" },
       explanation:
-        "Start cell (0, 0) is blocked by a wall! No solution possible.",
+        `Start cell (${sr}, ${sc}) is blocked by a wall! No solution possible.`,
       stats: { comparisons: 1, swaps: 0, step: 1 },
     });
   }
@@ -5997,3 +6043,223 @@ export const generateSubsetsUsingBitmaskSteps = (arr) => {
 // ============================================================
 // BST INSERT
 // ============================================================
+
+
+// ============================================================
+// KNIGHT'S TOUR
+// ============================================================
+export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = null, destC = null) => {
+  const steps = [];
+  const size = Math.min(Math.max(parseInt(n) || 5, 5), 7);
+  const board = Array.from({ length: size }, () => Array(size).fill(-1));
+  let moveCount = 0;
+
+  // Clamp start and dest position to board bounds
+  const sr = Math.min(Math.max(parseInt(startR) || 0, 0), size - 1);
+  const sc = Math.min(Math.max(parseInt(startC) || 0, 0), size - 1);
+  
+  // Default destination to some other cell if not provided or same as start
+  let dr = destR !== null ? Math.min(Math.max(parseInt(destR), 0), size - 1) : size - 1;
+  let dc = destC !== null ? Math.min(Math.max(parseInt(destC), 0), size - 1) : size - 1;
+  if (dr === sr && dc === sc) {
+    dr = (sr + 2) % size;
+    dc = (sc + 1) % size;
+  }
+
+  // Knight move offsets
+  const moves = [
+    [2, 1], [1, 2], [-1, 2], [-2, 1],
+    [-2, -1], [-1, -2], [1, -2], [2, -1],
+  ];
+
+  const isValid = (r, c, move) => {
+    if (r < 0 || r >= size || c < 0 || c >= size || board[r][c] !== -1) return false;
+    // Don't land on destination until the final move
+    if (r === dr && c === dc && move < size * size - 1) return false;
+    return true;
+  };
+
+  // Warnsdorff's heuristic: count onward moves from a cell
+  const degree = (r, c, move) =>
+    moves.reduce((cnt, [drr, dcc]) => cnt + (isValid(r + drr, c + dcc, move + 1) ? 1 : 0), 0);
+
+  const addStep = (r, c, phase, explanation) => {
+    // Cap intermediate steps to 1000 to avoid memory & gc lag, but always allow init, done, or fail steps
+    if (steps.length >= 1000 && phase !== 'done' && phase !== 'fail' && phase !== 'init') {
+      return;
+    }
+    steps.push({
+      data: { board: board.map(row => [...row]), size, currentRow: r, currentCol: c },
+      knightState: { board: board.map(row => [...row]), size, currentRow: r, currentCol: c, moveCount, phase, startRow: sr, startCol: sc, destRow: dr, destCol: dc },
+      highlights: { [`${r}-${c}`]: phase === 'place' ? 'pivot' : phase === 'backtrack' ? 'swap' : 'sorted' },
+      explanation,
+      stats: { comparisons: steps.length, swaps: moveCount, step: steps.length },
+    });
+  };
+  addStep(sr, sc, 'init',
+    `Initialize ${size}×${size} chessboard. Start: (${sr},${sc}) → Destination: (${dr},${dc}).`);
+
+  let callCount = 0;
+  const maxCalls = 30000;
+  let aborted = false;
+
+  const solve = (r, c, move) => {
+    if (aborted) return false;
+    callCount++;
+    if (callCount > maxCalls) {
+      aborted = true;
+      return false;
+    }
+
+    board[r][c] = move;
+    moveCount = move;
+    addStep(r, c, 'place', `Move #${move + 1}: Knight placed at (${r}, ${c}).`);
+
+    if (move === size * size - 1) {
+      if (r === dr && c === dc) {
+        addStep(r, c, 'done', `Knight's Tour complete! Visited all ${size * size} cells, ending at (${dr}, ${dc}).`);
+        return true;
+      }
+      board[r][c] = -1;
+      return false;
+    }
+
+    // Gather candidate moves sorted by Warnsdorff's degree (ascending)
+    const candidates = moves
+      .map(([drr, dcc]) => [r + drr, c + dcc])
+      .filter(([nr, nc]) => isValid(nr, nc, move))
+      .map(([nr, nc]) => ({ nr, nc, deg: degree(nr, nc, move) }))
+      .sort((a, b) => a.deg - b.deg);
+
+    for (const { nr, nc } of candidates) {
+      if (solve(nr, nc, move + 1)) return true;
+    }
+
+    board[r][c] = -1;
+    addStep(r, c, 'backtrack', `Backtracking from (${r}, ${c}).`);
+    return false;
+  };
+
+  if (!solve(sr, sc, 0)) {
+    if (aborted) {
+      addStep(sr, sc, 'fail', `Search aborted (limit of ${maxCalls} calls exceeded to prevent page freeze). No valid tour found.`);
+    } else {
+      addStep(sr, sc, 'fail', `No complete tour ending at (${dr}, ${dc}) found starting from (${sr}, ${sc}).`);
+    }
+  }
+  return steps;
+};
+
+
+// ============================================================
+// SLIDING PUZZLE (8-PUZZLE / 3×3)
+// ============================================================
+export const slidingPuzzleSteps = (inputStr) => {
+  const steps = [];
+
+  // Parse input: 9 space/newline separated numbers (0 = blank)
+  const raw = (inputStr || '1 2 3 4 5 6 7 0 8')
+    .replace(/\n/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .map(Number)
+    .filter(x => !isNaN(x));
+
+  const size = 3;
+  const GOAL = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+
+  // Build initial grid as flat array (length 9)
+  const initial = Array(9).fill(0);
+  for (let i = 0; i < 9; i++) {
+    initial[i] = raw[i] !== undefined ? raw[i] : GOAL[i];
+  }
+
+  const toKey = (arr) => arr.join(',');
+  const goalKey = toKey(GOAL);
+
+  const dirMap = [
+    { name: 'Up',    dr: -1, dc: 0  },
+    { name: 'Down',  dr:  1, dc: 0  },
+    { name: 'Left',  dr:  0, dc: -1 },
+    { name: 'Right', dr:  0, dc:  1 },
+  ];
+
+  // BFS to find shortest solution path
+  const visited = new Map();
+  const queue = [{ state: [...initial], path: [] }];
+  visited.set(toKey(initial), true);
+  let solution = null;
+  let qHead = 0;
+  const maxStates = 8000;
+
+  while (qHead < queue.length) {
+    if (visited.size > maxStates) break;
+    const { state, path } = queue[qHead++];
+    if (toKey(state) === goalKey) { solution = { state, path }; break; }
+    if (path.length >= 30) continue; // cap to prevent infinite search
+
+    const blankIdx = state.indexOf(0);
+    const blankRow = Math.floor(blankIdx / size);
+    const blankCol = blankIdx % size;
+
+    for (const { name, dr, dc } of dirMap) {
+      const nr = blankRow + dr;
+      const nc = blankCol + dc;
+      if (nr < 0 || nr >= size || nc < 0 || nc >= size) continue;
+      const tileIdx = nr * size + nc;
+      const next = [...state];
+      [next[blankIdx], next[tileIdx]] = [next[tileIdx], next[blankIdx]];
+      const key = toKey(next);
+      if (!visited.has(key)) {
+        visited.set(key, true);
+        queue.push({ state: next, path: [...path, { state: next, move: name, tileVal: state[tileIdx] }] });
+      }
+    }
+  }
+
+  const toGrid = (arr) => [
+    [arr[0], arr[1], arr[2]],
+    [arr[3], arr[4], arr[5]],
+    [arr[6], arr[7], arr[8]],
+  ];
+
+  // Initial step
+  steps.push({
+    data: { grid: toGrid(initial), flat: [...initial] },
+    puzzleState: { grid: toGrid(initial), flat: [...initial], moveNum: 0, move: null, phase: 'init', totalMoves: solution ? solution.path.length : 0 },
+    highlights: {},
+    explanation: `Initial 8-Puzzle state. ${solution ? `BFS found a solution in ${solution.path.length} moves.` : 'No solution found — check your input.'}`,
+    stats: { comparisons: 0, swaps: 0, step: 0 },
+  });
+
+  if (!solution) {
+    steps.push({
+      data: { grid: toGrid(initial), flat: [...initial] },
+      puzzleState: { grid: toGrid(initial), flat: [...initial], moveNum: 0, move: null, phase: 'unsolvable', totalMoves: 0 },
+      highlights: {},
+      explanation: 'This puzzle configuration is unsolvable. Try a different arrangement.',
+      stats: { comparisons: 1, swaps: 0, step: 1 },
+    });
+    return steps;
+  }
+
+  // Replay each move
+  solution.path.forEach(({ state, move, tileVal }, idx) => {
+    const grid = toGrid(state);
+    const blankIdx = state.indexOf(0);
+    const blankRow = Math.floor(blankIdx / size);
+    const blankCol = blankIdx % size;
+    const phase = idx === solution.path.length - 1 ? 'done' : 'moving';
+    steps.push({
+      data: { grid, flat: [...state] },
+      puzzleState: { grid, flat: [...state], moveNum: idx + 1, move, tileVal, blankRow, blankCol, phase, totalMoves: solution.path.length },
+      highlights: { [`${blankRow}-${blankCol}`]: 'pivot' },
+      explanation: phase === 'done'
+        ? `Move ${idx + 1}/${solution.path.length}: Slide tile ${tileVal} ${move}. Puzzle Solved! 🎉`
+        : `Move ${idx + 1}/${solution.path.length}: Slide tile ${tileVal} ${move}.`,
+      stats: { comparisons: idx + 1, swaps: idx + 1, step: idx + 1 },
+    });
+  });
+
+  return steps;
+};

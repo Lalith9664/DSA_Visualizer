@@ -275,6 +275,8 @@ export const CATEGORIES = [
       "permutations",
       "crossword-solver",
       "branch-and-bound-concept",
+      "knights-tour",
+      "sliding-puzzle",
     ],
   },
   {
@@ -2208,6 +2210,82 @@ export const ALGORITHMS = {
     code: {
       python:
         "def solve_n_queens(n):\n    res = []\n    board = [['.'] * n for _ in range(n)]\n    def is_safe(r, c):\n        for i in range(r):\n            if board[i][c] == 'Q': return False\n            if c - (r - i) >= 0 and board[i][c - (r - i)] == 'Q': return False\n            if c + (r - i) < n and board[i][c + (r - i)] == 'Q': return False\n        return True",
+    },
+  },
+  "knights-tour": {
+    id: "knights-tour",
+    name: "Knight's Tour",
+    category: "backtracking",
+    difficulty: "Hard",
+    description:
+      "The Knight's Tour is a sequence of knight moves on a chessboard such that the knight visits every square exactly once. Uses Warnsdorff's heuristic (move to the square with the fewest onward moves) to guide backtracking, dramatically reducing search time.",
+    timeComplexity: {
+      best: "O(N²)",
+      average: "O(N^2 * 8!)",
+      worst: "O(8^(N²))",
+    },
+    spaceComplexity: "O(N²)",
+    applications: [
+      "Graph Hamiltonian path problems",
+      "Heuristic algorithm benchmarking",
+      "Game AI path planning",
+    ],
+    advantages: [
+      "Warnsdorff's heuristic finds solutions in near-linear time",
+      "Demonstrates backtracking with effective pruning",
+    ],
+    disadvantages: [
+      "Worst-case exponential without heuristics",
+      "Closed tours are harder to find for all board sizes",
+    ],
+    realWorldUses: [
+      "Chess engine move ordering",
+      "Robotic arm path scheduling",
+      "Network topology traversal",
+    ],
+    defaultInput: "5",
+    inputType: "recursion",
+    code: {
+      python:
+        "def knights_tour(n):\n    board = [[-1]*n for _ in range(n)]\n    moves = [(2,1),(1,2),(-1,2),(-2,1),(-2,-1),(-1,-2),(1,-2),(2,-1)]\n    def degree(r,c):\n        return sum(1 for dr,dc in moves if 0<=r+dr<n and 0<=c+dc<n and board[r+dr][c+dc]==-1)\n    def solve(r,c,move):\n        board[r][c]=move\n        if move==n*n-1: return True\n        cands=sorted([(r+dr,c+dc) for dr,dc in moves if 0<=r+dr<n and 0<=c+dc<n and board[r+dr][c+dc]==-1],key=lambda p:degree(*p))\n        for nr,nc in cands:\n            if solve(nr,nc,move+1): return True\n        board[r][c]=-1\n        return False\n    solve(0,0,0)\n    return board",
+    },
+  },
+  "sliding-puzzle": {
+    id: "sliding-puzzle",
+    name: "Sliding Puzzle (8-Puzzle)",
+    category: "backtracking",
+    difficulty: "Medium",
+    description:
+      "The 8-Puzzle is a 3×3 grid with tiles numbered 1–8 and one blank space. The goal is to slide tiles into the goal configuration [1,2,3,4,5,6,7,8,blank] using BFS to find the shortest solution path.",
+    timeComplexity: {
+      best: "O(1)",
+      average: "O(b^d)",
+      worst: "O(9!)",
+    },
+    spaceComplexity: "O(9!)",
+    applications: [
+      "AI search algorithms (BFS, A*, IDA*)",
+      "Puzzle game engines",
+      "Sliding window problems in competitive programming",
+    ],
+    advantages: [
+      "BFS guarantees shortest solution path",
+      "Clear demonstration of state-space exploration",
+    ],
+    disadvantages: [
+      "State space grows factorially with board size",
+      "Half of all configurations are unsolvable",
+    ],
+    realWorldUses: [
+      "Robot navigation planning (A* search)",
+      "Logistics route optimization",
+      "Puzzle game level generation",
+    ],
+    defaultInput: "1 2 3 4 5 6 7 0 8",
+    inputType: "puzzle",
+    code: {
+      python:
+        "from collections import deque\ndef solve_puzzle(start):\n    goal = (1,2,3,4,5,6,7,8,0)\n    start = tuple(start)\n    if start == goal: return []\n    visited = {start: None}\n    queue = deque([start])\n    while queue:\n        state = queue.popleft()\n        blank = state.index(0)\n        r,c = blank//3, blank%3\n        for dr,dc in [(-1,0),(1,0),(0,-1),(0,1)]:\n            nr,nc = r+dr,c+dc\n            if 0<=nr<3 and 0<=nc<3:\n                ni = nr*3+nc\n                nxt = list(state)\n                nxt[blank],nxt[ni]=nxt[ni],nxt[blank]\n                nxt=tuple(nxt)\n                if nxt not in visited:\n                    visited[nxt]=state\n                    if nxt==goal: return nxt\n                    queue.append(nxt)",
     },
   },
   "knapsack-dp": {

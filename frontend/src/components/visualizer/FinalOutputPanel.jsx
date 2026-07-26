@@ -162,6 +162,38 @@ function deriveOutput(algoId, snap) {
     return { label: 'Result', value: match ? 'Valid queen placement found ✓' : 'Placement complete', type: 'success' };
   }
 
+  // Knight's Tour
+  if (algoId?.includes('knights-tour') || algoId?.includes('knight')) {
+    const isDone = snap?.knightState?.phase === 'done';
+    const isFail = snap?.knightState?.phase === 'fail';
+    const size = snap?.knightState?.size || 5;
+    const moveCount = snap?.knightState?.moveCount ?? 0;
+    if (isDone) {
+      return { label: "Knight's Tour Result", value: `Complete! Knight visited all ${size * size} cells ✓`, type: 'success' };
+    }
+    if (isFail) {
+      return { label: "Knight's Tour Result", value: 'No complete tour found from (0,0) ✗', type: 'failure' };
+    }
+    return { label: "Knight's Tour Progress", value: `Move ${moveCount + 1} of ${size * size}`, type: 'array' };
+  }
+
+  // Sliding Puzzle
+  if (algoId?.includes('sliding-puzzle') || algoId?.includes('puzzle')) {
+    const phase = snap?.puzzleState?.phase;
+    const moveNum = snap?.puzzleState?.moveNum ?? 0;
+    const totalMoves = snap?.puzzleState?.totalMoves ?? 0;
+    if (phase === 'done') {
+      return { label: 'Sliding Puzzle Result', value: `Solved in ${totalMoves} moves! 🎉`, type: 'success' };
+    }
+    if (phase === 'unsolvable') {
+      return { label: 'Sliding Puzzle Result', value: 'This configuration is unsolvable ✗', type: 'failure' };
+    }
+    if (phase === 'init' && totalMoves > 0) {
+      return { label: 'BFS Solution Found', value: `Shortest path: ${totalMoves} moves`, type: 'array' };
+    }
+    return { label: 'Sliding Puzzle', value: `Move ${moveNum} / ${totalMoves}`, type: 'array' };
+  }
+
   // BST traversal path
   if (snap?.treeState?.path && snap.treeState.path.length > 0) {
     return { label: 'Traversal Order', value: `[${snap.treeState.path.join(' → ')}]`, type: 'array' };
@@ -250,9 +282,11 @@ function deriveOutput(algoId, snap) {
   // Rat in a Maze
   if (algoId?.includes('rat-in-a-maze') && snap?.gridState) {
     const isSuccess = snap.gridState.phase === 'success';
+    const destRow = snap.gridState.mazeRows != null ? snap.gridState.mazeRows - 1 : 3;
+    const destCol = snap.gridState.mazeCols != null ? snap.gridState.mazeCols - 1 : 3;
     return {
       label: 'Rat in a Maze Result',
-      value: isSuccess ? 'Path Solved Successfully! Rat reached (3, 3) ✓' : 'Blocked — No solution found for this maze layout ✗',
+      value: isSuccess ? `Path Solved Successfully! Rat reached (${destRow}, ${destCol}) ✓` : 'Blocked — No solution found for this maze layout ✗',
       type: isSuccess ? 'success' : 'failure'
     };
   }

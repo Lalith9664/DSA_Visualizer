@@ -399,6 +399,10 @@ const SECOND_INPUT_CONFIG = {
   },
 };
 
+// Helper: generate a blank (all-0) maze grid string of given dimensions
+const generateBlankMaze = (rows, cols) =>
+  Array.from({ length: rows }, () => Array(cols).fill(0).join(" ")).join("\n");
+
 const getCustomInputPlaceholder = (algo) => {
   if (!algo) return "";
   if (algo.id === "knapsack-dp") {
@@ -411,6 +415,9 @@ const getCustomInputPlaceholder = (algo) => {
     return "Enter character grid board layout (newline separated rows), e.g.:\nA B C E\nS F C S\nA D E E";
   }
   if (algo.inputType === "grid") {
+    if (algo.id === "rat-in-a-maze") {
+      return "Enter grid (0=open, 1=wall). Each row on a new line, cells space-separated, e.g.:\n0 1 0 0\n0 0 0 1\n1 0 0 0\n0 1 0 0";
+    }
     return "Enter grid board layout (space-separated cells, newline-separated rows), e.g.:\n0 1 0 0\n0 0 0 1\n1 0 0 0";
   }
   if (algo.inputType === "graph") {
@@ -435,7 +442,13 @@ const getCustomInputPlaceholder = (algo) => {
     return "Enter space-separated queue elements (e.g., 12 45 67 89)";
   }
   if (algo.inputType === "recursion") {
+    if (algo.id === "knights-tour") {
+      return "Enter board size N (5, 6 or 7). Knight visits all N×N cells once.";
+    }
     return "Enter positive integer for recursion (e.g., 3 or 5)";
+  }
+  if (algo.inputType === "puzzle") {
+    return "Enter 9 numbers 0–8 (0=blank), space-separated, e.g.: 1 2 3 4 5 6 7 0 8";
   }
   if (algo.inputType === "dp") {
     return "Enter integer size / value (e.g., 5 or 11)";
@@ -523,6 +536,22 @@ const VisualizerPage = () => {
   const [isNavigating, setIsNavigating] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  // Maze dimension state (Rat in a Maze)
+  const [mazeRows, setMazeRows] = useState(4);
+  const [mazeCols, setMazeCols] = useState(4);
+  // Maze start / destination coordinates
+  const [mazeStartRow, setMazeStartRow] = useState(0);
+  const [mazeStartCol, setMazeStartCol] = useState(0);
+  const [mazeDestRow, setMazeDestRow] = useState(3);
+  const [mazeDestCol, setMazeDestCol] = useState(3);
+  // N-Queens board size state
+  const [queenSize, setQueenSize] = useState(4);
+  // Knight's Tour board size and start cell
+  const [knightSize, setKnightSize] = useState(5);
+  const [knightStartRow, setKnightStartRow] = useState(0);
+  const [knightStartCol, setKnightStartCol] = useState(0);
+  const [knightDestRow, setKnightDestRow] = useState(4);
+  const [knightDestCol, setKnightDestCol] = useState(4);
 
   useEffect(() => {
     if (isExpanded) {
@@ -827,6 +856,8 @@ const VisualizerPage = () => {
         quadraticProbingSteps,
         doubleHashingSteps,
         separateChainingSteps,
+        knightsTourSteps,
+        slidingPuzzleSteps,
       } = await getGenerators(counterpartId);
 
       const rawInput =
@@ -1463,7 +1494,10 @@ const VisualizerPage = () => {
           } else if (algo.id === "branch-and-bound-concept") {
             computedSteps = branchAndBoundSteps(rawInput);
           } else if (algo.id === "n-queens") {
+            // rawInput could be a size number or use queenSize from state
             computedSteps = nQueensSteps(rawInput);
+          } else if (algo.id === "knights-tour") {
+            computedSteps = knightsTourSteps(parseInt(rawInput) || 5, knightStartRow, knightStartCol, knightDestRow, knightDestCol);
           } else if (algo.id === "generate-parentheses") {
             computedSteps = generateParenthesesSteps(parseInt(rawInput) || 3);
           } else {
@@ -1583,12 +1617,14 @@ const VisualizerPage = () => {
           }
         } else if (algo.inputType === "grid") {
           if (algo.id === "rat-in-a-maze") {
-            computedSteps = ratInAMazeSteps(rawInput, rawTarget);
+            computedSteps = ratInAMazeSteps(rawInput, rawTarget, mazeStartRow, mazeStartCol, mazeDestRow, mazeDestCol);
           } else if (algo.id === "crossword-solver") {
             computedSteps = crosswordSolverSteps(rawInput);
           } else {
             computedSteps = sudokuSolverSteps(rawInput);
           }
+        } else if (algo.inputType === "puzzle") {
+          computedSteps = slidingPuzzleSteps(rawInput);
         } else if (algo.inputType === "greedy-interval") {
           if (algo.id === "job-scheduling" || algo.id === "job-sequencing") {
             computedSteps = jobSchedulingSteps(rawInput);
@@ -1788,8 +1824,30 @@ const VisualizerPage = () => {
       }
     }
 
-    // Start with completely blank custom inputs
-    setCustomInput("");
+    // Reset dimension controls when navigating to maze/queens/knights
+    if (algoId === "rat-in-a-maze") {
+      setMazeRows(4);
+      setMazeCols(4);
+      setMazeStartRow(0);
+      setMazeStartCol(0);
+      setMazeDestRow(3);
+      setMazeDestCol(3);
+      setCustomInput(generateBlankMaze(4, 4));
+    } else if (algoId === "n-queens") {
+      setQueenSize(4);
+      setCustomInput("4");
+    } else if (algoId === "knights-tour") {
+      setKnightSize(5);
+      setKnightStartRow(0);
+      setKnightStartCol(0);
+      setKnightDestRow(4);
+      setKnightDestCol(4);
+      setCustomInput("5");
+    } else if (algoId === "sliding-puzzle") {
+      setCustomInput("1 2 3 4 5 6 7 0 8");
+    } else {
+      setCustomInput("");
+    }
     setTargetInput("");
     setDeleteInput("");
 
@@ -1804,6 +1862,35 @@ const VisualizerPage = () => {
       cancelled = true;
     };
   }, [algoId]);
+
+  // Reactive layout compiling for dimensional constraints
+  useEffect(() => {
+    if (isNavigating) return;
+    if (algoId === "knights-tour") {
+      generateSteps(String(knightSize), "");
+    }
+  }, [knightSize, knightStartRow, knightStartCol, knightDestRow, knightDestCol, algoId, isNavigating]);
+
+  useEffect(() => {
+    if (isNavigating) return;
+    if (algoId === "rat-in-a-maze") {
+      generateSteps(customInput || generateBlankMaze(mazeRows, mazeCols), "");
+    }
+  }, [mazeRows, mazeCols, mazeStartRow, mazeStartCol, mazeDestRow, mazeDestCol, customInput, algoId, isNavigating]);
+
+  useEffect(() => {
+    if (isNavigating) return;
+    if (algoId === "n-queens") {
+      generateSteps(String(queenSize), "");
+    }
+  }, [queenSize, algoId, isNavigating]);
+
+  useEffect(() => {
+    if (isNavigating) return;
+    if (algoId === "sliding-puzzle") {
+      generateSteps(customInput, "");
+    }
+  }, [customInput, algoId, isNavigating]);
 
   const handleApplyCustomInput = () => {
     const isInsertion =
@@ -2021,7 +2108,23 @@ const VisualizerPage = () => {
         randStr = "0 1 3\n0 2 6\n1 2 2\n1 3 1\n2 3 5";
       }
     } else if (algo.inputType === "recursion") {
-      randStr = (Math.floor(Math.random() * 2) + 3).toString();
+      if (algo.id === "knights-tour") {
+        const sizes = [5, 6, 7];
+        randStr = sizes[Math.floor(Math.random() * sizes.length)].toString();
+        setKnightSize(parseInt(randStr));
+      } else {
+        randStr = (Math.floor(Math.random() * 2) + 3).toString();
+      }
+    } else if (algo.inputType === "puzzle") {
+      // Pick a random solvable preset
+      const presets = [
+        "1 2 3 4 5 6 7 0 8",
+        "1 2 3 4 0 6 7 5 8",
+        "2 8 3 1 6 4 7 0 5",
+        "5 1 3 4 0 2 7 8 6",
+        "1 3 0 4 2 6 7 5 8",
+      ];
+      randStr = presets[Math.floor(Math.random() * presets.length)];
     } else if (algo.inputType === "dp") {
       if (algo.id === "knapsack-dp") {
         const weights = Array.from(
@@ -2102,12 +2205,16 @@ const VisualizerPage = () => {
       }
     } else if (algo.inputType === "grid") {
       if (algo.id === "rat-in-a-maze") {
-        const mazes = [
-          "0 1 0 0\n0 0 0 1\n1 0 0 0\n0 1 0 0",
-          "0 0 0 0\n1 1 0 1\n0 0 0 0\n0 1 1 0",
-          "0 1 0 0\n0 1 0 1\n0 0 0 0\n1 1 0 0",
-        ];
-        randStr = mazes[Math.floor(Math.random() * mazes.length)];
+        // Generate a random maze respecting current mazeRows x mazeCols
+        const r = mazeRows || 4;
+        const c = mazeCols || 4;
+        const grid = Array.from({ length: r }, () =>
+          Array.from({ length: c }, (_, ci) => (Math.random() < 0.25 && !(ci === 0) ? 1 : 0))
+        );
+        // Ensure start (0,0) and end (r-1, c-1) are always open
+        grid[0][0] = 0;
+        grid[r - 1][c - 1] = 0;
+        randStr = grid.map((row) => row.join(" ")).join("\n");
       } else {
         const boards = [
           "1 0 3 0\n0 0 0 2\n3 0 1 0\n0 2 0 4",
@@ -2326,6 +2433,246 @@ const VisualizerPage = () => {
           Type variables separated by spaces
         </span>
       </div>
+
+      {/* ── Rat in a Maze: Rows & Cols dimension pickers ── */}
+      {algoId === "rat-in-a-maze" && (
+        <div className="flex flex-col gap-3">
+          {/* Grid size row */}
+          <div className="flex gap-3 items-end">
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                Rows
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    const next = Math.max(2, mazeRows - 1);
+                    setMazeRows(next);
+                    setMazeDestRow(Math.min(mazeDestRow, next - 1));
+                    setMazeStartRow(Math.min(mazeStartRow, next - 1));
+                    setCustomInput(generateBlankMaze(next, mazeCols));
+                  }}
+                  className="clay-btn w-7 h-8 flex items-center justify-center text-xs font-bold text-text-secondary hover:text-text-primary"
+                >−</button>
+                <span className="w-8 text-center text-sm font-extrabold text-text-primary font-mono">{mazeRows}</span>
+                <button
+                  onClick={() => {
+                    const next = Math.min(8, mazeRows + 1);
+                    setMazeRows(next);
+                    setCustomInput(generateBlankMaze(next, mazeCols));
+                  }}
+                  className="clay-btn w-7 h-8 flex items-center justify-center text-xs font-bold text-text-secondary hover:text-text-primary"
+                >+</button>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                Columns
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    const next = Math.max(2, mazeCols - 1);
+                    setMazeCols(next);
+                    setMazeDestCol(Math.min(mazeDestCol, next - 1));
+                    setMazeStartCol(Math.min(mazeStartCol, next - 1));
+                    setCustomInput(generateBlankMaze(mazeRows, next));
+                  }}
+                  className="clay-btn w-7 h-8 flex items-center justify-center text-xs font-bold text-text-secondary hover:text-text-primary"
+                >−</button>
+                <span className="w-8 text-center text-sm font-extrabold text-text-primary font-mono">{mazeCols}</span>
+                <button
+                  onClick={() => {
+                    const next = Math.min(8, mazeCols + 1);
+                    setMazeCols(next);
+                    setCustomInput(generateBlankMaze(mazeRows, next));
+                  }}
+                  className="clay-btn w-7 h-8 flex items-center justify-center text-xs font-bold text-text-secondary hover:text-text-primary"
+                >+</button>
+              </div>
+            </div>
+            <span className="text-[9px] text-text-secondary opacity-60 pb-2 font-mono">
+              1 = wall · 0 = open path
+            </span>
+          </div>
+
+          {/* Start / Destination coord row */}
+          <div className="flex gap-4 items-center flex-wrap">
+            {/* Start */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-green-400 select-none">🐭 Start (row, col)</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number" min={0} max={mazeRows - 1}
+                  value={mazeStartRow}
+                  onChange={e => setMazeStartRow(Math.min(Math.max(0, parseInt(e.target.value) || 0), mazeRows - 1))}
+                  className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-green-400"
+                />
+                <span className="text-xs text-text-secondary font-mono">,</span>
+                <input
+                  type="number" min={0} max={mazeCols - 1}
+                  value={mazeStartCol}
+                  onChange={e => setMazeStartCol(Math.min(Math.max(0, parseInt(e.target.value) || 0), mazeCols - 1))}
+                  className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-green-400"
+                />
+              </div>
+            </div>
+            <span className="text-text-secondary text-sm mt-4">→</span>
+            {/* Destination */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-amber-400 select-none">🧀 Destination (row, col)</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number" min={0} max={mazeRows - 1}
+                  value={mazeDestRow}
+                  onChange={e => setMazeDestRow(Math.min(Math.max(0, parseInt(e.target.value) || 0), mazeRows - 1))}
+                  className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-amber-400"
+                />
+                <span className="text-xs text-text-secondary font-mono">,</span>
+                <input
+                  type="number" min={0} max={mazeCols - 1}
+                  value={mazeDestCol}
+                  onChange={e => setMazeDestCol(Math.min(Math.max(0, parseInt(e.target.value) || 0), mazeCols - 1))}
+                  className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-amber-400"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── N-Queens: Board Size picker ── */}
+      {algoId === "n-queens" && (
+        <div className="flex flex-col gap-1">
+          <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+            Board Size (N × N)
+          </span>
+          <div className="flex items-center gap-2">
+            {[4, 5, 6, 7, 8].map((n) => (
+              <button
+                key={n}
+                onClick={() => {
+                  setQueenSize(n);
+                  setCustomInput(String(n));
+                }}
+                className={`w-9 h-9 rounded-lg text-sm font-extrabold transition-all duration-200 border ${
+                  queenSize === n
+                    ? "bg-primary text-white border-primary shadow-md scale-105"
+                    : "bg-white/5 dark:bg-white/5 border-white/10 text-text-secondary hover:text-text-primary hover:bg-primary/10"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+            <span className="text-[9px] text-text-secondary opacity-60 font-mono pl-1">queens on N×N board</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Knight's Tour: Board Size picker ── */}
+      {algoId === "knights-tour" && (
+        <div className="flex flex-col gap-3">
+          {/* Board size */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+              Board Size (N × N)
+            </span>
+            <div className="flex items-center gap-2">
+              {[5, 6, 7].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => {
+                    setKnightSize(n);
+                    setKnightStartRow(Math.min(knightStartRow, n - 1));
+                    setKnightStartCol(Math.min(knightStartCol, n - 1));
+                    setCustomInput(String(n));
+                  }}
+                  className={`w-9 h-9 rounded-lg text-sm font-extrabold transition-all duration-200 border ${
+                    knightSize === n
+                      ? "bg-amber-500 text-white border-amber-400 shadow-md scale-105"
+                      : "bg-white/5 dark:bg-white/5 border-white/10 text-text-secondary hover:text-text-primary hover:bg-amber-500/10"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+              <span className="text-[9px] text-text-secondary opacity-60 font-mono pl-1">knight visits all {knightSize}×{knightSize} = {knightSize * knightSize} cells</span>
+            </div>
+          </div>
+          {/* Start & Destination position */}
+          <div className="flex gap-4 items-center flex-wrap">
+            {/* Start */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-green-400 select-none">🏁 Start (row, col)</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number" min={0} max={knightSize - 1}
+                  value={knightStartRow}
+                  onChange={e => setKnightStartRow(Math.min(Math.max(0, parseInt(e.target.value) || 0), knightSize - 1))}
+                  className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-green-400"
+                />
+                <span className="text-xs text-text-secondary font-mono">,</span>
+                <input
+                  type="number" min={0} max={knightSize - 1}
+                  value={knightStartCol}
+                  onChange={e => setKnightStartCol(Math.min(Math.max(0, parseInt(e.target.value) || 0), knightSize - 1))}
+                  className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-green-400"
+                />
+              </div>
+            </div>
+            <span className="text-text-secondary text-sm mt-4">→</span>
+            {/* Destination */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-amber-400 select-none">🎯 Destination (row, col)</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number" min={0} max={knightSize - 1}
+                  value={knightDestRow}
+                  onChange={e => setKnightDestRow(Math.min(Math.max(0, parseInt(e.target.value) || 0), knightSize - 1))}
+                  className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-amber-400"
+                />
+                <span className="text-xs text-text-secondary font-mono">,</span>
+                <input
+                  type="number" min={0} max={knightSize - 1}
+                  value={knightDestCol}
+                  onChange={e => setKnightDestCol(Math.min(Math.max(0, parseInt(e.target.value) || 0), knightSize - 1))}
+                  className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-amber-400"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sliding Puzzle: Preset scrambles ── */}
+      {algoId === "sliding-puzzle" && (
+        <div className="flex flex-col gap-1">
+          <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+            Puzzle Preset (row by row, 0 = blank)
+          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { label: "Easy", val: "1 2 3 4 5 6 7 0 8" },
+              { label: "Medium", val: "1 2 3 4 0 6 7 5 8" },
+              { label: "Hard", val: "2 8 3 1 6 4 7 0 5" },
+              { label: "Scramble", val: "5 1 3 4 0 2 7 8 6" },
+            ].map(({ label, val }) => (
+              <button
+                key={label}
+                onClick={() => setCustomInput(val)}
+                className={`px-3 py-1 rounded-lg text-[10px] font-extrabold transition-all duration-200 border ${
+                  customInput === val
+                    ? "bg-cyan-500 text-white border-cyan-400 shadow-md"
+                    : "bg-white/5 dark:bg-white/5 border-white/10 text-text-secondary hover:text-text-primary hover:bg-cyan-500/10"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            <span className="text-[9px] text-text-secondary opacity-60 font-mono pl-1">or type 9 numbers (0–8)</span>
+          </div>
+        </div>
+      )}
       {isCombinedTreeAlgo ? (
         <div className="flex flex-col gap-3">
           {/* 1. Underlying tree structure array */}
@@ -2404,7 +2751,17 @@ const VisualizerPage = () => {
         </div>
       ) : (
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-start w-full">
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col gap-1.5">
+            <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none flex items-center justify-between">
+              <span>
+                {algo.inputType === "graph" || algo.inputType === "grid" || algo.inputType === "word-search-grid" || (algo.defaultInput && algo.defaultInput.includes("\n") && !secondInputConfig)
+                  ? "Custom Layout Grid"
+                  : "Custom Input Values"}
+              </span>
+            </span>
+            <span className="text-[10px] text-text-secondary opacity-75 pl-1 select-none whitespace-pre-line leading-relaxed pb-1 font-mono">
+              {getCustomInputPlaceholder(algo)}
+            </span>
             {algo.inputType === "graph" ||
             algo.inputType === "grid" ||
             algo.inputType === "word-search-grid" ||
@@ -2430,10 +2787,15 @@ const VisualizerPage = () => {
             )}
           </div>
           {secondInputConfig && (
-            <div className={`w-full ${algo.id === "rat-in-a-maze" ? "sm:w-60 md:w-64" : "sm:w-28 md:w-36"} flex-shrink-0 flex flex-col gap-1`}>
+            <div className={`w-full ${algo.id === "rat-in-a-maze" ? "sm:w-60 md:w-64" : "sm:w-28 md:w-36"} flex-shrink-0 flex flex-col gap-1.5`}>
               <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
                 {algo.id === "rat-in-a-maze" ? "Direction Search Mode" : secondInputConfig.label.split("(")[0].trim()}
               </span>
+              {algo.id !== "rat-in-a-maze" && (
+                <span className="text-[10px] text-text-secondary opacity-75 pl-1 select-none font-mono pb-1">
+                  {getSecondInputPlaceholder(secondInputConfig)}
+                </span>
+              )}
               {algo.id === "rat-in-a-maze" ? (
                 <div className="flex bg-[#f3f4f6]/5 dark:bg-white/5 border border-black/5 dark:border-white/10 p-0.5 rounded-lg w-full">
                   <button
@@ -2514,6 +2876,13 @@ const VisualizerPage = () => {
     setCustomInput("");
     setTargetInput("");
     setDeleteInput("");
+    // Reset dimension controls for specific algorithms
+    if (algoId === "rat-in-a-maze") {
+      setMazeRows(4);
+      setMazeCols(4);
+    }
+    if (algoId === "n-queens") setQueenSize(4);
+    if (algoId === "knights-tour") setKnightSize(5);
   };
 
   const totalSteps = steps.length;

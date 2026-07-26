@@ -7,6 +7,8 @@ export {
   generateParenthesesSteps,
   towerOfHanoiSteps,
   wordSearchSteps,
+  knightsTourSteps,
+  slidingPuzzleSteps,
 } from '../stepGenerators';
 
 export {

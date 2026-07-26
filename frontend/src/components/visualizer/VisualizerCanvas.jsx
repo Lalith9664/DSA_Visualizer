@@ -4278,26 +4278,228 @@ const VisualizerCanvas = ({
     );
   };
 
+  // --- 8.6 RENDER KNIGHT'S TOUR CHESSBOARD ---
+  const renderKnightsTourCanvas = () => {
+    const {
+      board = [],
+      size = 5,
+      currentRow,
+      currentCol,
+      phase,
+      startRow = 0,
+      startCol = 0,
+      destRow = 4,
+      destCol = 4,
+    } = currentSnap.knightState || {};
+
+    const cellSize = Math.min(48, Math.floor(280 / size));
+
+    return (
+      <div className="w-full h-72 flex flex-col items-center justify-center gap-3 px-4">
+        {/* Board */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
+            gridTemplateRows: `repeat(${size}, ${cellSize}px)`,
+          }}
+          className="border border-slate-700 rounded-xl overflow-hidden shadow-2xl"
+        >
+          {Array.from({ length: size }).map((_, r) =>
+            Array.from({ length: size }).map((_, c) => {
+              const moveNum = board[r]?.[c] ?? -1;
+              const isDark = (r + c) % 2 === 1;
+              const isKnight = currentRow === r && currentCol === c;
+              const isVisited = moveNum >= 0;
+              const isBacktrack = isKnight && phase === 'backtrack';
+              const isStart = r === startRow && c === startCol;
+              const isDest = r === destRow && c === destCol;
+
+              let cellClass = isDark ? 'bg-slate-800' : 'bg-slate-700';
+              if (isBacktrack) cellClass = 'bg-red-600/60 border-2 border-red-400';
+              else if (isKnight) cellClass = 'bg-amber-500/70 border-2 border-amber-300';
+              else if (isVisited) cellClass = isDark ? 'bg-emerald-900/80' : 'bg-emerald-800/60';
+
+              return (
+                <div
+                  key={`${r}-${c}`}
+                  style={{ width: cellSize, height: cellSize }}
+                  className={`flex items-center justify-center relative transition-all duration-200 ${cellClass} ${
+                    isStart && !isKnight ? 'ring-2 ring-inset ring-green-500/80' : ''
+                  } ${
+                    isDest && !isKnight ? 'ring-2 ring-inset ring-rose-500/80' : ''
+                  }`}
+                >
+                  {isKnight && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="text-base md:text-lg select-none z-10 drop-shadow-[0_0_8px_#fbbf24]"
+                    >
+                      ♞
+                    </motion.span>
+                  )}
+                  {isVisited && !isKnight && (
+                    <span
+                      className="text-[9px] md:text-[11px] font-extrabold text-emerald-300 font-mono select-none"
+                    >
+                      {moveNum + 1}
+                    </span>
+                  )}
+                  {isStart && (
+                    <span className="absolute top-0.5 left-1 text-[7px] text-green-400 font-extrabold select-none opacity-80">
+                      S
+                    </span>
+                  )}
+                  {isDest && (
+                    <span className="absolute bottom-0.5 right-1 text-[7px] text-rose-400 font-extrabold select-none opacity-80">
+                      D
+                    </span>
+                  )}
+                  {phase === 'done' && isVisited && (
+                    <span className="absolute inset-0 bg-emerald-400/10" />
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+        {/* Legend */}
+        <div className="flex gap-3 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500 inline-block" /> Current</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-800 inline-block" /> Visited</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-600 inline-block" /> Backtrack</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-green-500 inline-block" /> Start</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-rose-500 inline-block" /> Destination</span>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 8.7 RENDER SLIDING PUZZLE (8-PUZZLE) ---
+  const renderSlidingPuzzleCanvas = () => {
+    const {
+      grid = [[1,2,3],[4,5,6],[7,8,0]],
+      moveNum = 0,
+      move,
+      tileVal,
+      blankRow,
+      blankCol,
+      phase,
+      totalMoves = 0,
+    } = currentSnap.puzzleState || {};
+
+    const GOAL = [[1,2,3],[4,5,6],[7,8,0]];
+    const tileColors = [
+      'from-violet-600 to-purple-700',
+      'from-blue-600 to-blue-700',
+      'from-cyan-600 to-cyan-700',
+      'from-teal-600 to-teal-700',
+      'from-emerald-600 to-emerald-700',
+      'from-lime-600 to-lime-700',
+      'from-amber-500 to-orange-600',
+      'from-rose-600 to-red-700',
+    ];
+
+    return (
+      <div className="w-full h-72 flex flex-col items-center justify-center gap-4">
+        {/* Progress bar */}
+        <div className="w-48 flex flex-col gap-1">
+          <div className="flex justify-between text-[9px] font-bold text-text-secondary">
+            <span>Move {moveNum} / {totalMoves}</span>
+            <span className={phase === 'done' ? 'text-green-400' : phase === 'unsolvable' ? 'text-red-400' : 'text-accent'}>
+              {phase === 'done' ? '✓ Solved!' : phase === 'unsolvable' ? '✗ Unsolvable' : phase === 'init' ? 'BFS Ready' : `Sliding ${move}`}
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${phase === 'done' ? 'bg-green-400' : 'bg-primary'}`}
+              style={{ width: totalMoves > 0 ? `${(moveNum / totalMoves) * 100}%` : '0%' }}
+            />
+          </div>
+        </div>
+
+        {/* 3×3 grid */}
+        <div className="grid grid-cols-3 gap-2 p-3 bg-slate-900/60 rounded-2xl border border-slate-700 shadow-2xl">
+          {grid.map((row, r) =>
+            row.map((tile, c) => {
+              const isBlank = tile === 0;
+              const isGoalCorrect = !isBlank && GOAL[r][c] === tile;
+              const isCurrent = blankRow === r && blankCol === c;
+
+              return (
+                <motion.div
+                  key={`${r}-${c}`}
+                  layout
+                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                  className={`w-14 h-14 flex items-center justify-center rounded-xl font-extrabold text-xl select-none
+                    ${isBlank
+                      ? 'bg-slate-800/40 border-2 border-dashed border-slate-600'
+                      : `bg-gradient-to-br ${tileColors[(tile - 1) % tileColors.length]} text-white shadow-lg
+                        ${isGoalCorrect && phase === 'done' ? 'ring-2 ring-green-400 ring-offset-1 ring-offset-slate-900' : ''}
+                        ${isCurrent && !isBlank ? 'ring-2 ring-amber-400 scale-105' : ''}
+                      `
+                    }
+                  `}
+                >
+                  {isBlank ? '' : tile}
+                </motion.div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Goal state hint */}
+        <div className="flex items-center gap-1.5 text-[9px] text-slate-500 font-mono">
+          <span>Goal:</span>
+          {[1,2,3,4,5,6,7,8,'□'].map((t, i) => (
+            <span key={i} className="w-4 h-4 flex items-center justify-center rounded bg-slate-800 text-[8px] font-bold">
+              {t}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderGridCanvas = () => {
     if (algorithm.id === "rat-in-a-maze") {
-      const { currentRow, currentCol, phase } = currentSnap.gridState || {};
+      const {
+        currentRow,
+        currentCol,
+        phase,
+        mazeRows,
+        mazeCols,
+        startRow = 0,
+        startCol = 0,
+        destRow = 3,
+        destCol = 3,
+      } = currentSnap.gridState || {};
       const actualMaze = currentSnap.data?.maze || [];
       const actualPath = currentSnap.data?.path || [];
-      const size = 4;
+      const gridRows = mazeRows || actualMaze.length || 4;
+      const gridCols = mazeCols || (actualMaze[0] ? actualMaze[0].length : 4);
+      const cellSize = Math.min(52, Math.floor(260 / Math.max(gridRows, gridCols)));
+
+      // If destRow/destCol are defaults, dynamically set to last cell if undefined
+      const sr = startRow;
+      const sc = startCol;
+      const dr = destRow ?? (gridRows - 1);
+      const dc = destCol ?? (gridCols - 1);
 
       return (
         <div className="w-full h-72 flex flex-col items-center justify-center gap-4 px-6">
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
-              width: `${size * 52}px`,
-              height: `${size * 52}px`,
+              gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+              width: `${gridCols * cellSize}px`,
+              height: `${gridRows * cellSize}px`,
             }}
             className="border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-md rounded-2xl overflow-hidden p-2 gap-1.5"
           >
-            {Array.from({ length: size }).map((_, r) =>
-              Array.from({ length: size }).map((_, c) => {
+            {Array.from({ length: gridRows }).map((_, r) =>
+              Array.from({ length: gridCols }).map((_, c) => {
                 const isWall = actualMaze[r] && actualMaze[r][c] === 1;
                 const isPath = actualPath[r] && actualPath[r][c] === 1;
                 const isCurrent = currentRow === r && currentCol === c;
@@ -4332,9 +4534,9 @@ const VisualizerCanvas = ({
                   >
                     {isWall ? (
                       <span className="text-[14px]">🧱</span>
-                    ) : r === 0 && c === 0 ? (
+                    ) : r === sr && c === sc ? (
                       <span className="text-[16px] z-10">🐭</span>
-                    ) : r === size - 1 && c === size - 1 ? (
+                    ) : r === dr && c === dc ? (
                       <span className="text-[16px] z-10">🧀</span>
                     ) : isPath ? (
                       <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
@@ -9304,9 +9506,14 @@ const VisualizerCanvas = ({
         if (algorithm.id === "branch-and-bound-concept") {
           return renderBranchAndBoundCanvas();
         }
+        if (algorithm.id === "knights-tour") {
+          return renderKnightsTourCanvas();
+        }
         return currentSnap.queensState
           ? renderChessboardCanvas()
           : renderHanoiCanvas();
+      case "puzzle":
+        return renderSlidingPuzzleCanvas();
       case "dp":
         if (resolvedId === "dp-burst-balloons")
           return renderBurstBalloonsCanvas();
