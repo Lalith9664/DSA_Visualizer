@@ -3529,7 +3529,7 @@ const VisualizerCanvas = ({
               ? "Linear Factorial Call Stack"
               : "Binary Recursion Tree"}
           </span>
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/20 text-primary uppercase font-mono">
+          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-primary/20 text-primary uppercase font-mono animate-pulse">
             Active:{" "}
             {activeNodeId !== null
               ? `${isFactorial ? "fact" : "fib"}(${nodes.find((n) => n.id === activeNodeId)?.val})`
@@ -3537,8 +3537,9 @@ const VisualizerCanvas = ({
           </span>
         </div>
 
-        <div className="relative w-full max-w-lg h-60 min-h-[220px] select-none mx-auto flex items-center justify-center">
+        <div className="relative w-full max-w-lg h-60 min-h-[220px] select-none mx-auto flex items-center justify-center z-10">
           <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+            {/* Draw connecting edge lines */}
             {nodes.map((node) => {
               if (isFactorial) {
                 if (node.childId !== null && node.childId !== undefined) {
@@ -3608,7 +3609,7 @@ const VisualizerCanvas = ({
               bgClass = "bg-emerald-500 text-white font-bold";
               clayStyle = {
                 boxShadow:
-                  "inset 4px 4px 8px rgba(255, 255, 255, 0.4), inset -4px -4px 8px rgba(0, 0, 0, 0.35), 8px 8px 20px rgba(16, 185, 129, 0.3)",
+                  "inset 4px 4px 8px rgba(255, 255, 255, 0.4), inset -4px -4px 8px rgba(0, 0, 0, 0.35), 8px 8px 20px rgba(16, 185, 129, 0.35)",
               };
             }
 
@@ -6607,7 +6608,7 @@ const VisualizerCanvas = ({
           </span>
         </div>
 
-        <div className="w-full flex flex-col gap-3 max-w-lg mx-auto py-2">
+        <div className="w-full flex flex-col gap-3 max-w-lg mx-auto py-2 max-h-[380px] overflow-y-auto pr-1">
           {buckets.map((bucket, idx) => (
             <div
               key={idx}
@@ -6747,7 +6748,7 @@ const VisualizerCanvas = ({
             <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider">
               Bit Slots
             </span>
-            <div className="flex gap-1.5 p-2 rounded-xl border border-slate-800 bg-slate-950">
+            <div className="flex flex-wrap justify-center gap-1.5 p-2.5 rounded-xl border border-slate-800 bg-slate-950 max-w-lg max-h-[160px] overflow-y-auto">
               {bits.map((bit, idx) => {
                 const isActive = activeHashes.includes(idx);
 
@@ -9531,14 +9532,75 @@ const VisualizerCanvas = ({
     }
   };
 
+  const showCallStack = currentSnap && Array.isArray(currentSnap.recursionStack);
+
   return (
     <div
       className={`skeuo-screen w-full select-none relative group transition-all duration-300 ${isExpanded ? "h-full min-h-[450px] flex items-center justify-center" : ""}`}
     >
       <div className="skeuo-screen-overlay" />
 
+      {/* Floating expanded header with algorithm name */}
+      {isExpanded && algorithm?.name && (
+        <div className="absolute top-3 left-3 z-30 px-3.5 py-1.5 rounded-xl bg-slate-900/60 hover:bg-slate-900/85 text-white/95 backdrop-blur-md border border-slate-700/50 shadow-md font-sans text-xs font-semibold select-none flex items-center gap-2 transition-all">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+          <span>{algorithm.name}</span>
+        </div>
+      )}
+
       {/* Render canvas or loading/empty state */}
-      <div className={isExpanded ? "w-full flex items-center justify-center" : ""}>{getCanvasContent()}</div>
+      <div className={`w-full ${isExpanded ? "h-full flex items-center justify-center" : ""}`}>
+        {showCallStack ? (
+          <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch p-1 z-10">
+            <div className="md:col-span-8 relative w-full flex items-center justify-center min-h-[340px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm overflow-hidden">
+              {getCanvasContent()}
+            </div>
+            
+            <div className="md:col-span-4 flex flex-col gap-2.5 p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200/85 dark:border-slate-800/85 rounded-3xl max-h-[380px] overflow-y-auto min-h-[220px]">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center border-b border-slate-200 dark:border-slate-800/60 pb-1.5 mb-1.5 select-none">
+                Execution Call Stack
+              </span>
+              <div className="flex flex-col-reverse gap-2">
+                {currentSnap.recursionStack.length === 0 ? (
+                  <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 text-center py-10 italic">
+                    Stack is empty
+                  </div>
+                ) : (
+                  currentSnap.recursionStack.map((stackVal, index) => {
+                    const isTop = index === currentSnap.recursionStack.length - 1;
+                    return (
+                      <motion.div
+                        key={`${stackVal}-${index}`}
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`
+                          px-3.5 py-2.5 rounded-xl border flex items-center justify-between font-mono text-[10px] transition-all duration-200 shadow-inner select-none
+                          ${
+                            isTop
+                              ? "bg-amber-500/10 border-amber-500/40 text-amber-600 dark:text-amber-400 font-extrabold"
+                              : "bg-slate-200/40 dark:bg-slate-900 border-slate-300/50 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-1.5 h-1.5 rounded-full ${isTop ? "bg-amber-500 animate-pulse" : "bg-slate-400"}`} />
+                          <span className="truncate max-w-[150px]">{stackVal}</span>
+                        </div>
+                        <span className="text-[8px] font-black uppercase tracking-wider opacity-85">
+                          {isTop ? "active" : "pending"}
+                        </span>
+                      </motion.div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          getCanvasContent()
+        )}
+      </div>
 
       {/* Full screen toggle button */}
       <button

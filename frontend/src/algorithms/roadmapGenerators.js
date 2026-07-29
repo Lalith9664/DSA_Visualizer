@@ -3420,19 +3420,22 @@ export function factorialRecursionSteps(rawInput) {
     data: nodes.map(n => ({ ...n })),
     treeState: { activeNode: null },
     explanation: `Compute Factorial(${valN}) using recursion. fact(n) = n * fact(n-1).`,
-    stats: { step: 0 }
+    stats: { step: 0 },
+    recursionStack: [],
   });
 
-  const runFact = (idx) => {
+  const runFact = (idx, path = []) => {
     const node = nodes[idx];
     const nodeId = node.id;
+    const currentPath = [...path, `fact(${node.val})` ];
 
     steps.push({
       data: nodes.map(n => ({ ...n })),
       treeState: { activeNode: nodeId },
       highlights: { [nodeId]: 'pivot' },
       explanation: `Calling fact(${node.val}).`,
-      stats: { step: steps.length }
+      stats: { step: steps.length },
+      recursionStack: currentPath,
     });
 
     if (node.val <= 1) {
@@ -3444,12 +3447,13 @@ export function factorialRecursionSteps(rawInput) {
         treeState: { activeNode: nodeId },
         highlights: { [nodeId]: 'sorted' },
         explanation: `Base Case: fact(${node.val}) = 1.`,
-        stats: { step: steps.length }
+        stats: { step: steps.length },
+        recursionStack: currentPath,
       });
       return 1;
     }
 
-    const sub = runFact(idx + 1);
+    const sub = runFact(idx + 1, currentPath);
     const res = node.val * sub;
     node.result = res;
     nodes[idx].result = res;
@@ -3459,7 +3463,8 @@ export function factorialRecursionSteps(rawInput) {
       treeState: { activeNode: nodeId },
       highlights: { [nodeId]: 'sorted' },
       explanation: `Returning from sub-call: fact(${node.val}) = ${node.val} * fact(${node.val - 1}) (${sub}) = ${res}.`,
-      stats: { step: steps.length }
+      stats: { step: steps.length },
+      recursionStack: currentPath,
     });
 
     return res;
@@ -3472,7 +3477,8 @@ export function factorialRecursionSteps(rawInput) {
     treeState: { activeNode: null },
     highlights: nodes.reduce((acc, n) => ({ ...acc, [n.id]: 'sorted' }), {}),
     explanation: `Recursion complete. Factorial(${valN}) = ${nodes[0].result}.`,
-    stats: { step: steps.length }
+    stats: { step: steps.length },
+    recursionStack: [],
   });
 
   return steps;
@@ -3501,16 +3507,19 @@ export function letterCombinationsSteps(rawInput) {
   steps.push({
     data: { digits, currentPrefix: "", combinations: [], activeDigit: "", letters: "" },
     explanation: `Initialize: Map digits "${digits}" to corresponding letter groups.`,
-    stats: { step: 0 }
+    stats: { step: 0 },
+    recursionStack: [],
   });
 
-  const backtrack = (idx, currentPrefix) => {
+  const backtrack = (idx, currentPrefix, path = []) => {
+    const currentPath = [...path, `backtrack(idx=${idx}, prefix="${currentPrefix}")` ];
     if (idx === digits.length) {
       if (currentPrefix) combinations.push(currentPrefix);
       steps.push({
         data: { digits, currentPrefix, combinations: [...combinations], activeDigit: "", letters: "" },
         explanation: `Reached leaf node. Found valid combination: "${currentPrefix}".`,
-        stats: { step: steps.length }
+        stats: { step: steps.length },
+        recursionStack: currentPath,
       });
       return;
     }
@@ -3521,20 +3530,22 @@ export function letterCombinationsSteps(rawInput) {
     steps.push({
       data: { digits, currentPrefix, combinations: [...combinations], activeDigit: digit, letters },
       explanation: `Digit '${digit}' maps to [${letters.split('').join(', ')}]. Appending to current prefix "${currentPrefix}".`,
-      stats: { step: steps.length }
+      stats: { step: steps.length },
+      recursionStack: currentPath,
     });
 
     for (let char of letters) {
-      backtrack(idx + 1, currentPrefix + char);
+      backtrack(idx + 1, currentPrefix + char, currentPath);
     }
   };
 
-  backtrack(0, "");
+  backtrack(0, "", []);
 
   steps.push({
     data: { digits, currentPrefix: "", combinations: [...combinations], activeDigit: "", letters: "" },
     explanation: `Backtracking complete. All ${combinations.length} combinations generated.`,
-    stats: { step: steps.length }
+    stats: { step: steps.length },
+    recursionStack: [],
   });
 
   return steps;
@@ -3558,16 +3569,19 @@ export function backtrackingPalindromePartitioningSteps(rawInput) {
   steps.push({
     data: { str, current: [], subStr: "", matchedIndex: -1, completed: [] },
     explanation: `Initialize Palindrome Partitioning for string "${str}".`,
-    stats: { step: 0 }
+    stats: { step: 0 },
+    recursionStack: [],
   });
 
-  const backtrack = (start, current) => {
+  const backtrack = (start, current, path = []) => {
+    const currentPath = [...path, `backtrack(start=${start}, current=[${current.join(',')}])` ];
     if (start === str.length) {
       partitions.push([...current]);
       steps.push({
         data: { str, current: [...current], subStr: "", matchedIndex: -1, completed: [...partitions] },
         explanation: `Reached end of string. Valid partitioning found: [${current.join(', ')}].`,
-        stats: { step: steps.length }
+        stats: { step: steps.length },
+        recursionStack: currentPath,
       });
       return;
     }
@@ -3579,34 +3593,38 @@ export function backtrackingPalindromePartitioningSteps(rawInput) {
       steps.push({
         data: { str, current: [...current], subStr: sub, matchedIndex: i - 1, completed: [...partitions] },
         explanation: `Inspect substring "${sub}" (indices ${start} to ${i - 1}).`,
-        stats: { step: steps.length }
+        stats: { step: steps.length },
+        recursionStack: currentPath,
       });
 
       if (ok) {
         steps.push({
           data: { str, current: [...current], subStr: sub, matchedIndex: i - 1, completed: [...partitions] },
           explanation: `"${sub}" is a palindrome. Push to active partition list and recurse.`,
-          stats: { step: steps.length }
+          stats: { step: steps.length },
+          recursionStack: currentPath,
         });
         current.push(sub);
-        backtrack(i, current);
+        backtrack(i, current, currentPath);
         current.pop();
       } else {
         steps.push({
           data: { str, current: [...current], subStr: sub, matchedIndex: i - 1, completed: [...partitions] },
           explanation: `"${sub}" is not a palindrome. Skip branch.`,
-          stats: { step: steps.length }
+          stats: { step: steps.length },
+          recursionStack: currentPath,
         });
       }
     }
   };
 
-  backtrack(0, []);
+  backtrack(0, [], []);
 
   steps.push({
     data: { str, current: [], subStr: "", matchedIndex: -1, completed: [...partitions] },
     explanation: `Backtracking complete. Found ${partitions.length} partitions.`,
-    stats: { step: steps.length }
+    stats: { step: steps.length },
+    recursionStack: [],
   });
 
   return steps;
@@ -3621,16 +3639,19 @@ export function permutationsSteps(rawInput) {
   steps.push({
     data: { arr: [...elements], current: [], remaining: [...elements], completed: [] },
     explanation: `Initialize permutations for elements [${elements.join(', ')}].`,
-    stats: { step: 0 }
+    stats: { step: 0 },
+    recursionStack: [],
   });
 
-  const backtrack = (curr, rem) => {
+  const backtrack = (curr, rem, path = []) => {
+    const currentPath = [...path, `backtrack(curr=[${curr.join(',')}], rem=[${rem.join(',')}])` ];
     if (rem.length === 0) {
       results.push([...curr]);
       steps.push({
         data: { arr: [...elements], current: [...curr], remaining: [], completed: [...results] },
         explanation: `Permutation candidate complete: [${curr.join(', ')}].`,
-        stats: { step: steps.length }
+        stats: { step: steps.length },
+        recursionStack: currentPath,
       });
       return;
     }
@@ -3642,21 +3663,23 @@ export function permutationsSteps(rawInput) {
       steps.push({
         data: { arr: [...elements], current: [...curr], remaining: [...rem], completed: [...results] },
         explanation: `Pick element "${nextVal}" from remaining.`,
-        stats: { step: steps.length }
+        stats: { step: steps.length },
+        recursionStack: currentPath,
       });
 
       curr.push(nextVal);
-      backtrack(curr, nextRem);
+      backtrack(curr, nextRem, currentPath);
       curr.pop();
     }
   };
 
-  backtrack([], [...elements]);
+  backtrack([], [...elements], []);
 
   steps.push({
     data: { arr: [...elements], current: [], remaining: [], completed: [...results] },
     explanation: `Permutations generator complete. Found ${results.length} total configurations.`,
-    stats: { step: steps.length }
+    stats: { step: steps.length },
+    recursionStack: [],
   });
 
   return steps;
@@ -3675,7 +3698,8 @@ export function crosswordSolverSteps(rawInput) {
   steps.push({
     data: { board: board.map(r => [...r]), words: [...words], activeWord: "", stepIndex: 0 },
     explanation: "Initialize Crossword Solver on 3x3 grid. Words to fit: [CAT, DOG].",
-    stats: { step: 0 }
+    stats: { step: 0 },
+    recursionStack: ["solve(wordIndex=0)"]
   });
 
   const board1 = [
@@ -3686,7 +3710,8 @@ export function crosswordSolverSteps(rawInput) {
   steps.push({
     data: { board: board1.map(r => [...r]), words: ["DOG"], activeWord: "CAT", stepIndex: 1 },
     explanation: "Try placing 'CAT' horizontally at row 0. Characters fit perfectly.",
-    stats: { step: 1 }
+    stats: { step: 1 },
+    recursionStack: ["solve(wordIndex=0)", "solve(wordIndex=1)"]
   });
 
   const board2 = [
@@ -3697,7 +3722,8 @@ export function crosswordSolverSteps(rawInput) {
   steps.push({
     data: { board: board2.map(r => [...r]), words: ["DOG"], activeWord: "DOG", stepIndex: 2 },
     explanation: "Try placing 'DOG' vertically at column 1. Collision at row 0: 'A' vs 'D'! Backtrack.",
-    stats: { step: 2 }
+    stats: { step: 2 },
+    recursionStack: ["solve(wordIndex=0)", "solve(wordIndex=1)", "placeWord(DOG, c=1) (COLLISION)"]
   });
 
   const board3 = [
@@ -3708,7 +3734,8 @@ export function crosswordSolverSteps(rawInput) {
   steps.push({
     data: { board: board3.map(r => [...r]), words: ["CAT"], activeWord: "DOG", stepIndex: 3 },
     explanation: "Backtrack. Try placing 'DOG' horizontally at row 0 instead.",
-    stats: { step: 3 }
+    stats: { step: 3 },
+    recursionStack: ["solve(wordIndex=0)", "solve(wordIndex=1)"]
   });
 
   const board4 = [
@@ -3719,7 +3746,8 @@ export function crosswordSolverSteps(rawInput) {
   steps.push({
     data: { board: board4.map(r => [...r]), words: ["CAT"], activeWord: "CAT", stepIndex: 4 },
     explanation: "Try placing 'CAT' vertically at column 1. Collision at intersection: 'O' vs 'C'! Backtrack.",
-    stats: { step: 4 }
+    stats: { step: 4 },
+    recursionStack: ["solve(wordIndex=0)", "solve(wordIndex=1)", "placeWord(CAT, c=1) (COLLISION)"]
   });
 
   const boardSolved = [
@@ -3730,7 +3758,8 @@ export function crosswordSolverSteps(rawInput) {
   steps.push({
     data: { board: boardSolved.map(r => [...r]), words: [], activeWord: "", stepIndex: 5 },
     explanation: "Crossword puzzle solved successfully! Matching words: CAT, APE.",
-    stats: { solved: true, step: 5 }
+    stats: { solved: true, step: 5 },
+    recursionStack: []
   });
 
   return steps;
@@ -3752,37 +3781,43 @@ export function branchAndBoundSteps(rawInput) {
   steps.push({
     data: { nodes: [nodes[0]], activeNodeId: 0, minCost: 999 },
     explanation: "Initialize Branch and Bound TSP search tree. Root node (City 0) Lower Bound Cost is 20.",
-    stats: { step: 0 }
+    stats: { step: 0 },
+    recursionStack: ["solve(path=[0])"]
   });
 
   steps.push({
     data: { nodes: [nodes[0], nodes[1]], activeNodeId: 1, minCost: 999 },
     explanation: "Branch to City 1. Calculated lower bound cost for path [0, 1] is 22.",
-    stats: { step: 1 }
+    stats: { step: 1 },
+    recursionStack: ["solve(path=[0])", "solve(path=[0, 1])"]
   });
 
   steps.push({
     data: { nodes: [nodes[0], nodes[1], nodes[2]], activeNodeId: 2, minCost: 999 },
     explanation: "Branch to City 2. Calculated lower bound cost for path [0, 2] is 35.",
-    stats: { step: 2 }
+    stats: { step: 2 },
+    recursionStack: ["solve(path=[0])", "solve(path=[0, 2])"]
   });
 
   steps.push({
     data: { nodes: [nodes[0], nodes[1], nodes[2], nodes[4]], activeNodeId: 4, minCost: 25 },
     explanation: "Branch from [0, 1] to City 2. Complete path [0, 1, 2, 3, 0] found! Update minCost to 25.",
-    stats: { step: 3 }
+    stats: { step: 3 },
+    recursionStack: ["solve(path=[0])", "solve(path=[0, 1])", "solve(path=[0, 1, 2])"]
   });
 
   steps.push({
     data: { nodes: [nodes[0], nodes[1], nodes[2], nodes[4], nodes[3]], activeNodeId: 3, minCost: 25 },
     explanation: "Branch to City 3. Lower Bound for path [0, 3] is 45. Since 45 > minCost (25), prune this branch!",
-    stats: { step: 4 }
+    stats: { step: 4 },
+    recursionStack: ["solve(path=[0])", "solve(path=[0, 3]) (PRUNED)"]
   });
 
   steps.push({
     data: { nodes: [nodes[0], nodes[1], nodes[2], nodes[4], nodes[3]], activeNodeId: null, minCost: 25 },
     explanation: "Branch and Bound search complete. Optimal TSP cost found: 25.",
-    stats: { solved: true, step: 5 }
+    stats: { solved: true, step: 5 },
+    recursionStack: []
   });
 
   return steps;

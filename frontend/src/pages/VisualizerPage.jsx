@@ -1584,7 +1584,9 @@ const VisualizerPage = () => {
           }
         } else if (algo.inputType === "hash") {
           const arr = parsedInput
+            .trim()
             .split(/\s+/)
+            .filter(Boolean)
             .map(Number)
             .filter((x) => !isNaN(x));
 
@@ -2060,10 +2062,22 @@ const VisualizerPage = () => {
         if (secondInputConfig) randTarget = secondInputConfig.randomVal(arr);
       }
     } else if (algo.inputType === "tree") {
-      const arr = Array.from(
-        { length: 7 },
-        () => Math.floor(Math.random() * 20) + 1,
-      );
+      const uniqueSet = new Set();
+      while (uniqueSet.size < 7) {
+        uniqueSet.add(Math.floor(Math.random() * 80) + 10);
+      }
+      const sortedArr = Array.from(uniqueSet).sort((a, b) => a - b);
+      // To get a well-balanced BST tree structure instead of a linear graph-like chain,
+      // we order the elements starting with the median, then branching.
+      const arr = [
+        sortedArr[3], // Root (median)
+        sortedArr[1], // Left child
+        sortedArr[5], // Right child
+        sortedArr[0], // Left leaf
+        sortedArr[2], // Left-Right leaf
+        sortedArr[4], // Right-Left leaf
+        sortedArr[6]  // Right leaf
+      ];
       randStr = arr.join(" ");
       if (secondInputConfig && !isCombinedTreeAlgo)
         randTarget = secondInputConfig.randomVal(arr);
@@ -2105,7 +2119,70 @@ const VisualizerPage = () => {
         randStr = matrices[Math.floor(Math.random() * matrices.length)];
         randTarget = "9999";
       } else {
-        randStr = "0 1 3\n0 2 6\n1 2 2\n1 3 1\n2 3 5";
+        const isWeighted =
+          algo.id === "prims-algorithm" ||
+          algo.id === "prim-mst" ||
+          algo.id === "kruskals-algorithm" ||
+          algo.id === "kruskal-mst" ||
+          algo.id === "kruskals" ||
+          algo.id === "dijkstra" ||
+          algo.id === "dijkstra-algorithm";
+        const isTopological = algo.id === "topological-sort";
+
+        if (isTopological) {
+          // Topological sort requires a Directed Acyclic Graph (DAG)
+          const V = Math.floor(Math.random() * 3) + 4; // 4 to 6 vertices
+          const edges = [];
+          const edgeSet = new Set();
+          
+          for (let i = 0; i < V - 1; i++) {
+            const count = Math.floor(Math.random() * 2) + 1; // 1 or 2 outgoing edges
+            for (let c = 0; c < count; c++) {
+              const v = Math.floor(Math.random() * (V - 1 - i)) + i + 1;
+              if (!edgeSet.has(`${i}-${v}`)) {
+                edges.push([i, v]);
+                edgeSet.add(`${i}-${v}`);
+              }
+            }
+          }
+          if (edges.length === 0) edges.push([0, 1]);
+          randStr = edges.map(([u, v]) => `${u} ${v}`).join("\n");
+          randTarget = "0";
+        } else {
+          // BFS, DFS, Dijkstra, Prim, Kruskal, DSU, Bipartite, Connected Components
+          const V = Math.floor(Math.random() * 3) + 4; // 4 to 6 vertices
+          const edges = [];
+          const edgeSet = new Set();
+
+          // Ensure graph is connected using a random spanning tree structure
+          for (let i = 1; i < V; i++) {
+            const parent = Math.floor(Math.random() * i);
+            const w = isWeighted ? Math.floor(Math.random() * 8) + 1 : 1;
+            edges.push([parent, i, w]);
+            edgeSet.add(`${parent}-${i}`);
+            edgeSet.add(`${i}-${parent}`);
+          }
+
+          // Add 1 or 2 extra random edges
+          const extraEdges = Math.floor(Math.random() * 2) + 1;
+          let attempts = 0;
+          while (edges.length < V - 1 + extraEdges && attempts < 20) {
+            attempts++;
+            const u = Math.floor(Math.random() * V);
+            const v = Math.floor(Math.random() * V);
+            if (u !== v && !edgeSet.has(`${u}-${v}`)) {
+              const w = isWeighted ? Math.floor(Math.random() * 8) + 1 : 1;
+              edges.push([u, v, w]);
+              edgeSet.add(`${u}-${v}`);
+              edgeSet.add(`${v}-${u}`);
+            }
+          }
+
+          randStr = edges
+            .map(([u, v, w]) => (isWeighted ? `${u} ${v} ${w}` : `${u} ${v}`))
+            .join("\n");
+          randTarget = "0";
+        }
       }
     } else if (algo.inputType === "recursion") {
       if (algo.id === "knights-tour") {

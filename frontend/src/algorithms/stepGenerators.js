@@ -1059,11 +1059,12 @@ export const towerOfHanoiSteps = (numDisks) => {
     explanation: `Initialize Tower of Hanoi with ${disks} disks stacked on Peg A in decreasing sizes.`,
     activeLine: 1,
     stats: { comparisons: 0, swaps: 0, step: 0 },
+    recursionStack: [],
   });
 
   let movesCount = 0;
 
-  const moveDisk = (from, to) => {
+  const moveDisk = (from, to, currentPath) => {
     movesCount++;
     const disk = pegs[from].pop();
     pegs[to].push(disk);
@@ -1074,17 +1075,19 @@ export const towerOfHanoiSteps = (numDisks) => {
       highlights: { [from]: "compare", [to]: "sorted" },
       explanation: `Step ${movesCount}: Moving disk ${disk} from Peg ${from} to Peg ${to}.`,
       stats: { comparisons: 0, swaps: movesCount, step: steps.length },
+      recursionStack: currentPath,
     });
   };
 
-  const runHanoi = (n, from, to, aux) => {
+  const runHanoi = (n, from, to, aux, path = []) => {
+    const currentPath = [...path, `hanoi(n=${n}, ${from}→${to})` ];
     if (n === 1) {
-      moveDisk(from, to);
+      moveDisk(from, to, currentPath);
       return;
     }
-    runHanoi(n - 1, from, aux, to);
-    moveDisk(from, to);
-    runHanoi(n - 1, aux, to, from);
+    runHanoi(n - 1, from, aux, to, currentPath);
+    moveDisk(from, to, currentPath);
+    runHanoi(n - 1, aux, to, from, currentPath);
   };
 
   runHanoi(disks, "A", "C", "B");
@@ -2543,12 +2546,14 @@ export const fibonacciRecursionSteps = (n) => {
     explanation: `Compute Fibonacci(${valN}) using recursion. fib(n) = fib(n-1) + fib(n-2).`,
     activeLine: 2,
     stats: { comparisons: 0, visitedNodes: 0, step: 0 },
+    recursionStack: [],
   });
 
-  const runFib = (node) => {
+  const runFib = (node, path = []) => {
     if (!node) return 0;
 
     const nodeId = node.id;
+    const currentPath = [...path, `fib(${node.val})` ];
     steps.push({
       data: JSON.parse(JSON.stringify(nodes)),
       treeState: { root, path: [], activeNode: nodeId },
@@ -2560,6 +2565,7 @@ export const fibonacciRecursionSteps = (n) => {
         visitedNodes: steps.length,
         step: steps.length,
       },
+      recursionStack: currentPath,
     });
 
     if (node.val <= 1) {
@@ -2578,12 +2584,13 @@ export const fibonacciRecursionSteps = (n) => {
           visitedNodes: steps.length,
           step: steps.length,
         },
+        recursionStack: currentPath,
       });
       return node.val;
     }
 
-    const a = runFib(node.left);
-    const b = runFib(node.right);
+    const a = runFib(node.left, currentPath);
+    const b = runFib(node.right, currentPath);
     const res = a + b;
     node.result = res;
     const nIndex = nodes.findIndex((n) => n.id === nodeId);
@@ -2600,6 +2607,7 @@ export const fibonacciRecursionSteps = (n) => {
         visitedNodes: steps.length,
         step: steps.length,
       },
+      recursionStack: currentPath,
     });
     return res;
   };
@@ -2611,12 +2619,13 @@ export const fibonacciRecursionSteps = (n) => {
     treeState: { root, path: [], activeNode: null },
     highlights: nodes.reduce((acc, n) => ({ ...acc, [n.id]: "sorted" }), {}),
     explanation: `Recursion complete. Fibonacci(${valN}) = ${root.result}.`,
-    activeLine: 3,
+    activeLine: 4,
     stats: {
       comparisons: steps.length,
-      visitedNodes: nodes.length,
+      visitedNodes: steps.length,
       step: steps.length,
     },
+    recursionStack: [],
   });
 
   return steps;
@@ -2633,6 +2642,7 @@ export const nQueensSteps = (n = 4) => {
     highlights = {},
     currentLoc = null,
     phase = "backtracking",
+    currentPath = [],
   ) => {
     steps.push({
       data: { board: [...board], size },
@@ -2640,6 +2650,7 @@ export const nQueensSteps = (n = 4) => {
       highlights,
       explanation,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+      recursionStack: currentPath,
     });
   };
 
@@ -2658,13 +2669,15 @@ export const nQueensSteps = (n = 4) => {
     return true;
   };
 
-  const solve = (row) => {
+  const solve = (row, path = []) => {
+    const currentPath = [...path, `solve(row=${row})`];
     if (row === size) {
       addStep(
         "All queens placed safely! Solution found.",
         {},
         null,
         "solution",
+        currentPath,
       );
       return true;
     }
@@ -2675,6 +2688,8 @@ export const nQueensSteps = (n = 4) => {
         `Testing placement: Queen at Row ${row}, Col ${col}.`,
         { [`${row}-${col}`]: "compare" },
         { row, col },
+        "backtracking",
+        currentPath,
       );
 
       if (isSafe(row, col)) {
@@ -2682,21 +2697,27 @@ export const nQueensSteps = (n = 4) => {
           `Position Safe! Locking Queen at Row ${row}, Col ${col} and moving to next row.`,
           { [`${row}-${col}`]: "pivot" },
           { row, col },
+          "backtracking",
+          currentPath,
         );
 
-        const res = solve(row + 1);
+        const res = solve(row + 1, currentPath);
         if (res) return true;
 
         addStep(
           `Backtracking: Queen at Row ${row}, Col ${col} led to no solutions. Removing.`,
           { [`${row}-${col}`]: "swap" },
           { row, col },
+          "backtracking",
+          currentPath,
         );
       } else {
         addStep(
           `Position Under Attack! Cannot place Queen at Row ${row}, Col ${col}.`,
           { [`${row}-${col}`]: "swap" },
           { row, col },
+          "backtracking",
+          currentPath,
         );
       }
       board[row] = -1;
@@ -3088,6 +3109,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
     highlights: {},
     explanation: `Initialize ${rows}×${cols} maze. Start: (${sr},${sc}) → Destination: (${dr},${dc}). Search order: ${dirs.map((d) => d[2]).join(" → ")}.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
+    recursionStack: [],
   });
 
   const isSafe = (r, c) => {
@@ -3101,7 +3123,8 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
     );
   };
 
-  const solve = (r, c) => {
+  const solve = (r, c, path = []) => {
+    const currentPath = [...path, `solve(${r}, ${c})` ];
     visited[r][c] = true;
     sol[r][c] = 1;
 
@@ -3122,6 +3145,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
       highlights: { [`${r}-${c}`]: "pivot" },
       explanation: `Exploring cell (${r}, ${c}). Marks cell in active search path.`,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+      recursionStack: currentPath,
     });
 
     if (r === dr && c === dc) {
@@ -3142,6 +3166,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
         highlights: { [`${r}-${c}`]: "sorted" },
         explanation: `Reached destination (${dr}, ${dc})! Path solved successfully.`,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        recursionStack: currentPath,
       });
       return true;
     }
@@ -3167,8 +3192,9 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
           highlights: { [`${nr}-${nc}`]: "pivot" },
           explanation: `Moving ${dirName} to cell (${nr}, ${nc}).`,
           stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+          recursionStack: currentPath,
         });
-        if (solve(nr, nc)) return true;
+        if (solve(nr, nc, currentPath)) return true;
       }
     }
 
@@ -3192,6 +3218,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
       explanation: `Dead end at (${r}, ${c}). Backtracking...`,
       activeLine: 12,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+      recursionStack: currentPath,
     });
     return false;
   };
@@ -3217,6 +3244,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
       explanation:
         `Start cell (${sr}, ${sc}) is blocked by a wall! No solution possible.`,
       stats: { comparisons: 1, swaps: 0, step: 1 },
+      recursionStack: [],
     });
   }
 
@@ -3250,6 +3278,7 @@ export const sudokuSolverSteps = (boardStr) => {
     explanation: "Initialize empty Sudoku solver board.",
     activeLine: 1,
     stats: { comparisons: 0, swaps: 0, step: 0 },
+    recursionStack: [],
   });
 
   const isSafe = (b, r, c, val) => {
@@ -3269,7 +3298,7 @@ export const sudokuSolverSteps = (boardStr) => {
     return true;
   };
 
-  const solve = () => {
+  const solve = (path = []) => {
     let r = -1;
     let c = -1;
     let empty = true;
@@ -3299,9 +3328,12 @@ export const sudokuSolverSteps = (boardStr) => {
         explanation: "All cells filled! Sudoku solved successfully.",
         activeLine: 10,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        recursionStack: path,
       });
       return true;
     }
+
+    const currentPath = [...path, `solve(r=${r}, c=${c})` ];
 
     for (let val = 1; val <= size; val++) {
       const valid = isSafe(board, r, c, val);
@@ -3319,10 +3351,11 @@ export const sudokuSolverSteps = (boardStr) => {
         highlights: { [`${r}-${c}`]: valid ? "pivot" : "swap" },
         explanation: `Trying number ${val} at cell (${r}, ${c}). It is ${valid ? "VALID" : "INVALID (Constraint Conflict)"}.`,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        recursionStack: currentPath,
       });
 
       if (valid) {
-        if (solve()) return true;
+        if (solve(currentPath)) return true;
       }
 
       board[r][c] = 0;
@@ -3339,6 +3372,7 @@ export const sudokuSolverSteps = (boardStr) => {
         explanation: `Backtracking cell (${r}, ${c}): removing value ${val}.`,
         activeLine: 12,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        recursionStack: currentPath,
       });
     }
 
@@ -4655,9 +4689,11 @@ export const wordSearchSteps = (grid, word) => {
     highlights: {},
     explanation: `Word Search: Find "${word}" in ${rows}x${cols} grid. DFS backtracking from each starting cell.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
+    recursionStack: [],
   });
-  const dfs = (r, c, idx) => {
+  const dfs = (r, c, idx, pathArr = []) => {
     if (found) return;
+    const currentPath = [...pathArr, `dfs(r=${r}, c=${c}, char='${word[idx]}')` ];
     if (idx === word.length) {
       found = true;
       return;
@@ -4680,6 +4716,7 @@ export const wordSearchSteps = (grid, word) => {
         highlights: { invalid: [r, c] },
         explanation: `Cell (${r},${c}): ${r < 0 || r >= rows || c < 0 || c >= cols ? "Out of bounds" : visited[r][c] ? "Already visited" : `'${grid[r]?.[c]}' ≠ '${word[idx]}'`} — backtrack.`,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        recursionStack: currentPath,
       });
       return;
     }
@@ -4695,6 +4732,7 @@ export const wordSearchSteps = (grid, word) => {
       highlights: { current: [r, c], matchIndex: idx },
       explanation: `Visit (${r},${c})='${word[idx]}': matches word[${idx}]. Path so far: "${word.slice(0, idx + 1)}".`,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+      recursionStack: currentPath,
     });
     const dirs = [
       [1, 0],
@@ -4703,7 +4741,7 @@ export const wordSearchSteps = (grid, word) => {
       [0, -1],
     ];
     for (const [dr, dc] of dirs) {
-      dfs(r + dr, c + dc, idx + 1);
+      dfs(r + dr, c + dc, idx + 1, currentPath);
       if (found) break;
     }
     if (!found) {
@@ -4719,6 +4757,7 @@ export const wordSearchSteps = (grid, word) => {
         highlights: { backtrack: [r, c] },
         explanation: `Backtrack from (${r},${c}): no valid continuation. Remove from path.`,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        recursionStack: currentPath,
       });
     }
   };
@@ -4730,8 +4769,9 @@ export const wordSearchSteps = (grid, word) => {
           highlights: { start: [r, c] },
           explanation: `Try starting DFS from cell (${r},${c})='${grid[r][c]}' matching word[0]='${word[0]}'.`,
           stats: { comparisons: r * cols + c, swaps: 0, step: steps.length },
+          recursionStack: [],
         });
-        dfs(r, c, 0);
+        dfs(r, c, 0, []);
       }
     }
   }
@@ -4745,6 +4785,7 @@ export const wordSearchSteps = (grid, word) => {
     highlights: { result: found },
     explanation: `Word Search result: "${word}" ${found ? "✅ FOUND" : "❌ NOT FOUND"} in grid.`,
     stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+    recursionStack: [],
   });
   return steps;
 };
@@ -4759,14 +4800,17 @@ export const generateParenthesesSteps = (n) => {
     highlights: {},
     explanation: `Generate all valid combinations of ${n} pairs of parentheses using backtracking.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
+    recursionStack: [],
   });
   const bt = (cur, open, close) => {
     callStack.push({ cur, open, close });
+    const currentStack = callStack.map(frame => `bt("${frame.cur}", o:${frame.open}, c:${frame.close})`);
     steps.push({
       data: { results: [...results], callStack: [...callStack], current: cur },
       highlights: { open, close },
       explanation: `State: "${cur}" | open=${open}/${n}, close=${close}/${n}. ${cur.length === 2 * n ? "✅ Complete!" : open < n ? 'Can add "("' : close < open ? 'Can add ")"' : "..."}`,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+      recursionStack: currentStack,
     });
     if (cur.length === 2 * n) {
       results.push(cur);
@@ -4783,6 +4827,7 @@ export const generateParenthesesSteps = (n) => {
     highlights: { done: true },
     explanation: `All ${results.length} valid parentheses combinations generated: ${results.join(", ")}.`,
     stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+    recursionStack: [],
   });
   return steps;
 };
@@ -6083,7 +6128,7 @@ export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = null, de
   const degree = (r, c, move) =>
     moves.reduce((cnt, [drr, dcc]) => cnt + (isValid(r + drr, c + dcc, move + 1) ? 1 : 0), 0);
 
-  const addStep = (r, c, phase, explanation) => {
+  const addStep = (r, c, phase, explanation, currentPath = []) => {
     // Cap intermediate steps to 1000 to avoid memory & gc lag, but always allow init, done, or fail steps
     if (steps.length >= 1000 && phase !== 'done' && phase !== 'fail' && phase !== 'init') {
       return;
@@ -6094,6 +6139,7 @@ export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = null, de
       highlights: { [`${r}-${c}`]: phase === 'place' ? 'pivot' : phase === 'backtrack' ? 'swap' : 'sorted' },
       explanation,
       stats: { comparisons: steps.length, swaps: moveCount, step: steps.length },
+      recursionStack: currentPath,
     });
   };
   addStep(sr, sc, 'init',
@@ -6103,7 +6149,7 @@ export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = null, de
   const maxCalls = 30000;
   let aborted = false;
 
-  const solve = (r, c, move) => {
+  const solve = (r, c, move, path = []) => {
     if (aborted) return false;
     callCount++;
     if (callCount > maxCalls) {
@@ -6111,13 +6157,14 @@ export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = null, de
       return false;
     }
 
+    const currentPath = [...path, `solve(${r}, ${c}, mv=${move})` ];
     board[r][c] = move;
     moveCount = move;
-    addStep(r, c, 'place', `Move #${move + 1}: Knight placed at (${r}, ${c}).`);
+    addStep(r, c, 'place', `Move #${move + 1}: Knight placed at (${r}, ${c}).`, currentPath);
 
     if (move === size * size - 1) {
       if (r === dr && c === dc) {
-        addStep(r, c, 'done', `Knight's Tour complete! Visited all ${size * size} cells, ending at (${dr}, ${dc}).`);
+        addStep(r, c, 'done', `Knight's Tour complete! Visited all ${size * size} cells, ending at (${dr}, ${dc}).`, currentPath);
         return true;
       }
       board[r][c] = -1;
@@ -6132,11 +6179,11 @@ export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = null, de
       .sort((a, b) => a.deg - b.deg);
 
     for (const { nr, nc } of candidates) {
-      if (solve(nr, nc, move + 1)) return true;
+      if (solve(nr, nc, move + 1, currentPath)) return true;
     }
 
     board[r][c] = -1;
-    addStep(r, c, 'backtrack', `Backtracking from (${r}, ${c}).`);
+    addStep(r, c, 'backtrack', `Backtracking from (${r}, ${c}).`, currentPath);
     return false;
   };
 

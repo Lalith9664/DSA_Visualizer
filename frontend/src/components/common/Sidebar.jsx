@@ -44,7 +44,6 @@ const ICON_MAP = {
   "sliding-window": LayoutGrid,
   "two-pointer": ArrowRightLeft,
   "prefix-sum": Database,
-  monotonic: Layers,
   "union-find": Network,
   "advanced-ds": GitFork,
   "advanced-algo": Sliders,
@@ -60,7 +59,6 @@ const DATA_STRUCTURES_CATEGORIES = [
   "trees",
   "heaps",
   "graphs",
-  "monotonic",
   "union-find",
   "advanced-ds"
 ];

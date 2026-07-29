@@ -1,11 +1,38 @@
 // Hashing algorithms step generators
 
+const isPrime = (num) => {
+  if (num <= 1) return false;
+  if (num <= 3) return true;
+  if (num % 2 === 0 || num % 3 === 0) return false;
+  for (let i = 5; i * i <= num; i += 6) {
+    if (num % i === 0 || num % (i + 2) === 0) return false;
+  }
+  return true;
+};
+
+const getNextPrime = (n) => {
+  let candidate = n;
+  while (!isPrime(candidate)) {
+    candidate++;
+  }
+  return candidate;
+};
+
+const cleanInputArray = (arr) => {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((x) => (typeof x === "string" ? x.trim() : x))
+    .filter((x) => x !== "" && x !== null && x !== undefined)
+    .map(Number)
+    .filter((x) => !isNaN(x));
+};
+
 // ─── Linear Probing ────────────────────────────────────────────────────────
 export const linearProbingSteps = (arr) => {
   const steps = [];
-  const nums = arr.map(Number).filter((x) => !isNaN(x));
+  const nums = cleanInputArray(arr);
   const n = nums.length;
-  const numBuckets = 7;
+  const numBuckets = Math.max(1, n);
   
   // Initialize empty buckets representing open addressing (max 1 item per slot)
   const hash = {};
@@ -80,9 +107,9 @@ export const linearProbingSteps = (arr) => {
 // ─── Quadratic Probing ─────────────────────────────────────────────────────
 export const quadraticProbingSteps = (arr) => {
   const steps = [];
-  const nums = arr.map(Number).filter((x) => !isNaN(x));
+  const nums = cleanInputArray(arr);
   const n = nums.length;
-  const numBuckets = 7;
+  const numBuckets = Math.max(1, n);
   
   const hash = {};
   for (let i = 0; i < numBuckets; i++) hash[i] = [];
@@ -156,9 +183,9 @@ export const quadraticProbingSteps = (arr) => {
 // ─── Double Hashing ────────────────────────────────────────────────────────
 export const doubleHashingSteps = (arr) => {
   const steps = [];
-  const nums = arr.map(Number).filter((x) => !isNaN(x));
+  const nums = cleanInputArray(arr);
   const n = nums.length;
-  const numBuckets = 7;
+  const numBuckets = Math.max(1, n);
   
   const hash = {};
   for (let i = 0; i < numBuckets; i++) hash[i] = [];
@@ -233,9 +260,9 @@ export const doubleHashingSteps = (arr) => {
 // ─── Separate Chaining ─────────────────────────────────────────────────────
 export const separateChainingSteps = (arr) => {
   const steps = [];
-  const nums = arr.map(Number).filter((x) => !isNaN(x));
+  const nums = cleanInputArray(arr);
   const n = nums.length;
-  const numBuckets = 5;
+  const numBuckets = Math.max(1, n);
   const hash = {};
   for (let i = 0; i < numBuckets; i++) hash[i] = [];
 
@@ -281,9 +308,9 @@ export const separateChainingSteps = (arr) => {
 // ─── Moved Hashing Step Generators from monolithic files ────────────────────────
 export const hashMapSteps = (arr) => {
   const steps = [];
-  const nums = arr.map(Number).filter((x) => !isNaN(x));
+  const nums = cleanInputArray(arr);
   const n = nums.length;
-  const numBuckets = 5;
+  const numBuckets = Math.max(1, n);
   const hash = {};
   for (let i = 0; i < numBuckets; i++) hash[i] = [];
 
@@ -463,7 +490,7 @@ export const bloomFilterSteps = (rawInput) => {
     .map((w) => w.trim())
     .filter(Boolean);
   const n = words.length;
-  const bitArraySize = 10;
+  const bitArraySize = Math.max(1, n);
   const bitArray = Array(bitArraySize).fill(0);
 
   const hash1 = (str) => {
@@ -478,7 +505,16 @@ export const bloomFilterSteps = (rawInput) => {
   };
 
   steps.push({
-    data: { filter: [...bitArray], word: null, h1: null, h2: null },
+    data: { 
+      filter: [...bitArray], 
+      bits: [...bitArray], 
+      word: null, 
+      activeHashes: [], 
+      h1: null, 
+      h2: null,
+      queryKey: null,
+      result: null
+    },
     explanation: `Initialize empty Bloom Filter bit array of size ${bitArraySize}. Hash 1: Sum(Chars) % ${bitArraySize}. Hash 2: Murmur-like % ${bitArraySize}.`,
     stats: { inserted: 0, step: 0 },
   });
@@ -489,7 +525,16 @@ export const bloomFilterSteps = (rawInput) => {
     const idx2 = hash2(word);
 
     steps.push({
-      data: { filter: [...bitArray], word, h1: idx1, h2: idx2 },
+      data: { 
+        filter: [...bitArray], 
+        bits: [...bitArray], 
+        word, 
+        activeHashes: [idx1, idx2], 
+        h1: idx1, 
+        h2: idx2,
+        queryKey: word,
+        result: 'Inserting'
+      },
       explanation: `Hashing "${word}". Hash 1 yields index ${idx1}. Hash 2 yields index ${idx2}.`,
       stats: { inserted: i, step: steps.length },
     });
@@ -498,14 +543,32 @@ export const bloomFilterSteps = (rawInput) => {
     bitArray[idx2] = 1;
 
     steps.push({
-      data: { filter: [...bitArray], word, h1: idx1, h2: idx2 },
+      data: { 
+        filter: [...bitArray], 
+        bits: [...bitArray], 
+        word, 
+        activeHashes: [idx1, idx2], 
+        h1: idx1, 
+        h2: idx2,
+        queryKey: word,
+        result: 'Inserted'
+      },
       explanation: `Set bits at indices ${idx1} and ${idx2} to 1. "${word}" is now registered in the filter.`,
       stats: { inserted: i + 1, step: steps.length },
     });
   }
 
   steps.push({
-    data: { filter: [...bitArray], word: null, h1: null, h2: null },
+    data: { 
+      filter: [...bitArray], 
+      bits: [...bitArray], 
+      word: null, 
+      activeHashes: [], 
+      h1: null, 
+      h2: null,
+      queryKey: null,
+      result: 'Finished'
+    },
     explanation: `Bloom Filter construction completed. Discovered ${bitArray.filter((x) => x === 1).length}/${bitArraySize} populated bit slots.`,
     stats: { inserted: n, step: steps.length },
   });
@@ -515,9 +578,9 @@ export const bloomFilterSteps = (rawInput) => {
 
 export const hashSetSteps = (arr) => {
   const steps = [];
-  const nums = arr.map(Number).filter((x) => !isNaN(x));
+  const nums = cleanInputArray(arr);
   const n = nums.length;
-  const numBuckets = 5;
+  const numBuckets = Math.max(1, n);
   const hash = {};
   for (let i = 0; i < numBuckets; i++) hash[i] = [];
 
