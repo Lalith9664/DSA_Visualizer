@@ -935,10 +935,6 @@ const VisualizerPage = () => {
             case "prefix-sum-concept":
               computedSteps = prefixSumSteps(arr);
               break;
-            case "suffix-sum":
-            case "suffix-sum-array":
-              computedSteps = suffixSumSteps(arr);
-              break;
             case "sliding-window":
             case "sliding-window-technique":
               computedSteps = slidingWindowSteps(arr, target || 3);

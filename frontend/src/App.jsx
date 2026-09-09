@@ -1,14 +1,11 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { VisualizerProvider } from './context/VisualizerContext';
-import { AuthProvider, useAuth } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage'));
 const VisualizerPage = lazy(() => import('./pages/VisualizerPage'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -26,44 +23,6 @@ const AppLayout = () => (
     <Outlet />
   </MainLayout>
 );
-
-// ProtectedRoute: Only allowed if logged in
-const ProtectedRoute = () => {
-  const { currentUser, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] text-slate-400">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Outlet />;
-};
-
-// PublicRoute: Only allowed if logged out
-const PublicRoute = () => {
-  const { currentUser, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] text-slate-400">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-      </div>
-    );
-  }
-
-  if (currentUser) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <Outlet />;
-};
 
 const LoadingScreen = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] text-slate-400 py-12">
@@ -87,35 +46,25 @@ const LoadingScreen = () => (
 
 function App() {
   return (
-    <AuthProvider>
-      <VisualizerProvider>
-        <Router>
-          <ScrollToTop />
-          <Suspense fallback={<LoadingScreen />}>
-            <Routes>
-              {/* Standalone Login/Auth Screen (Public Only) */}
-              <Route element={<PublicRoute />}>
-                <Route path="/" element={<Login />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-              </Route>
+    <VisualizerProvider>
+      <Router>
+        <ScrollToTop />
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            {/* Core Application Pages wrapped in Layout */}
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/dashboard" element={<LandingPage />} />
+              <Route path="/category/:categoryId" element={<CategoryPage />} />
+              <Route path="/visualizer/:algoId" element={<VisualizerPage />} />
+            </Route>
 
-              {/* Core Application Pages wrapped in Layout (Protected Only) */}
-              <Route element={<ProtectedRoute />}>
-                <Route element={<AppLayout />}>
-                  <Route path="/dashboard" element={<LandingPage />} />
-                  <Route path="/category/:categoryId" element={<CategoryPage />} />
-                  <Route path="/visualizer/:algoId" element={<VisualizerPage />} />
-                </Route>
-              </Route>
-
-              {/* Fallback route */}
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          </Suspense>
-        </Router>
-      </VisualizerProvider>
-    </AuthProvider>
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </Router>
+    </VisualizerProvider>
   );
 }
 

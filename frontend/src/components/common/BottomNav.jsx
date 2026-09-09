@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVisualizer } from '../../context/VisualizerContext';
 import { CATEGORIES, ALGORITHMS } from '../../data/algorithmsData';
@@ -187,10 +187,10 @@ const BottomNav = () => {
         {/* Tab 1: Home */}
         <button
           onClick={() => {
-            navigate('/dashboard');
+            navigate('/');
             setActiveTab(null);
           }}
-          className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all w-12 ${location.pathname === '/dashboard' && !activeTab ? 'text-primary scale-105' : 'text-text-secondary'}`}
+          className={`flex flex-col items-center justify-center gap-1 cursor-pointer transition-all w-12 ${(location.pathname === '/' || location.pathname === '/dashboard') && !activeTab ? 'text-primary scale-105' : 'text-text-secondary'}`}
         >
           <Home className="w-5 h-5" />
           <span className="text-[8px] font-bold font-mono uppercase">Home</span>

@@ -3,7 +3,6 @@ import Navbar from "../components/common/Navbar";
 import Sidebar from "../components/common/Sidebar";
 import BottomNav from "../components/common/BottomNav";
 import { useVisualizer } from "../context/VisualizerContext";
-import { Heart, Info } from "lucide-react";
 
 const MainLayout = ({ children }) => {
   const { sidebarOpen } = useVisualizer();

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useVisualizer } from "../../context/VisualizerContext";
 import { CATEGORIES } from "../../data/algorithmsData";
 import {
@@ -80,7 +80,6 @@ const ALGORITHMS_CATEGORIES = [
 
 const Sidebar = () => {
   const { sidebarOpen, favorites, recentlyViewed } = useVisualizer();
-  const navigate = useNavigate();
   const location = useLocation();
 
   if (!sidebarOpen) return null;

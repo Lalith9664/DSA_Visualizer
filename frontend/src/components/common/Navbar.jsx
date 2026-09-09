@@ -9,17 +9,12 @@ import {
   Bookmark,
   Compass,
   Terminal,
-  ShieldAlert,
-  LogIn,
-  LogOut,
 } from "lucide-react";
 import Button from "./Button";
-import { useAuth } from "../../context/AuthContext";
 
 const Navbar = () => {
   const { theme, toggleTheme, favorites, sidebarOpen, setSidebarOpen } =
     useVisualizer();
-  const { currentUser, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const navigate = useNavigate();
@@ -70,7 +65,7 @@ const Navbar = () => {
           <Compass className="w-5 h-5" />
         </button>
         <Link
-          to="/dashboard"
+          to="/"
           className="flex items-center gap-1.5 sm:gap-2 font-bold tracking-wider text-text-primary"
         >
           <Terminal className="w-5 h-5 text-accent animate-pulse" />
@@ -90,7 +85,7 @@ const Navbar = () => {
           <Search className="absolute left-2.5 sm:left-3.5 w-3.5 h-3.5 sm:w-4 sm:h-4 text-text-secondary opacity-75" />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search algorithms and data structures..."
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => {
@@ -124,7 +119,7 @@ const Navbar = () => {
       {/* Right Action Deck */}
       <div className="flex items-center gap-1.5 sm:gap-3">
         {/* Bookmark Count badge */}
-        <Link to="/dashboard" className="relative hidden sm:block" title="Favorites">
+        <Link to="/" className="relative hidden sm:block" title="Favorites">
           <Button
             variant="default"
             className="w-10 h-10 !p-0 clay-btn clay-btn-default flex items-center justify-center"
@@ -137,52 +132,6 @@ const Navbar = () => {
             )}
           </Button>
         </Link>
-
-        {/* User Account / Auth Actions */}
-        {currentUser ? (
-          <div className="flex items-center gap-2.5">
-            {/* User Profile Thumbnail (Clay style) */}
-            <div 
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-emerald-100 dark:bg-slate-800 border border-white dark:border-slate-800 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.8),3px_4px_8px_rgba(0,0,0,0.05)] overflow-hidden flex items-center justify-center flex-shrink-0"
-              title={currentUser.email}
-            >
-              {currentUser.photoURL ? (
-                <img src={currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                  {currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U'}
-                </span>
-              )}
-            </div>
-
-            {/* Logout button */}
-            <Button
-              variant="default"
-              onClick={async () => {
-                try {
-                  await logout();
-                  navigate('/login');
-                } catch (err) {
-                  console.error('Logout error:', err);
-                }
-              }}
-              className="h-9 w-9 sm:h-10 sm:w-10 !p-0 clay-btn flex items-center justify-center text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 border-0 flex-shrink-0"
-              title="Sign Out"
-            >
-              <LogOut className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            </Button>
-          </div>
-        ) : (
-          <Link to="/login" title="Sign In to Platform">
-            <Button
-              variant="primary"
-              className="h-10 px-4 flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-purple-600 text-white rounded-full shadow-md text-xs md:text-sm hover:brightness-105 border-0 hover:translate-y-[-2px] transition-transform duration-200"
-            >
-              <LogIn className="w-4.5 h-4.5" />
-              <span className="hidden sm:inline font-bold">Sign In</span>
-            </Button>
-          </Link>
-        )}
 
         {/* Physical Theme Toggle Capsule Switch */}
         <div
