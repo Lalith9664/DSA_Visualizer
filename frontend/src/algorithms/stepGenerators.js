@@ -5080,13 +5080,37 @@ export const bellmanFordSteps = (numVerticesOrInput, edgesInput) => {
   const INF = 9999;
   const dist = new Array(V).fill(INF);
   dist[0] = 0;
+  const graphNodes = Array.from({ length: V }, (_, i) => i);
+  const formattedEdges = edges.map(([u, v, w]) => ({ u, v, w }));
+
   steps.push({
-    data: { dist: [...dist], edges, iteration: 0, relaxedEdge: null },
+    data: {
+      nodes: graphNodes,
+      edges: formattedEdges,
+      dist: [...dist],
+      iteration: 0,
+      relaxedEdge: null,
+    },
+    graphState: {
+      activeNode: 0,
+      relaxingEdge: null,
+      nodes: graphNodes.map((id) => ({
+        id,
+        label: id === 0 ? "0" : "∞",
+      })),
+      edges: formattedEdges.map((e) => ({
+        source: e.u,
+        target: e.v,
+        label: String(e.w),
+        active: false,
+      })),
+    },
     highlights: {},
     explanation: `Bellman-Ford: ${V} vertices, ${edges.length} edges. dist[0]=0, all others=∞. Running ${V - 1} relaxation iterations.`,
     activeLine: 1,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
+
   for (let i = 0; i < V - 1; i++) {
     let updated = false;
     for (const [u, v, w] of edges) {
@@ -5095,12 +5119,28 @@ export const bellmanFordSteps = (numVerticesOrInput, edgesInput) => {
         updated = true;
         steps.push({
           data: {
+            nodes: graphNodes,
+            edges: formattedEdges,
             dist: [...dist],
-            edges,
             iteration: i + 1,
             relaxedEdge: [u, v, w],
           },
-          highlights: { relaxed: [u, v] },
+          graphState: {
+            activeNode: u,
+            relaxingEdge: { u, v },
+            nodes: graphNodes.map((id) => ({
+              id,
+              label: dist[id] === INF ? "∞" : String(dist[id]),
+              active: id === u || id === v,
+            })),
+            edges: formattedEdges.map((e) => ({
+              source: e.u,
+              target: e.v,
+              label: String(e.w),
+              active: e.u === u && e.v === v,
+            })),
+          },
+          highlights: { relaxed: [u, v], [u]: "active", [v]: "sorted" },
           explanation: `Iteration ${i + 1}: Relax edge (${u}→${v}, w=${w}): dist[${v}] updated to ${dist[v]}.`,
           activeLine: 4,
           stats: {
@@ -5113,7 +5153,27 @@ export const bellmanFordSteps = (numVerticesOrInput, edgesInput) => {
     }
     if (!updated) {
       steps.push({
-        data: { dist: [...dist], edges, iteration: i + 1, relaxedEdge: null },
+        data: {
+          nodes: graphNodes,
+          edges: formattedEdges,
+          dist: [...dist],
+          iteration: i + 1,
+          relaxedEdge: null,
+        },
+        graphState: {
+          activeNode: null,
+          relaxingEdge: null,
+          nodes: graphNodes.map((id) => ({
+            id,
+            label: dist[id] === INF ? "∞" : String(dist[id]),
+          })),
+          edges: formattedEdges.map((e) => ({
+            source: e.u,
+            target: e.v,
+            label: String(e.w),
+            active: false,
+          })),
+        },
         highlights: {},
         explanation: `Iteration ${i + 1}: No relaxation needed — distances are already optimal. Early exit.`,
         stats: {
@@ -5125,8 +5185,30 @@ export const bellmanFordSteps = (numVerticesOrInput, edgesInput) => {
       break;
     }
   }
+
   steps.push({
-    data: { dist: [...dist], edges, iteration: V - 1, relaxedEdge: null },
+    data: {
+      nodes: graphNodes,
+      edges: formattedEdges,
+      dist: [...dist],
+      iteration: V - 1,
+      relaxedEdge: null,
+    },
+    graphState: {
+      activeNode: null,
+      relaxingEdge: null,
+      nodes: graphNodes.map((id) => ({
+        id,
+        label: dist[id] === INF ? "∞" : String(dist[id]),
+        visited: true,
+      })),
+      edges: formattedEdges.map((e) => ({
+        source: e.u,
+        target: e.v,
+        label: String(e.w),
+        visited: true,
+      })),
+    },
     highlights: { done: true },
     explanation: `Bellman-Ford complete. Shortest distances from source 0: ${dist.map((d, i) => `v${i}=${d === INF ? "∞" : d}`).join(", ")}.`,
     activeLine: 8,

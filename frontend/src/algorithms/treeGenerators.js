@@ -73,6 +73,52 @@ function cloneNodes(nodes) {
   return Array.from(map.values());
 }
 
+// Helper to build visual node objects with coordinates for binary tree visualizations
+export function buildBinaryTreeVisual(arr) {
+  const filtered = (Array.isArray(arr) ? arr : [])
+    .map(Number)
+    .filter((x) => x !== undefined && x !== null && !isNaN(x));
+  if (filtered.length === 0) return [];
+  const list = filtered.map((val, idx) => ({
+    id: idx,
+    val,
+    left: null,
+    right: null,
+    x: 0,
+    y: 0,
+  }));
+  for (let i = 0; i < list.length; i++) {
+    const leftIdx = 2 * i + 1;
+    const rightIdx = 2 * i + 2;
+    if (leftIdx < list.length) list[i].left = list[leftIdx];
+    if (rightIdx < list.length) list[i].right = list[rightIdx];
+  }
+  const root = list[0];
+  const getMaxDepth = (node) => {
+    if (!node) return 0;
+    return 1 + Math.max(getMaxDepth(node.left), getMaxDepth(node.right));
+  };
+  const maxDepth = getMaxDepth(root);
+  const positionNodes = (node, depth, minX, maxX) => {
+    if (!node) return;
+    const x = (minX + maxX) / 2;
+    let y = 135;
+    if (maxDepth > 1) {
+      y = 45 + depth * (180 / (maxDepth - 1));
+    }
+    node.x = x;
+    node.y = y;
+    positionNodes(node.left, depth + 1, minX, x);
+    positionNodes(node.right, depth + 1, x, maxX);
+  };
+  positionNodes(root, 0, 10, 90);
+  return list.map((n) => ({
+    ...n,
+    left: n.left ? { id: n.left.id } : null,
+    right: n.right ? { id: n.right.id } : null,
+  }));
+}
+
 // Tree BST step generators
 export const bstTraversalSteps = (arr, traversalOrder = "inorder") => {
   const steps = [];
@@ -631,66 +677,128 @@ export const lcaSteps = (arr, targetsStr) => {
 };
 
 
-// Level Order Traversal
+// Level Order Traversal (BFS)
 export const levelOrderTraversalSteps = (values) => {
   const steps = [];
-  if (!values || values.length === 0) return steps;
-  // Build BST
-  const nodes = values.map((v, i) => ({
-    val: v,
-    left: null,
-    right: null,
-    id: i,
-  }));
-  const buildBST = (arr) => {
-    if (arr.length === 0) return null;
-    const mid = Math.floor(arr.length / 2);
-    const node = {
-      val: arr[mid],
-      left: buildBST(arr.slice(0, mid)),
-      right: buildBST(arr.slice(mid + 1)),
-    };
-    return node;
-  };
-  const sorted = [...values].sort((a, b) => a - b);
-  const root = buildBST(sorted);
-  const levels = [];
-  const queue = [root];
-  while (queue.length) {
-    const size = queue.length;
-    const level = [];
-    for (let i = 0; i < size; i++) {
-      const node = queue.shift();
-      level.push(node.val);
-      if (node.left) queue.push(node.left);
-      if (node.right) queue.push(node.right);
-    }
-    levels.push(level);
+  const raw = Array.isArray(values)
+    ? values
+    : typeof values === "string"
+      ? values.trim().split(/\s+/)
+      : [];
+  const nums = raw.map(Number).filter((x) => !isNaN(x));
+  if (nums.length === 0) return steps;
+
+  const visualNodes = buildBinaryTreeVisual(nums);
+  if (visualNodes.length === 0) return steps;
+
+  const n = visualNodes.length;
+  const traversalPath = [];
+  const visitedMap = {};
+
+  // Build temporary level breakdown for initial overview
+  const queue = [{ idx: 0, level: 0 }];
+  const tempLevels = [];
+  while (queue.length > 0) {
+    const { idx, level } = queue.shift();
+    if (idx >= n) continue;
+    if (!tempLevels[level]) tempLevels[level] = [];
+    tempLevels[level].push(visualNodes[idx].val);
+    const leftIdx = 2 * idx + 1;
+    const rightIdx = 2 * idx + 2;
+    if (leftIdx < n) queue.push({ idx: leftIdx, level: level + 1 });
+    if (rightIdx < n) queue.push({ idx: rightIdx, level: level + 1 });
   }
+
+  // Step 0: Initial state, Enqueue Root
+  const bfsQueue = [visualNodes[0].val];
   steps.push({
-    data: { values: sorted, levels: [], currentLevel: -1 },
-    highlights: {},
-    explanation: `Level Order Traversal (BFS). Start with root [${sorted[Math.floor(sorted.length / 2)]}] in queue.`,
-    stats: { comparisons: 0, swaps: 0, step: 0 },
+    data: visualNodes,
+    highlights: { [0]: "pivot" },
+    explanation: `Level-Order Traversal (BFS): Initialized binary tree with ${n} nodes. Enqueue root [${visualNodes[0].val}].`,
+    treeState: {
+      path: [],
+      queue: [...bfsQueue],
+      currentLevel: 0,
+      levels: tempLevels,
+      activeNode: visualNodes[0].val,
+    },
+    activeLine: 1,
+    stats: { comparisons: 0, visitedNodes: 0, step: 0 },
   });
-  for (let lvl = 0; lvl < levels.length; lvl++) {
+
+  // BFS Queue processing
+  const executionQueue = [{ idx: 0, level: 0 }];
+  while (executionQueue.length > 0) {
+    const { idx, level } = executionQueue.shift();
+    if (idx >= n) continue;
+
+    const currVal = visualNodes[idx].val;
+    traversalPath.push(currVal);
+    visitedMap[idx] = "sorted";
+
+    const leftIdx = 2 * idx + 1;
+    const rightIdx = 2 * idx + 2;
+    const currentHighlights = { ...visitedMap, [idx]: "active" };
+
+    if (leftIdx < n) {
+      executionQueue.push({ idx: leftIdx, level: level + 1 });
+      currentHighlights[leftIdx] = "pivot";
+    }
+    if (rightIdx < n) {
+      executionQueue.push({ idx: rightIdx, level: level + 1 });
+      currentHighlights[rightIdx] = "pivot";
+    }
+
+    const currentQueueVals = executionQueue.map(
+      (item) => visualNodes[item.idx].val,
+    );
+
     steps.push({
-      data: {
-        values: sorted,
-        levels: levels.slice(0, lvl + 1),
-        currentLevel: lvl,
+      data: visualNodes,
+      highlights: currentHighlights,
+      explanation: `Level ${level}: Dequeued and visiting node [${currVal}]. ${
+        leftIdx < n ? `Enqueued left child [${visualNodes[leftIdx].val}]. ` : ""
+      }${
+        rightIdx < n
+          ? `Enqueued right child [${visualNodes[rightIdx].val}]. `
+          : ""
+      }Queue: [${currentQueueVals.join(", ") || "empty"}].`,
+      treeState: {
+        path: [...traversalPath],
+        queue: currentQueueVals,
+        currentLevel: level,
+        levels: tempLevels,
+        activeNode: currVal,
       },
-      highlights: { level: lvl },
-      explanation: `Level ${lvl}: Dequeue and visit all ${levels[lvl].length} node(s) — [${levels[lvl].join(", ")}]. Enqueue their children.`,
-      stats: { comparisons: lvl + 1, swaps: 0, step: steps.length },
+      activeLine: 3,
+      stats: {
+        comparisons: traversalPath.length,
+        visitedNodes: traversalPath.length,
+        step: steps.length,
+      },
     });
   }
+
+  // Final Step: Complete traversal
   steps.push({
-    data: { values: sorted, levels, currentLevel: -1 },
-    highlights: { done: true },
-    explanation: `BFS complete! Tree visited level-by-level: ${levels.map((l, i) => `L${i}:[${l.join(",")}]`).join(" → ")}.`,
-    stats: { comparisons: levels.length, swaps: 0, step: steps.length },
+    data: visualNodes,
+    highlights: { ...visitedMap },
+    explanation: `Level-Order BFS Traversal complete! Visited ${traversalPath.length} nodes: [${traversalPath.join(", ")}]. Levels: ${tempLevels.map((lvl, i) => `L${i}: [${lvl.join(", ")}]`).join(" → ")}.`,
+    treeState: {
+      path: [...traversalPath],
+      queue: [],
+      currentLevel: tempLevels.length - 1,
+      levels: tempLevels,
+      activeNode: null,
+    },
+    activeLine: 5,
+    stats: {
+      comparisons: traversalPath.length,
+      visitedNodes: traversalPath.length,
+      step: steps.length,
+    },
   });
+
   return steps;
 };
 
@@ -1838,42 +1946,6 @@ export const rbtInsertSteps = (arr) => {
   return steps;
 };
 
-// Helper to build visual node objects with coordinates for binary tree visualizations
-function buildBinaryTreeVisual(arr) {
-  const filtered = arr.filter(x => x !== undefined && x !== null && !isNaN(x));
-  if (filtered.length === 0) return [];
-  const list = arr.map((val, idx) => ({ id: idx, val, left: null, right: null, x: 0, y: 0 }));
-  for (let i = 0; i < list.length; i++) {
-    const leftIdx = 2 * i + 1;
-    const rightIdx = 2 * i + 2;
-    if (leftIdx < list.length) list[i].left = list[leftIdx];
-    if (rightIdx < list.length) list[i].right = list[rightIdx];
-  }
-  const root = list[0];
-  const getMaxDepth = (node) => {
-    if (!node) return 0;
-    return 1 + Math.max(getMaxDepth(node.left), getMaxDepth(node.right));
-  };
-  const maxDepth = getMaxDepth(root);
-  const positionNodes = (node, depth, minX, maxX) => {
-    if (!node) return;
-    const x = (minX + maxX) / 2;
-    let y = 135;
-    if (maxDepth > 1) {
-      y = 45 + depth * (180 / (maxDepth - 1));
-    }
-    node.x = x;
-    node.y = y;
-    positionNodes(node.left, depth + 1, minX, x);
-    positionNodes(node.right, depth + 1, x, maxX);
-  };
-  positionNodes(root, 0, 10, 90);
-  return list.map(n => ({
-    ...n,
-    left: n.left ? { id: n.left.id } : null,
-    right: n.right ? { id: n.right.id } : null
-  }));
-}
 
 // Tree view + advanced tree generators (from roadmapGenerators)
 export function treeDiameterSteps(arr) {

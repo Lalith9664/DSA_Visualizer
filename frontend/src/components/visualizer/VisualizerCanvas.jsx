@@ -76,6 +76,7 @@ const VisualizerCanvas = ({
   const {
     data,
     highlights = {},
+    stats,
     pointerState,
     rotateState,
     listState,
@@ -3456,37 +3457,55 @@ const VisualizerCanvas = ({
       const topIdx = items.length - 1;
 
       return (
-        <div className="flex flex-col items-center gap-3 flex-1 max-w-[160px]">
-          {/* Label */}
-          <span className="text-[8px] font-black tracking-wider text-slate-500 uppercase font-sans">
-            {label}
-          </span>
+        <div className="flex flex-col items-center gap-2.5 flex-1 max-w-[200px]">
+          {/* Label Header with count badge */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black tracking-wider text-slate-700 dark:text-slate-200 uppercase font-sans">
+              {label}
+            </span>
+            <span
+              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full font-mono border ${
+                isSecond
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                  : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30"
+              }`}
+            >
+              {items.length}
+            </span>
+          </div>
 
           {/* Tube container */}
-          <div className="relative w-28 h-56 bg-slate-900/40 dark:bg-slate-950/40 backdrop-blur-sm border-x-2 border-b-2 border-slate-700/80 dark:border-slate-800/80 rounded-b-2xl flex flex-col-reverse justify-start p-2 gap-1.5 shadow-[inset_0_2px_8px_rgba(0,0,0,0.8),0_4px_20px_rgba(0,0,0,0.4)] relative">
-            {/* Graduated markings (ticks) */}
-            <div className="absolute left-1 top-0 h-full flex flex-col justify-between py-4 text-[5px] font-mono text-slate-600/50 select-none pointer-events-none">
-              <span>[MAX]</span>
-              <span>- 4</span>
-              <span>- 3</span>
-              <span>- 2</span>
-              <span>- 1</span>
-              <span>[MIN]</span>
+          <div className="relative w-36 sm:w-44 min-h-[260px] h-72 bg-gradient-to-b from-slate-100 to-slate-200/90 dark:from-slate-900/90 dark:to-slate-950/95 backdrop-blur-md border-x-2 border-b-2 border-slate-300 dark:border-slate-700/90 rounded-b-3xl flex flex-col-reverse justify-start p-2.5 gap-2 shadow-[inset_0_4px_16px_rgba(0,0,0,0.06),0_10px_25px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_4px_20px_rgba(0,0,0,0.8),0_10px_25px_rgba(0,0,0,0.5)]">
+            {/* Top Rim Indicator */}
+            <div className="absolute -top-3 left-0 right-0 flex justify-center items-center">
+              <span className="text-[9px] font-extrabold font-mono tracking-wider px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 shadow-sm select-none">
+                ↓ PUSH / POP ↑
+              </span>
+            </div>
+
+            {/* Left Slot Index Markers */}
+            <div className="absolute -left-7 top-0 bottom-0 flex flex-col-reverse justify-around py-4 text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 select-none pointer-events-none">
+              {Array.from({ length: 5 }, (_, i) => (
+                <span key={i} className="text-right pr-1">
+                  [{i}]
+                </span>
+              ))}
             </div>
 
             <AnimatePresence>
               {items.map((val, idx) => {
                 const isTop = idx === topIdx;
-                let bgClass = "bg-slate-800/90 border-slate-700 text-slate-300";
+                let bgClass =
+                  "bg-slate-700 dark:bg-slate-800 text-white border border-slate-600 dark:border-slate-700 shadow-sm";
                 let glowClass = "";
 
                 if (isTop) {
                   bgClass = isSecond
-                    ? "bg-success/20 border-success text-success"
-                    : "bg-primary/20 border-primary text-primary";
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-600 border-2 border-emerald-300 text-white font-black"
+                    : "bg-gradient-to-r from-indigo-500 to-purple-600 border-2 border-indigo-300 text-white font-black";
                   glowClass = isSecond
-                    ? "shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-                    : "shadow-[0_0_12px_rgba(79,70,229,0.3)]";
+                    ? "shadow-[0_0_16px_rgba(16,185,129,0.5)] scale-105"
+                    : "shadow-[0_0_16px_rgba(99,102,241,0.5)] scale-105";
                 }
 
                 return (
@@ -3495,16 +3514,16 @@ const VisualizerCanvas = ({
                     initial={{ y: -60, opacity: 0, scale: 0.8 }}
                     animate={{ y: 0, opacity: 1, scale: 1 }}
                     exit={{ y: -60, opacity: 0, scale: 0.8 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className={`w-full h-8 rounded-lg border flex items-center justify-center font-mono text-xs font-bold transition-all relative flex-shrink-0 z-10 ${bgClass} ${glowClass}`}
+                    transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                    className={`w-full h-10 rounded-xl flex items-center justify-center font-mono text-sm font-extrabold transition-all relative flex-shrink-0 z-10 ${bgClass} ${glowClass}`}
                   >
-                    {val}
+                    <span className="truncate px-2">{val}</span>
 
                     {/* Top Pointer Indicator Tag */}
                     {isTop && (
                       <motion.div
                         layoutId={`top-pointer-${isSecond ? "sec" : "prim"}`}
-                        className="absolute -right-16 flex items-center gap-1 text-[7px] font-black text-amber-500 bg-amber-500/20 px-1 py-0.5 rounded border border-amber-500/30 uppercase tracking-widest select-none z-20"
+                        className="absolute -right-20 flex items-center gap-1 text-[9px] font-extrabold text-white bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-0.5 rounded-full border border-amber-300 shadow-md uppercase tracking-wider select-none z-20 animate-pulse"
                       >
                         <span>◀ TOP</span>
                       </motion.div>
@@ -3515,9 +3534,12 @@ const VisualizerCanvas = ({
             </AnimatePresence>
 
             {items.length === 0 && (
-              <span className="text-[8px] font-black tracking-widest text-slate-700 text-center mb-4 select-none uppercase">
-                Empty Stack
-              </span>
+              <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 opacity-60 my-auto select-none">
+                <span className="text-xl">📭</span>
+                <span className="text-[10px] font-black tracking-widest text-slate-500 dark:text-slate-400 text-center uppercase font-mono">
+                  Empty Stack
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -3525,15 +3547,28 @@ const VisualizerCanvas = ({
     };
 
     return (
-      <div className="w-full min-h-[300px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left">
+      <div
+        className="w-full min-h-[340px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left relative overflow-hidden bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-3xl select-none"
+        style={{
+          boxShadow:
+            theme === "light"
+              ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
+              : "10px 10px 25px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255, 255, 255, 0.05)",
+        }}
+      >
         {/* Header */}
-        <div className="w-full flex items-center justify-between">
-          <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase">
-            Stack Frame Visualizer
-          </span>
+        <div className="w-full flex items-center justify-between z-10 px-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+              Stack Memory Frame
+            </span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase font-mono border border-primary/20">
+              LIFO Order
+            </span>
+          </div>
           <div className="flex gap-2">
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary uppercase">
-              Items: {stackItems.length}
+            <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-mono tracking-wider">
+              Total Items: {stackItems.length + (stackItems2 ? stackItems2.length : 0)}
             </span>
           </div>
         </div>
@@ -3576,37 +3611,41 @@ const VisualizerCanvas = ({
         )}
 
         {/* Outer Stack Row */}
-        <div className="w-full flex justify-center items-center gap-16 flex-wrap py-4">
+        <div className="w-full flex justify-center items-center gap-14 flex-wrap py-2 z-10">
           {/* Input token scan list if it exists */}
           {Array.isArray(data) && data.length > 0 && (
-            <div className="flex flex-col gap-2 items-center flex-shrink-0">
-              <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider">
-                Token Scan Pointer
+            <div className="flex flex-col gap-1.5 items-center flex-shrink-0">
+              <span className="text-[9px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider font-mono">
+                Tokens Scan Pointer
               </span>
-              <div className="flex gap-1.5 p-2.5 rounded-2xl border border-slate-200/40 dark:border-slate-800/45 bg-slate-50/5 dark:bg-slate-900/5 max-w-sm flex-wrap justify-center">
+              <div className="flex gap-2 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60 shadow-inner max-w-md flex-wrap justify-center items-center">
                 {data.map((char, idx) => {
                   const isActive = stackState?.charIdx === idx;
                   const isProcessed = stackState?.charIdx > idx;
 
-                  let borderClass =
-                    "border-slate-200/40 dark:border-slate-700/45";
-                  let bgClass = "bg-white dark:bg-slate-800 opacity-60";
+                  let borderClass = "border-slate-300 dark:border-slate-700";
+                  let bgClass = "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200";
                   if (isActive) {
-                    borderClass = "border-amber-500 shadow-sm";
-                    bgClass =
-                      "bg-amber-500/5 dark:bg-amber-500/10 font-bold opacity-100 scale-105";
+                    borderClass = "border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.5)]";
+                    bgClass = "bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black scale-110";
                   } else if (isProcessed) {
-                    borderClass = "border-primary/50";
-                    bgClass = "bg-primary/5 opacity-40";
+                    borderClass = "border-emerald-500/40";
+                    bgClass = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 opacity-60";
                   }
 
                   return (
-                    <span
-                      key={idx}
-                      className={`px-2 py-1 rounded font-mono text-xs border transition-all duration-300 ${bgClass} ${borderClass}`}
-                    >
-                      {char}
-                    </span>
+                    <div key={idx} className="flex flex-col items-center gap-1">
+                      <span
+                        className={`w-8 h-8 rounded-lg font-mono text-sm font-black border flex items-center justify-center transition-all duration-300 ${bgClass} ${borderClass}`}
+                      >
+                        {char}
+                      </span>
+                      {isActive && (
+                        <span className="text-[7.5px] font-black text-amber-500 uppercase tracking-tighter">
+                          ▲ ACTIVE
+                        </span>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -4150,7 +4189,7 @@ const VisualizerCanvas = ({
     const n = people.length;
     if (n === 0) return null;
 
-    const survivor = stepState?.stats?.survivor || null;
+    const survivor = stats?.survivor || currentSnap?.stats?.survivor || null;
 
     return (
       <div className="w-full min-h-[360px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left">
@@ -4265,139 +4304,290 @@ const VisualizerCanvas = ({
     );
   };
 
-  // --- 6. RENDER TREES (BST) ---
+  // --- 6. RENDER TREES (BST / BINARY TREE / BFS) ---
   const renderTreeCanvas = () => {
-    const nodes = data || [];
+    let nodes =
+      Array.isArray(data) ? data : data?.nodes || data?.visualNodes || [];
+
+    if (nodes.length === 0 && (data?.values || data?.arr || data?.levels)) {
+      const fallbackArr =
+        data?.values ||
+        data?.arr ||
+        (Array.isArray(data?.levels) ? data.levels.flat() : []);
+      if (Array.isArray(fallbackArr) && fallbackArr.length > 0) {
+        // Build binary tree positions
+        const list = fallbackArr.map((val, idx) => ({
+          id: idx,
+          val,
+          left: null,
+          right: null,
+          x: 0,
+          y: 0,
+        }));
+        for (let i = 0; i < list.length; i++) {
+          const leftIdx = 2 * i + 1;
+          const rightIdx = 2 * i + 2;
+          if (leftIdx < list.length) list[i].left = list[leftIdx];
+          if (rightIdx < list.length) list[i].right = list[rightIdx];
+        }
+        const getMaxDepth = (n) =>
+          !n ? 0 : 1 + Math.max(getMaxDepth(n.left), getMaxDepth(n.right));
+        const maxDepth = getMaxDepth(list[0]);
+        const positionNodes = (n, depth, minX, maxX) => {
+          if (!n) return;
+          const x = (minX + maxX) / 2;
+          let y = maxDepth > 1 ? 45 + depth * (180 / (maxDepth - 1)) : 135;
+          n.x = x;
+          n.y = y;
+          positionNodes(n.left, depth + 1, minX, x);
+          positionNodes(n.right, depth + 1, x, maxX);
+        };
+        positionNodes(list[0], 0, 10, 90);
+        nodes = list.map((n) => ({
+          ...n,
+          left: n.left ? { id: n.left.id } : null,
+          right: n.right ? { id: n.right.id } : null,
+        }));
+      }
+    }
+
     const isLargeTree = nodes.length > 10;
     const nodeSizeClass = isLargeTree
-      ? "w-7.5 h-7.5 text-[10px]"
-      : "w-9 h-9 text-xs";
+      ? "w-8 h-8 text-[10px]"
+      : "w-10 h-10 text-xs";
+
+    const bfsQueue = treeState?.queue || [];
+    const activeVal =
+      treeState?.activeNode !== undefined ? treeState.activeNode : null;
 
     return (
-      <div className="w-full h-72 relative">
-        <svg className="w-full h-full absolute inset-0 z-0 pointer-events-none">
-          {/* Draw connecting edge lines */}
+      <div
+        className="w-full min-h-[340px] flex flex-col justify-between items-center gap-3 p-5 font-sans text-left relative overflow-hidden bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-3xl select-none"
+        style={{
+          boxShadow:
+            theme === "light"
+              ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
+              : "10px 10px 25px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255, 255, 255, 0.05)",
+        }}
+      >
+        {/* Header HUD */}
+        <div className="w-full flex items-center justify-between z-10 px-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+              {algorithm.name || "Tree Visualizer"}
+            </span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono border border-emerald-500/20">
+              {nodes.length} Nodes
+            </span>
+          </div>
+
+          {activeVal !== null && activeVal !== undefined && (
+            <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-mono border border-purple-500/20 animate-pulse">
+              Visiting: [{activeVal}]
+            </span>
+          )}
+        </div>
+
+        {/* Tree SVG Graph Arena */}
+        <div className="w-full h-64 relative z-10 my-1">
+          <svg className="w-full h-full absolute inset-0 z-0 pointer-events-none">
+            {/* Draw connecting edge lines */}
+            {nodes.map((node) => {
+              const lines = [];
+              const isNodeSorted = highlights[node.id] === "sorted";
+              const isNodeActive =
+                highlights[node.id] === "active" ||
+                highlights[node.id] === "compare";
+
+              if (node.left) {
+                const leftChild = nodes.find((n) => n.id === node.left.id);
+                if (leftChild) {
+                  const isLeftSorted = highlights[leftChild.id] === "sorted";
+                  const isLeftActive =
+                    highlights[leftChild.id] === "active" ||
+                    highlights[leftChild.id] === "pivot";
+                  const isPathEdge =
+                    (isNodeSorted && isLeftSorted) ||
+                    (isNodeActive && isLeftActive);
+
+                  lines.push(
+                    <line
+                      key={`${node.id}-left`}
+                      x1={`${node.x}%`}
+                      y1={node.y}
+                      x2={`${leftChild.x}%`}
+                      y2={leftChild.y}
+                      stroke={
+                        isPathEdge
+                          ? "#10b981"
+                          : isNodeActive
+                            ? "#8b5cf6"
+                            : theme === "light"
+                              ? "#cbd5e1"
+                              : "#334155"
+                      }
+                      strokeWidth={isPathEdge || isNodeActive ? "2.5" : "1.75"}
+                      strokeDasharray={isPathEdge ? "none" : "3 3"}
+                      className="transition-all duration-300"
+                    />,
+                  );
+                }
+              }
+              if (node.right) {
+                const rightChild = nodes.find((n) => n.id === node.right.id);
+                if (rightChild) {
+                  const isRightSorted = highlights[rightChild.id] === "sorted";
+                  const isRightActive =
+                    highlights[rightChild.id] === "active" ||
+                    highlights[rightChild.id] === "pivot";
+                  const isPathEdge =
+                    (isNodeSorted && isRightSorted) ||
+                    (isNodeActive && isRightActive);
+
+                  lines.push(
+                    <line
+                      key={`${node.id}-right`}
+                      x1={`${node.x}%`}
+                      y1={node.y}
+                      x2={`${rightChild.x}%`}
+                      y2={rightChild.y}
+                      stroke={
+                        isPathEdge
+                          ? "#10b981"
+                          : isNodeActive
+                            ? "#8b5cf6"
+                            : theme === "light"
+                              ? "#cbd5e1"
+                              : "#334155"
+                      }
+                      strokeWidth={isPathEdge || isNodeActive ? "2.5" : "1.75"}
+                      strokeDasharray={isPathEdge ? "none" : "3 3"}
+                      className="transition-all duration-300"
+                    />,
+                  );
+                }
+              }
+              return lines;
+            })}
+          </svg>
+
+          {/* Tree Nodes */}
           {nodes.map((node) => {
-            const lines = [];
-            if (node.left) {
-              const leftChild = nodes.find((n) => n.id === node.left.id);
-              if (leftChild) {
-                lines.push(
-                  <line
-                    key={`${node.id}-left`}
-                    x1={`${node.x}%`}
-                    y1={node.y}
-                    x2={`${leftChild.x}%`}
-                    y2={leftChild.y}
-                    stroke="#475569"
-                    strokeWidth="2"
-                    strokeDasharray={
-                      highlights[node.id] === "sorted" &&
-                      highlights[leftChild.id] === "sorted"
-                        ? "none"
-                        : "4"
-                    }
-                  />,
-                );
+            let nodeColorClass = getHighlightClass(node.id);
+            const isRbt =
+              treeState?.rbt || node.color === "red" || node.color === "black";
+
+            if (isRbt) {
+              const isRed = node.color === "red";
+              const isHighlight = highlights[node.id] === "compare";
+              if (isHighlight) {
+                nodeColorClass = isRed
+                  ? "bg-rose-500 text-white border-white scale-110 shadow-lg ring-4 ring-rose-400/50"
+                  : "bg-slate-900 text-white border-white scale-110 shadow-lg ring-4 ring-slate-400/50";
+              } else {
+                nodeColorClass = isRed
+                  ? "bg-rose-600 text-white border-rose-500 shadow-md ring-2 ring-rose-500/30"
+                  : "bg-slate-950 text-white border-slate-800 shadow-md ring-2 ring-slate-700/30";
               }
+            } else if (!highlights[node.id]) {
+              nodeColorClass =
+                theme === "light"
+                  ? "bg-white text-slate-800 border-slate-300 shadow-sm"
+                  : "bg-slate-900 text-slate-100 border-slate-700 shadow-sm";
             }
-            if (node.right) {
-              const rightChild = nodes.find((n) => n.id === node.right.id);
-              if (rightChild) {
-                lines.push(
-                  <line
-                    key={`${node.id}-right`}
-                    x1={`${node.x}%`}
-                    y1={node.y}
-                    x2={`${rightChild.x}%`}
-                    y2={rightChild.y}
-                    stroke="#475569"
-                    strokeWidth="2"
-                    strokeDasharray={
-                      highlights[node.id] === "sorted" &&
-                      highlights[rightChild.id] === "sorted"
-                        ? "none"
-                        : "4"
-                    }
-                  />,
-                );
-              }
-            }
-            return lines;
-          })}
-        </svg>
 
-        {/* Tree Nodes */}
-        {nodes.map((node) => {
-          let nodeColorClass = getHighlightClass(node.id);
-          const isRbt =
-            treeState?.rbt || node.color === "red" || node.color === "black";
+            const isCurrentActive =
+              highlights[node.id] === "active" ||
+              highlights[node.id] === "compare";
 
-          if (isRbt) {
-            const isRed = node.color === "red";
-            const isHighlight = highlights[node.id] === "compare";
-            if (isHighlight) {
-              nodeColorClass = isRed
-                ? "bg-rose-500 text-white border-white scale-110 shadow-lg ring-4 ring-rose-400/50"
-                : "bg-slate-900 text-white border-white scale-110 shadow-lg ring-4 ring-slate-400/50";
-            } else {
-              nodeColorClass = isRed
-                ? "bg-rose-600 text-white border-rose-500 shadow-md ring-2 ring-rose-500/30"
-                : "bg-slate-950 text-white border-slate-800 shadow-md ring-2 ring-slate-700/30";
-            }
-          }
+            const resolvedId = algorithm.counterpartId || algorithm.id;
+            const isBTreeOrAdvanced =
+              resolvedId === "b-tree" ||
+              resolvedId === "b-plus-tree" ||
+              resolvedId === "kd-tree" ||
+              resolvedId === "quad-tree" ||
+              resolvedId === "octree" ||
+              resolvedId === "interval-tree" ||
+              resolvedId === "suffix-tree";
 
-          const resolvedId = algorithm.counterpartId || algorithm.id;
-          const isBTreeOrAdvanced =
-            resolvedId === "b-tree" ||
-            resolvedId === "b-plus-tree" ||
-            resolvedId === "kd-tree" ||
-            resolvedId === "quad-tree" ||
-            resolvedId === "octree" ||
-            resolvedId === "interval-tree" ||
-            resolvedId === "suffix-tree";
+            const nodeShapeClass = isBTreeOrAdvanced
+              ? "rounded-md px-3.5 py-2.5 h-auto w-auto max-w-[150px] text-center text-[10px] whitespace-nowrap shadow-md"
+              : `${nodeSizeClass} rounded-full`;
 
-          const nodeShapeClass = isBTreeOrAdvanced
-            ? "rounded-md px-3.5 py-2.5 h-auto w-auto max-w-[150px] text-center text-[10px] whitespace-nowrap shadow-md"
-            : `${nodeSizeClass} rounded-full`;
-
-          return (
-            <div
-              key={node.id}
-              style={{
-                left: `${node.x}%`,
-                top: `${node.y}px`,
-                transform: "translate(-50%, -50%)",
-              }}
-              className={`
-                absolute ${nodeShapeClass} border-2 flex flex-col items-center justify-center font-mono font-bold transition-all duration-300 z-10
-                ${nodeColorClass}
-              `}
-            >
-              <span className="leading-none">{node.val}</span>
-              {node.result !== undefined && node.result !== null && (
-                <span className="text-[7.5px] text-yellow-400 font-semibold leading-none mt-0.5">
-                  {typeof node.result === "number"
-                    ? `=${node.result}`
-                    : node.result}
-                </span>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Visit Path scoreboard bottom list */}
-        {treeState?.path && (
-          <div className="absolute bottom-2 left-4 right-4 flex items-center gap-1.5 font-mono text-[10px] text-slate-500 overflow-x-auto whitespace-nowrap bg-black/40 p-1.5 rounded border border-slate-800">
-            <span className="font-bold text-accent uppercase mr-1">Path:</span>
-            {treeState.path.map((val, idx) => (
-              <span
-                key={idx}
-                className="bg-slate-800 text-slate-300 px-1 rounded"
+            return (
+              <div
+                key={node.id}
+                style={{
+                  left: `${node.x}%`,
+                  top: `${node.y}px`,
+                  transform: "translate(-50%, -50%)",
+                }}
+                className={`
+                  absolute ${nodeShapeClass} border-2 flex flex-col items-center justify-center font-mono font-bold transition-all duration-300 z-10
+                  ${nodeColorClass}
+                  ${isCurrentActive ? "scale-115 ring-4 ring-purple-500/40 shadow-lg" : ""}
+                `}
               >
-                {val}
-              </span>
-            ))}
+                <span className="leading-none">{node.val}</span>
+                {node.result !== undefined && node.result !== null && (
+                  <span className="text-[7px] text-amber-400 font-semibold leading-none mt-0.5">
+                    {typeof node.result === "number"
+                      ? `=${node.result}`
+                      : node.result}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* HUD: BFS Queue (if present) */}
+        {bfsQueue.length > 0 && (
+          <div className="w-full flex items-center gap-2 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs font-mono z-10 shadow-inner">
+            <span className="text-[9px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider flex items-center gap-1 min-w-[70px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-ping" />
+              BFS Queue:
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap overflow-x-auto py-0.5">
+              {bfsQueue.map((item, qIdx) => (
+                <span
+                  key={qIdx}
+                  className={`px-2 py-0.5 rounded-lg border text-[11px] font-bold ${
+                    qIdx === 0
+                      ? "bg-purple-600 text-white border-purple-400 shadow-sm"
+                      : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                  }`}
+                >
+                  {item}
+                  {qIdx === 0 && (
+                    <span className="text-[8px] ml-1 opacity-75 font-normal">
+                      ◀ FRONT
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* HUD: Visit Path Scoreboard */}
+        {treeState?.path && treeState.path.length > 0 && (
+          <div className="w-full flex items-center gap-2 p-2 rounded-xl bg-slate-50/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs font-mono z-10 shadow-inner">
+            <span className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider min-w-[70px]">
+              Visited Path:
+            </span>
+            <div className="flex items-center gap-1 flex-wrap overflow-x-auto py-0.5">
+              {treeState.path.map((val, idx) => (
+                <React.Fragment key={idx}>
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold text-[11px]">
+                    {val}
+                  </span>
+                  {idx < treeState.path.length - 1 && (
+                    <span className="text-slate-400 text-[10px]">→</span>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -8422,77 +8612,105 @@ const VisualizerCanvas = ({
     if (algoId === "bloom-filter") return renderBloomFilterCanvas();
 
     // Default two-sum-hash / pair-sum / frequency-count display
-    const nums = data?.nums || data?.arr || [];
-    const map = data?.map || data?.hash || {};
-    const target = data?.target || 9;
-    const currentIdx = data?.currentIdx !== undefined ? data.currentIdx : -1;
-    const complement = data?.complement !== undefined ? data.complement : null;
+    const nums = data?.nums || data?.arr || (Array.isArray(data) ? data : []);
+    const map = data?.map || data?.hash || (data?.table ? data.table : {});
+    const target = data?.target !== undefined ? data.target : (stats?.target !== undefined ? stats.target : 9);
+    const currentIdx =
+      data?.currentIdx !== undefined && data.currentIdx !== -1
+        ? data.currentIdx
+        : hashState?.currentIdx !== undefined
+          ? hashState.currentIdx
+          : -1;
+    const complement =
+      data?.complement !== undefined && data.complement !== null
+        ? data.complement
+        : hashState?.complement !== undefined
+          ? hashState.complement
+          : null;
+    const matchIdx = hashState?.matchIdx !== undefined ? hashState.matchIdx : -1;
 
     return (
-      <div className="w-full min-h-[320px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left">
+      <div
+        className="w-full min-h-[340px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left relative overflow-hidden bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-3xl select-none"
+        style={{
+          boxShadow:
+            theme === "light"
+              ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
+              : "10px 10px 25px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255, 255, 255, 0.05)",
+        }}
+      >
         {/* Header */}
-        <div className="w-full flex items-center justify-between">
-          <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase">
-            Two Sum Hash Mapper
-          </span>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-mono">
-            Target: {target}
+        <div className="w-full flex items-center justify-between z-10 px-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+              Hash Map Two Sum Finder
+            </span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 font-mono border border-purple-500/20">
+              O(n) Time · O(n) Space
+            </span>
+          </div>
+          <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono border border-amber-500/20">
+            🎯 Target: {target}
           </span>
         </div>
 
         {/* Formula calculation card */}
-        {currentIdx !== -1 && (
-          <div className="w-full max-w-md p-3 rounded-2xl border border-slate-200/10 dark:border-slate-800/40 bg-slate-900/35 backdrop-blur-sm flex justify-around items-center font-mono text-xs text-slate-400 mx-auto shadow-sm">
+        {currentIdx !== -1 && nums[currentIdx] !== undefined && (
+          <div className="w-full max-w-md p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 backdrop-blur-md flex justify-around items-center font-mono text-xs text-slate-600 dark:text-slate-300 mx-auto shadow-sm z-10">
             <div className="flex flex-col items-center">
-              <span className="text-[7px] text-slate-500 uppercase tracking-widest">
-                Current
+              <span className="text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Current [idx: {currentIdx}]
               </span>
-              <span className="text-sm font-bold text-slate-200">
+              <span className="text-base font-black text-purple-600 dark:text-purple-400">
                 {nums[currentIdx]}
               </span>
             </div>
-            <span className="text-slate-600 font-black">+</span>
+            <span className="text-slate-400 font-black text-sm">+</span>
             <div className="flex flex-col items-center">
-              <span className="text-[7px] text-slate-500 uppercase tracking-widest">
+              <span className="text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Complement
               </span>
-              <span className="text-sm font-bold text-amber-500">
-                {complement}
+              <span className="text-base font-black text-amber-500">
+                {complement !== null ? complement : "—"}
               </span>
             </div>
-            <span className="text-slate-600 font-black">=</span>
+            <span className="text-slate-400 font-black text-sm">=</span>
             <div className="flex flex-col items-center">
-              <span className="text-[7px] text-slate-500 uppercase tracking-widest">
-                Target
+              <span className="text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Target Sum
               </span>
-              <span className="text-sm font-bold text-primary">{target}</span>
+              <span className="text-base font-black text-emerald-600 dark:text-emerald-400">
+                {target}
+              </span>
             </div>
           </div>
         )}
 
-        <div className="w-full flex flex-col md:flex-row gap-6 items-start py-2">
+        <div className="w-full flex flex-col md:flex-row gap-6 items-start py-2 z-10">
           {/* Left Side: Array Scan */}
-          <div className="flex-1 flex flex-wrap gap-2 justify-center py-2">
+          <div className="flex-1 flex flex-wrap gap-2.5 justify-center py-2">
             {nums.map((val, idx) => {
               const isCurrent = idx === currentIdx;
               const isMatch =
                 highlights[idx] === "sorted" ||
-                (stepState?.stats?.solution &&
-                  stepState.stats.solution.includes(idx));
+                highlights[idx] === "match" ||
+                Boolean(stats?.solution && Array.isArray(stats.solution) && stats.solution.includes(idx)) ||
+                Boolean(currentSnap?.stats?.solution && Array.isArray(currentSnap.stats.solution) && currentSnap.stats.solution.includes(idx)) ||
+                idx === matchIdx;
 
               return (
                 <div
                   key={idx}
-                  className={`px-3 py-2 rounded-lg border text-xs font-mono font-bold transition-all duration-300 ${
-                    isCurrent
-                      ? "bg-purple-600 border-purple-400 text-white shadow-md scale-105"
-                      : isMatch
-                        ? "bg-success text-white border-success"
-                        : "bg-slate-800 border-slate-700 text-slate-400"
+                  className={`px-3.5 py-2.5 rounded-xl border text-xs font-mono font-bold transition-all duration-300 ${
+                    isMatch
+                      ? "bg-gradient-to-b from-emerald-500 to-teal-600 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.5)] scale-110"
+                      : isCurrent
+                        ? "bg-gradient-to-b from-purple-600 to-indigo-600 border-purple-400 text-white shadow-[0_0_18px_rgba(147,51,234,0.5)] scale-110"
+                        : "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 shadow-sm"
                   }`}
                 >
-                  <div>val: {val}</div>
-                  <div className="text-[8px] text-slate-500 font-normal mt-0.5">
+                  <div className="text-sm font-black">val: {val}</div>
+                  <div className="text-[9px] text-slate-400 dark:text-slate-400 font-mono mt-0.5 opacity-80">
                     idx: {idx}
                   </div>
                 </div>
@@ -8501,25 +8719,30 @@ const VisualizerCanvas = ({
           </div>
 
           {/* Right Side: Map registry */}
-          <div className="w-full md:w-60 flex flex-col gap-1.5 p-3.5 rounded-2xl border border-slate-800 bg-slate-950 max-h-48 overflow-y-auto">
-            <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider mb-1 text-center">
-              Hash Map Entries
-            </span>
+          <div className="w-full md:w-64 flex flex-col gap-2 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 max-h-52 overflow-y-auto shadow-inner">
+            <div className="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-slate-800">
+              <span className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
+                Hash Map Registry
+              </span>
+              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                {Object.keys(map).length} entries
+              </span>
+            </div>
             {Object.entries(map).map(([key, val]) => (
               <div
                 key={key}
-                className="flex justify-between items-center text-xs font-mono border-b border-slate-900 pb-1 text-slate-300"
+                className="flex justify-between items-center text-xs font-mono py-1 px-2 rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 shadow-sm text-slate-700 dark:text-slate-200"
               >
-                <span className="text-slate-500">
-                  Key: <b className="text-slate-300">{key}</b>
+                <span className="text-slate-500 dark:text-slate-400">
+                  Key: <b className="text-slate-900 dark:text-white font-black">{key}</b>
                 </span>
-                <span className="text-slate-500">
-                  Idx: <b className="text-primary">{val}</b>
+                <span className="text-slate-500 dark:text-slate-400">
+                  Idx: <b className="text-purple-600 dark:text-purple-400 font-black">{val}</b>
                 </span>
               </div>
             ))}
             {Object.keys(map).length === 0 && (
-              <span className="text-[8px] font-black text-slate-850 text-center py-4 uppercase">
+              <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 text-center py-4 uppercase font-mono">
                 Map Empty
               </span>
             )}
@@ -10921,8 +11144,8 @@ const VisualizerCanvas = ({
       return renderHouseRobberCanvas();
     if (resolvedId === "frequency-count") return renderHashCanvas();
     // --- Specific algorithm overrides ---
-    if (resolvedId === "level-order-traversal") return renderLevelOrderCanvas();
-    if (resolvedId === "bellman-ford") return renderBellmanFordCanvas();
+    if (resolvedId === "level-order-traversal") return renderTreeCanvas();
+    if (resolvedId === "bellman-ford") return renderGraphCanvas();
     if (resolvedId === "floyd-warshall") return renderFloydWarshallCanvas();
     if (resolvedId === "pascal-triangle") return renderPascalTriangleCanvas();
     if (resolvedId === "single-number") return renderXorAccumulatorCanvas(true);

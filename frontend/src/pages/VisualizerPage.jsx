@@ -536,8 +536,11 @@ const VisualizerPage = () => {
     algoId === "linked-list-deletion";
   const isCombinedTreeAlgo =
     algoId === "bst-insert" ||
+    algoId === "bst-delete" ||
     algoId === "avl-insert" ||
+    algoId === "avl-delete" ||
     algoId === "bt-insert" ||
+    algoId === "bt-delete" ||
     algoId === "linked-list-traversal" ||
     algoId === "linked-list-insertion" ||
     algoId === "linked-list-deletion" ||
@@ -1392,33 +1395,27 @@ const VisualizerPage = () => {
             computedSteps = lcaSteps(arr, lcaInput);
           } else if (algo.id === "level-order-traversal") {
             computedSteps = levelOrderTraversalSteps(arr);
-          } else if (algo.id === "bst-insert") {
+          } else if (algo.id === "bst-insert" || algo.id === "bst-delete") {
             if (autoPlay && !isDeletionAction) {
               baseStepsCount = bstInsertSteps(arr, undefined).length;
             }
             computedSteps = isDeletionAction
               ? bstDeleteSteps(arr, treeTarget)
               : bstInsertSteps(arr, treeTarget);
-          } else if (algo.id === "bst-delete") {
-            computedSteps = bstDeleteSteps(arr, treeTarget);
-          } else if (algo.id === "avl-insert") {
+          } else if (algo.id === "avl-insert" || algo.id === "avl-delete") {
             if (autoPlay && !isDeletionAction) {
               baseStepsCount = avlInsertSteps(arr, undefined).length;
             }
             computedSteps = isDeletionAction
               ? avlDeleteSteps(arr, treeTarget)
               : avlInsertSteps(arr, treeTarget);
-          } else if (algo.id === "avl-delete") {
-            computedSteps = avlDeleteSteps(arr, treeTarget);
-          } else if (algo.id === "bt-insert") {
+          } else if (algo.id === "bt-insert" || algo.id === "bt-delete") {
             if (autoPlay && !isDeletionAction) {
               baseStepsCount = btInsertSteps(arr, undefined).length;
             }
             computedSteps = isDeletionAction
               ? btDeleteSteps(arr, treeTarget)
               : btInsertSteps(arr, treeTarget);
-          } else if (algo.id === "bt-delete") {
-            computedSteps = btDeleteSteps(arr, treeTarget);
           } else if (algo.id === "rbt-insert") {
             computedSteps = rbtInsertSteps(arr);
           } else if (
@@ -3024,48 +3021,129 @@ const VisualizerPage = () => {
           </div>
           {/* 2. Operations rows */}
           <div className="flex flex-col sm:flex-row gap-3 items-end">
-            {/* Insert row */}
-            <div className="flex-1 flex gap-2 items-end w-full">
-              <div className="flex-1 flex flex-col gap-1">
-                <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
-                  Insert Value
-                </span>
-                <Input
-                  value={targetInput}
-                  onChange={(e) => setTargetInput(e.target.value)}
-                  placeholder={algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Enter val & index (e.g. 99 2)" : "Enter insert value"}
-                />
-              </div>
-              <Button
-                onClick={handleInsertAction}
-                variant="accent"
-                className="font-bold flex-shrink-0 clay-btn clay-btn-accent w-auto text-xs"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Insert</span>
-              </Button>
-            </div>
-            {/* Delete row */}
-            <div className="flex-1 flex gap-2 items-end w-full">
-              <div className="flex-1 flex flex-col gap-1">
-                <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
-                  {algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Delete Index" : "Delete Value"}
-                </span>
-                <Input
-                  value={deleteInput}
-                  onChange={(e) => setDeleteInput(e.target.value)}
-                  placeholder={algo.category === "linked-list" || algoId.includes("linked-list") || algoId.includes("list-") ? "Enter delete index" : "Enter delete value"}
-                />
-              </div>
-              <Button
-                onClick={handleDeleteAction}
-                variant="danger"
-                className="font-bold flex-shrink-0 clay-btn clay-btn-danger w-auto text-xs"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Delete</span>
-              </Button>
-            </div>
+            {isDelete ? (
+              <>
+                {/* Delete row */}
+                <div className="flex-1 flex gap-2 items-end w-full">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                      {algo.category === "linked-list" ||
+                      algoId.includes("linked-list") ||
+                      algoId.includes("list-")
+                        ? "Delete Index"
+                        : "Delete Value"}
+                    </span>
+                    <Input
+                      value={deleteInput}
+                      onChange={(e) => setDeleteInput(e.target.value)}
+                      placeholder={
+                        algo.category === "linked-list" ||
+                        algoId.includes("linked-list") ||
+                        algoId.includes("list-")
+                          ? "Enter delete index"
+                          : "Enter delete value (e.g. 10)"
+                      }
+                    />
+                  </div>
+                  <Button
+                    onClick={handleDeleteAction}
+                    variant="danger"
+                    className="font-bold flex-shrink-0 clay-btn clay-btn-danger w-auto text-xs"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete</span>
+                  </Button>
+                </div>
+                {/* Insert row */}
+                <div className="flex-1 flex gap-2 items-end w-full">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                      Insert Value
+                    </span>
+                    <Input
+                      value={targetInput}
+                      onChange={(e) => setTargetInput(e.target.value)}
+                      placeholder={
+                        algo.category === "linked-list" ||
+                        algoId.includes("linked-list") ||
+                        algoId.includes("list-")
+                          ? "Enter val & index (e.g. 99 2)"
+                          : "Enter insert value (e.g. 25)"
+                      }
+                    />
+                  </div>
+                  <Button
+                    onClick={handleInsertAction}
+                    variant="accent"
+                    className="font-bold flex-shrink-0 clay-btn clay-btn-accent w-auto text-xs"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Insert</span>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Insert row */}
+                <div className="flex-1 flex gap-2 items-end w-full">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                      Insert Value
+                    </span>
+                    <Input
+                      value={targetInput}
+                      onChange={(e) => setTargetInput(e.target.value)}
+                      placeholder={
+                        algo.category === "linked-list" ||
+                        algoId.includes("linked-list") ||
+                        algoId.includes("list-")
+                          ? "Enter val & index (e.g. 99 2)"
+                          : "Enter insert value (e.g. 25)"
+                      }
+                    />
+                  </div>
+                  <Button
+                    onClick={handleInsertAction}
+                    variant="accent"
+                    className="font-bold flex-shrink-0 clay-btn clay-btn-accent w-auto text-xs"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Insert</span>
+                  </Button>
+                </div>
+                {/* Delete row */}
+                <div className="flex-1 flex gap-2 items-end w-full">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+                      {algo.category === "linked-list" ||
+                      algoId.includes("linked-list") ||
+                      algoId.includes("list-")
+                        ? "Delete Index"
+                        : "Delete Value"}
+                    </span>
+                    <Input
+                      value={deleteInput}
+                      onChange={(e) => setDeleteInput(e.target.value)}
+                      placeholder={
+                        algo.category === "linked-list" ||
+                        algoId.includes("linked-list") ||
+                        algoId.includes("list-")
+                          ? "Enter delete index"
+                          : "Enter delete value (e.g. 10)"
+                      }
+                    />
+                  </div>
+                  <Button
+                    onClick={handleDeleteAction}
+                    variant="danger"
+                    className="font-bold flex-shrink-0 clay-btn clay-btn-danger w-auto text-xs"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete</span>
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       ) : (
