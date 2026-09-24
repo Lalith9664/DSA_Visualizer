@@ -9,6 +9,7 @@ import {
   Bookmark,
   Compass,
   Terminal,
+  Monitor,
 } from "lucide-react";
 import Button from "./Button";
 
@@ -111,13 +112,22 @@ const Navbar = () => {
                   {algo.category}
                 </span>
               </button>
-            ))}
+             ))}
           </div>
         )}
       </div>
 
       {/* Right Action Deck */}
       <div className="flex items-center gap-1.5 sm:gap-3">
+        {/* Mobile Desktop Mode Quick Button */}
+        <button
+          onClick={() => window.dispatchEvent(new Event('open-desktop-guide'))}
+          className="clay-btn w-8 h-8 flex lg:hidden items-center justify-center text-amber-500 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/20 rounded-full cursor-pointer transition-all active:scale-95"
+          title="Switch to Desktop Mode"
+        >
+          <Monitor className="w-4 h-4" />
+        </button>
+
         {/* Bookmark Count badge */}
         <Link to="/" className="relative hidden sm:block" title="Favorites">
           <Button

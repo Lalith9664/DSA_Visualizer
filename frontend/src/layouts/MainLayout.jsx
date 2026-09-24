@@ -2,6 +2,7 @@ import React from "react";
 import Navbar from "../components/common/Navbar";
 import Sidebar from "../components/common/Sidebar";
 import BottomNav from "../components/common/BottomNav";
+import DesktopModeNotification from "../components/common/DesktopModeNotification";
 import { useVisualizer } from "../context/VisualizerContext";
 
 const MainLayout = ({ children }) => {
@@ -20,13 +21,14 @@ const MainLayout = ({ children }) => {
         {/* Content Box */}
         <main
           className={`
-            flex-1 p-6 md:p-8 pb-24 lg:pb-8 flex flex-col gap-6 overflow-x-clip min-h-[calc(100vh-4rem)] transition-all duration-300
-            ${sidebarOpen ? "lg:pl-80" : "pl-6 md:pl-8"}
+            flex-1 p-4 sm:p-6 md:p-8 pb-24 lg:pb-8 flex flex-col gap-6 overflow-x-clip min-h-[calc(100vh-4rem)] transition-all duration-300
+            ${sidebarOpen ? "lg:pl-80" : "pl-4 sm:pl-6 md:pl-8"}
           `}
         >
+          {/* Mobile Desktop Mode Notification & Guide */}
+          <DesktopModeNotification />
+
           {children}
-
-
         </main>
       </div>
       {/* Bottom Mobile Navigation Dock */}
