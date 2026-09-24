@@ -4254,8 +4254,8 @@ export const ALGORITHMS = {
       "Compiler syntax parsing engines",
       "Backtracking solver states monitors",
     ],
-    defaultInput: "4",
-    inputType: "spiral-matrix",
+    defaultInput: "0: 1, 2\n1: 0, 2, 3\n2: 0, 1, 4\n3: 1, 4\n4: 2, 3",
+    inputType: "graph",
     isRoadmapAlias: true,
     counterpartId: "dfs",
     code: {
@@ -8717,7 +8717,7 @@ export const ALGORITHMS = {
       "Knapsack configurations search spaces mapping",
       "Product combo recommendations calculators",
     ],
-    defaultInput: "A B C",
+    defaultInput: "1 2 3",
     inputType: "array",
     isRoadmapAlias: false,
     code: {
@@ -8901,6 +8901,8 @@ export const ALGORITHMS = {
       python:
         "def fixed_window(arr, k):\n    if len(arr) < k: return 0\n    window_sum = sum(arr[:k])\n    max_sum = window_sum\n    for i in range(k, len(arr)):\n        window_sum += arr[i] - arr[i - k]\n        if window_sum > max_sum:\n            max_sum = window_sum\n    return max_sum",
     },
+  },
+  "variable-size-window": {
     id: "variable-size-window",
     name: "Variable Size Window",
     category: "arrays",
@@ -8938,6 +8940,8 @@ export const ALGORITHMS = {
       python:
         "def variable_window(arr, target):\n    left = 0\n    curr_sum = 0\n    max_len = 0\n    for right in range(len(arr)):\n        curr_sum += arr[right]\n        while curr_sum > target and left <= right:\n            curr_sum -= arr[left]\n            left += 1\n        if curr_sum == target:\n            max_len = max(max_len, right - left + 1)\n    return max_len",
     },
+  },
+  "maximum-sum-subarray": {
     id: "maximum-sum-subarray",
     name: "Maximum Sum Subarray",
     category: "arrays",
@@ -9010,6 +9014,8 @@ export const ALGORITHMS = {
       python:
         "def length_of_longest_substring(s):\n    seen = {}\n    left = 0\n    max_len = 0\n    for right, c in enumerate(s):\n        if c in seen and seen[c] >= left:\n            left = seen[c] + 1\n        seen[c] = right\n        max_len = max(max_len, right - left + 1)\n    return max_len",
     },
+  },
+  "three-sum": {
     id: "three-sum",
     name: "Three Sum",
     category: "two-pointer",
@@ -9037,6 +9043,8 @@ export const ALGORITHMS = {
       python:
         "def three_sum(nums):\n    nums.sort()\n    res = []\n    for i in range(len(nums) - 2):\n        if i > 0 and nums[i] == nums[i-1]: continue\n        l, r = i + 1, len(nums) - 1\n        while l < r:\n            s = nums[i] + nums[l] + nums[r]\n            if s == 0:\n                res.append([nums[i], nums[l], nums[r]])\n                while l < r and nums[l] == nums[l+1]: l += 1\n                while l < r and nums[r] == nums[r-1]: r -= 1\n                l += 1; r -= 1\n            elif s < 0: l += 1\n            else: r -= 1\n    return res",
     },
+  },
+  "four-sum": {
     id: "four-sum",
     name: "Four Sum",
     category: "two-pointer",
@@ -9064,6 +9072,8 @@ export const ALGORITHMS = {
       python:
         "def four_sum(nums, target):\n    nums.sort()\n    res = []\n    n = len(nums)\n    for i in range(n - 3):\n        for j in range(i + 1, n - 2):\n            l, r = j + 1, n - 1\n            while l < r:\n                s = nums[i] + nums[j] + nums[l] + nums[r]\n                if s == target:\n                    res.append([nums[i], nums[j], nums[l], nums[r]])\n                    l += 1; r -= 1\n                elif s < target: l += 1\n                else: r -= 1\n    return res",
     },
+  },
+  "container-with-most-water": {
     id: "container-with-most-water",
     name: "Container With Most Water",
     category: "arrays",
@@ -9101,6 +9111,8 @@ export const ALGORITHMS = {
       python:
         "def max_water(height):\n    left, right = 0, len(height) - 1\n    max_area = 0\n    while left < right:\n        width = right - left\n        h = min(height[left], height[right])\n        max_area = max(max_area, width * h)\n        if height[left] < height[right]:\n            left += 1\n        else:\n            right -= 1\n    return max_area",
     },
+  },
+  "trapping-rain-water-pointer": {
     id: "trapping-rain-water-pointer",
     name: "Trapping Rain Water Pointer",
     category: "two-pointer",

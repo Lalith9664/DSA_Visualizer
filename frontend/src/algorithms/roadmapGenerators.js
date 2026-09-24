@@ -2127,9 +2127,19 @@ export function grayCodeSteps(n) {
 }
 
 // 43. LCM
-export function lcmSteps(rawInput) {
-  const nums = (rawInput || '12 18').split(/\s+/).map(Number).filter(x => !isNaN(x));
-  let a = nums[0] || 12, b = nums[1] || 18;
+export function lcmSteps(rawInput, secondArg) {
+  let a = 12, b = 18;
+  if (typeof rawInput === 'number') {
+    a = Math.abs(rawInput) || 12;
+    b = Math.abs(secondArg) || 18;
+  } else if (Array.isArray(rawInput)) {
+    a = Math.abs(rawInput[0]) || 12;
+    b = Math.abs(rawInput[1]) || 18;
+  } else if (typeof rawInput === 'string') {
+    const nums = (rawInput || '12 18').split(/[\s,]+/).map(Number).filter(x => !isNaN(x));
+    a = nums[0] || 12;
+    b = nums[1] || 18;
+  }
   const steps = [{ data: [a, b], highlights: {}, explanation: `LCM(${a}, ${b}) = (a × b) / GCD(a, b). First compute GCD using Euclidean algorithm.`, stats: { step: 0 } }];
   let x = a, y = b;
   while (y !== 0) {

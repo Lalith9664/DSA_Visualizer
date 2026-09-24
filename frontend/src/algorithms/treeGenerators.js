@@ -1838,6 +1838,43 @@ export const rbtInsertSteps = (arr) => {
   return steps;
 };
 
+// Helper to build visual node objects with coordinates for binary tree visualizations
+function buildBinaryTreeVisual(arr) {
+  const filtered = arr.filter(x => x !== undefined && x !== null && !isNaN(x));
+  if (filtered.length === 0) return [];
+  const list = arr.map((val, idx) => ({ id: idx, val, left: null, right: null, x: 0, y: 0 }));
+  for (let i = 0; i < list.length; i++) {
+    const leftIdx = 2 * i + 1;
+    const rightIdx = 2 * i + 2;
+    if (leftIdx < list.length) list[i].left = list[leftIdx];
+    if (rightIdx < list.length) list[i].right = list[rightIdx];
+  }
+  const root = list[0];
+  const getMaxDepth = (node) => {
+    if (!node) return 0;
+    return 1 + Math.max(getMaxDepth(node.left), getMaxDepth(node.right));
+  };
+  const maxDepth = getMaxDepth(root);
+  const positionNodes = (node, depth, minX, maxX) => {
+    if (!node) return;
+    const x = (minX + maxX) / 2;
+    let y = 135;
+    if (maxDepth > 1) {
+      y = 45 + depth * (180 / (maxDepth - 1));
+    }
+    node.x = x;
+    node.y = y;
+    positionNodes(node.left, depth + 1, minX, x);
+    positionNodes(node.right, depth + 1, x, maxX);
+  };
+  positionNodes(root, 0, 10, 90);
+  return list.map(n => ({
+    ...n,
+    left: n.left ? { id: n.left.id } : null,
+    right: n.right ? { id: n.right.id } : null
+  }));
+}
+
 // Tree view + advanced tree generators (from roadmapGenerators)
 export function treeDiameterSteps(arr) {
   const visualNodes = buildBinaryTreeVisual(arr);

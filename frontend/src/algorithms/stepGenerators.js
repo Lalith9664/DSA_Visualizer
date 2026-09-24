@@ -2846,22 +2846,31 @@ export const knapsackDpSteps = (inputStr) => {
   return steps;
 };
 
-export const coinChangeDpSteps = (inputStr) => {
+export const coinChangeDpSteps = (inputStr, maybeAmount) => {
   const steps = [];
-  const lines = inputStr
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-
   let coins = [1, 2, 5];
-  let amount = 5;
+  let amount = typeof maybeAmount === 'number' ? maybeAmount : 5;
 
-  if (lines.length >= 2) {
-    coins = lines[0]
-      .split(/\s+/)
-      .map(Number)
-      .filter((x) => !isNaN(x));
-    amount = parseInt(lines[1]) || 5;
+  if (Array.isArray(inputStr)) {
+    coins = inputStr.filter(x => !isNaN(x));
+  } else if (typeof inputStr === 'string') {
+    const lines = inputStr
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    if (lines.length >= 2) {
+      coins = lines[0]
+        .split(/\s+/)
+        .map(Number)
+        .filter((x) => !isNaN(x));
+      amount = parseInt(lines[1]) || amount;
+    } else if (lines.length === 1) {
+      coins = lines[0]
+        .split(/\s+/)
+        .map(Number)
+        .filter((x) => !isNaN(x));
+    }
   }
 
   const dp = Array(amount + 1).fill(Infinity);
@@ -3820,11 +3829,20 @@ export const powerOfTwoSteps = (nVal) => {
   return steps;
 };
 
-export const gcdSteps = (inputStr) => {
+export const gcdSteps = (inputStr, secondArg) => {
   const steps = [];
-  const parts = inputStr.trim().split(/\s+/).map(Number);
-  let a = Math.abs(parts[0]) || 48;
-  let b = Math.abs(parts[1]) || 18;
+  let a = 48, b = 18;
+  if (typeof inputStr === 'number') {
+    a = Math.abs(inputStr) || 48;
+    b = Math.abs(secondArg) || 18;
+  } else if (Array.isArray(inputStr)) {
+    a = Math.abs(inputStr[0]) || 48;
+    b = Math.abs(inputStr[1]) || 18;
+  } else if (typeof inputStr === 'string') {
+    const parts = inputStr.trim().split(/[\s,]+/).map(Number);
+    a = Math.abs(parts[0]) || 48;
+    b = Math.abs(parts[1]) || 18;
+  }
 
   steps.push({
     data: { a, b },
@@ -4609,9 +4627,37 @@ export const minStackSteps = (operations) => {
 };
 
 // --- LEVEL ORDER TRAVERSAL ---
-export const bellmanFordSteps = (numVertices, edges) => {
+export const bellmanFordSteps = (numVerticesOrInput, edgesInput) => {
   const steps = [];
-  const V = numVertices;
+  let V = 5;
+  let edges = [
+    [0, 1, -1],
+    [0, 2, 4],
+    [1, 2, 3],
+    [1, 3, 2],
+    [1, 4, 2],
+    [3, 2, 5],
+    [3, 1, 1],
+    [4, 3, -3],
+  ];
+
+  if (typeof numVerticesOrInput === 'string') {
+    const lines = numVerticesOrInput.trim().split("\n");
+    const parsedEdges = lines
+      .map((l) => l.split(/\s+/).map(Number))
+      .filter((e) => e.length >= 3 && !isNaN(e[0]) && !isNaN(e[1]) && !isNaN(e[2]));
+    if (parsedEdges.length > 0) {
+      edges = parsedEdges;
+      const maxV = edges.reduce((m, e) => Math.max(m, e[0], e[1]), 0) + 1;
+      V = Math.max(maxV, 3);
+    }
+  } else if (typeof numVerticesOrInput === 'number') {
+    V = numVerticesOrInput;
+    if (Array.isArray(edgesInput)) {
+      edges = edgesInput;
+    }
+  }
+
   const INF = 9999;
   const dist = new Array(V).fill(INF);
   dist[0] = 0;
@@ -5794,11 +5840,20 @@ function cloneNodes(nodes) {
 // NEW BITWISE STEP GENERATORS
 // ============================================================
 
-export const bitmaskAndSteps = (arrOrVal) => {
+export const bitmaskAndSteps = (arrOrVal, maskVal) => {
   const steps = [];
-  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = parts[0];
-  const mask = parts[1];
+  let n, mask;
+  if (Array.isArray(arrOrVal)) {
+    n = Number(arrOrVal[0]);
+    mask = Number(arrOrVal[1] !== undefined ? arrOrVal[1] : maskVal);
+  } else if (maskVal !== undefined) {
+    n = Number(arrOrVal);
+    mask = Number(maskVal);
+  } else {
+    const parts = String(arrOrVal).trim().split(/[\s,]+/).map(Number);
+    n = parts[0];
+    mask = parts[1];
+  }
   if (isNaN(n) || isNaN(mask)) return [];
   const andResult = n & mask;
   
@@ -5821,11 +5876,20 @@ export const bitmaskAndSteps = (arrOrVal) => {
   return steps;
 };
 
-export const bitmaskOrSteps = (arrOrVal) => {
+export const bitmaskOrSteps = (arrOrVal, maskVal) => {
   const steps = [];
-  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = parts[0];
-  const mask = parts[1];
+  let n, mask;
+  if (Array.isArray(arrOrVal)) {
+    n = Number(arrOrVal[0]);
+    mask = Number(arrOrVal[1] !== undefined ? arrOrVal[1] : maskVal);
+  } else if (maskVal !== undefined) {
+    n = Number(arrOrVal);
+    mask = Number(maskVal);
+  } else {
+    const parts = String(arrOrVal).trim().split(/[\s,]+/).map(Number);
+    n = parts[0];
+    mask = parts[1];
+  }
   if (isNaN(n) || isNaN(mask)) return [];
   const orResult = n | mask;
   
@@ -5848,11 +5912,20 @@ export const bitmaskOrSteps = (arrOrVal) => {
   return steps;
 };
 
-export const bitmaskXorSteps = (arrOrVal) => {
+export const bitmaskXorSteps = (arrOrVal, maskVal) => {
   const steps = [];
-  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = parts[0];
-  const mask = parts[1];
+  let n, mask;
+  if (Array.isArray(arrOrVal)) {
+    n = Number(arrOrVal[0]);
+    mask = Number(arrOrVal[1] !== undefined ? arrOrVal[1] : maskVal);
+  } else if (maskVal !== undefined) {
+    n = Number(arrOrVal);
+    mask = Number(maskVal);
+  } else {
+    const parts = String(arrOrVal).trim().split(/[\s,]+/).map(Number);
+    n = parts[0];
+    mask = parts[1];
+  }
   if (isNaN(n) || isNaN(mask)) return [];
   const xorResult = n ^ mask;
   
@@ -5900,11 +5973,20 @@ export const bitmaskNotSteps = (nVal) => {
   return steps;
 };
 
-export const bitLeftShiftSteps = (arrOrVal) => {
+export const bitLeftShiftSteps = (arrOrVal, shiftVal) => {
   const steps = [];
-  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = parts[0];
-  const shift = parts[1];
+  let n, shift;
+  if (Array.isArray(arrOrVal)) {
+    n = Number(arrOrVal[0]);
+    shift = Number(arrOrVal[1] !== undefined ? arrOrVal[1] : shiftVal);
+  } else if (shiftVal !== undefined) {
+    n = Number(arrOrVal);
+    shift = Number(shiftVal);
+  } else {
+    const parts = String(arrOrVal).trim().split(/[\s,]+/).map(Number);
+    n = parts[0];
+    shift = parts[1];
+  }
   if (isNaN(n) || isNaN(shift)) return [];
   const shiftResult = n << shift;
   
@@ -5927,11 +6009,20 @@ export const bitLeftShiftSteps = (arrOrVal) => {
   return steps;
 };
 
-export const bitRightShiftSteps = (arrOrVal) => {
+export const bitRightShiftSteps = (arrOrVal, shiftVal) => {
   const steps = [];
-  const parts = String(arrOrVal).trim().split(/\s+/).map(Number);
-  const n = parts[0];
-  const shift = parts[1];
+  let n, shift;
+  if (Array.isArray(arrOrVal)) {
+    n = Number(arrOrVal[0]);
+    shift = Number(arrOrVal[1] !== undefined ? arrOrVal[1] : shiftVal);
+  } else if (shiftVal !== undefined) {
+    n = Number(arrOrVal);
+    shift = Number(shiftVal);
+  } else {
+    const parts = String(arrOrVal).trim().split(/[\s,]+/).map(Number);
+    n = parts[0];
+    shift = parts[1];
+  }
   if (isNaN(n) || isNaN(shift)) return [];
   const shiftResult = n >> shift;
   
