@@ -19,7 +19,7 @@ function deriveOutput(algoId, snap) {
   }
 
   // Search Algorithms
-  if (snap?.searchState || algoId?.includes('search') || algoId?.includes('find') || algoId?.includes('linear') || algoId?.includes('binary') || algoId?.includes('ternary')) {
+  if ((snap?.searchState || algoId?.includes('search') || algoId?.includes('find') || algoId?.includes('linear') || algoId?.includes('binary') || algoId?.includes('ternary')) && !algoId?.includes('a-star') && !algoId?.includes('word-search')) {
     const found = expl.toLowerCase().includes('found') && !expl.toLowerCase().includes('not found');
     const notFound = expl.toLowerCase().includes('not found') || expl.toLowerCase().includes('exhausted') || expl.toLowerCase().includes('not present');
     if (found) {
@@ -107,9 +107,283 @@ function deriveOutput(algoId, snap) {
     return { label: 'Maximum Subarray Sum', value: `${snap.kadaneState.maxSoFar}`, type: 'number' };
   }
 
-  // Sorting — flat numeric array
-  if (Array.isArray(data) && data.length > 0 && data.every(x => typeof x === 'number')) {
+  // Remove Duplicates (Two Pointer)
+  if (algoId?.includes('remove-duplicates') || algoId?.includes('remove-duplicate')) {
+    const slow = snap?.pointerState?.slow;
+    const uniqueCount =
+      slow !== undefined && slow >= 0
+        ? slow + 1
+        : snap?.pointerState?.uniqueCount || (Array.isArray(data) ? data.length : 0);
+    if (Array.isArray(data)) {
+      const uniqueElements = data.slice(0, uniqueCount);
+      return {
+        label: `Unique Elements (${uniqueCount} Unique Items)`,
+        value: `[${uniqueElements.join(', ')}]`,
+        type: 'success',
+      };
+    }
+  }
+
+  // Two Pointer / Two Sum Two Pointer
+  if (algoId?.includes('two-pointer') || algoId?.includes('two-sum-two-pointer')) {
+    const { left, right, sum, target } = snap?.pointerState || {};
+    const found =
+      expl.toLowerCase().includes('matches') ||
+      expl.toLowerCase().includes('found pair') ||
+      expl.toLowerCase().includes('found');
+    if (found && left >= 0 && right >= 0 && Array.isArray(data)) {
+      return {
+        label: 'Target Pair Found',
+        value: `Indices: [${left}, ${right}] → ${data[left]} + ${data[right]} = ${sum ?? target}`,
+        type: 'success',
+      };
+    } else if (expl.toLowerCase().includes('crossed') || expl.toLowerCase().includes('no pair')) {
+      return {
+        label: 'Two Pointer Result',
+        value: `No pair found with sum = ${target}`,
+        type: 'failure',
+      };
+    }
+  }
+
+  // Rotate Array
+  if (algoId?.includes('rotate-array') || algoId?.includes('rotate')) {
+    const arrData = Array.isArray(data) ? data : snap?.data?.arr || [];
+    return {
+      label: 'Rotated Array',
+      value: `[${arrData.join(', ')}]`,
+      type: 'array',
+    };
+  }
+
+  // Reverse Array
+  if (algoId?.includes('reverse-array')) {
+    const arrData = Array.isArray(data) ? data : snap?.data?.arr || [];
+    return {
+      label: 'Reversed Array',
+      value: `[${arrData.join(', ')}]`,
+      type: 'array',
+    };
+  }
+
+  // Dutch National Flag (3-way partition)
+  if (algoId?.includes('dutch-national-flag') || algoId?.includes('dutch')) {
+    const arrData = Array.isArray(data) ? data : snap?.data?.arr || [];
+    return {
+      label: 'Partitioned Array (0s, 1s, 2s)',
+      value: `[${arrData.join(', ')}]`,
+      type: 'success',
+    };
+  }
+
+  // Moore's Voting Algorithm (Majority Element)
+  if (algoId?.includes('moores-voting') || algoId?.includes('moore')) {
+    const candidate = snap?.stats?.candidate;
+    const count = snap?.stats?.count;
+    const match = expl.match(/majority element is\s*(\w+)/i);
+    const noMatch = expl.toLowerCase().includes('no majority');
+    if (noMatch) {
+      return {
+        label: "Moore's Voting Result",
+        value: 'No majority element (> n/2) exists in array ✗',
+        type: 'warning',
+      };
+    }
+    const majVal = match ? match[1] : candidate && candidate !== 'None' ? candidate : null;
+    return {
+      label: 'Majority Element (> n/2)',
+      value: majVal ? `Majority Element: ${majVal} (Occurrences: ${count || 'Verified'})` : 'Majority element identified ✓',
+      type: 'success',
+    };
+  }
+
+  // Candy Distribution
+  if (algoId?.includes('candy')) {
+    const arrData = Array.isArray(data) ? data : [];
+    const total =
+      snap?.stats?.total ||
+      (arrData.length > 0 ? arrData.reduce((a, b) => a + Number(b), 0) : null);
+    return {
+      label: 'Minimum Candies Needed',
+      value: `${total ?? 'Computed'} Candies ${arrData.length > 0 ? `(Distribution: [${arrData.join(', ')}])` : ''}`,
+      type: 'success',
+    };
+  }
+
+  // Equilibrium Index
+  if (algoId?.includes('equilibrium')) {
+    const match = expl.match(/index\s+(\d+)/i);
+    const notFound = expl.toLowerCase().includes('no equilibrium');
+    if (notFound) {
+      return {
+        label: 'Equilibrium Index Result',
+        value: 'No Equilibrium Index Found in Array ✗',
+        type: 'failure',
+      };
+    }
+    const idx = match ? match[1] : snap?.prefixState?.currentIdx >= 0 ? snap.prefixState.currentIdx : null;
+    return {
+      label: 'Equilibrium Index Found',
+      value: idx !== null ? `Equilibrium at index ${idx} (Left sum = Right sum)` : 'Equilibrium index found ✓',
+      type: 'success',
+    };
+  }
+
+  // Two Sum
+  if (algoId === 'two-sum' || algoId?.includes('two-sum') || algoId?.includes('pair-sum')) {
+    const match =
+      expl.match(/indices[:\s]+\[?(\d+)[,\s]+(\d+)\]?/i) ||
+      expl.match(/index\s+(\d+)\s+and\s+(\d+)/i);
+    const notFound = expl.toLowerCase().includes('no pair') || expl.toLowerCase().includes('not found');
+    if (match) {
+      return {
+        label: 'Two Sum Target Pair',
+        value: `Pair found at indices: [${match[1]}, ${match[2]}] ✓`,
+        type: 'success',
+      };
+    }
+    if (notFound) {
+      return {
+        label: 'Two Sum Result',
+        value: 'No pair sums to target value ✗',
+        type: 'failure',
+      };
+    }
+  }
+
+  // Container With Most Water
+  if (algoId?.includes('container-with-most-water') || algoId?.includes('most-water')) {
+    const match =
+      expl.match(/max(?:imum)?\s*(?:water|area)[:=\s]+(\d+)/i) ||
+      expl.match(/area[:=\s]+(\d+)/i);
+    return {
+      label: 'Max Water Trapped',
+      value: match ? `${match[1]} units of water` : 'Max water area computed ✓',
+      type: 'success',
+    };
+  }
+
+  // Three Sum / Four Sum
+  if (algoId?.includes('three-sum') || algoId?.includes('four-sum')) {
+    const match = expl.match(/\[([-\d\s,]+)\]/);
+    return {
+      label: `${algoId?.includes('three-sum') ? 'Three Sum' : 'Four Sum'} Result`,
+      value: match ? `Tuple found: [${match[1].trim()}] ✓` : 'Search complete',
+      type: 'success',
+    };
+  }
+
+  // Peak Element
+  if (algoId?.includes('peak')) {
+    const match = expl.match(/index\s+(\d+)/i);
+    return {
+      label: 'Peak Element Found',
+      value: match
+        ? `Peak element at index ${match[1]} (Value: ${Array.isArray(data) ? data[match[1]] : ''}) ✓`
+        : 'Peak element identified ✓',
+      type: 'success',
+    };
+  }
+
+  // First & Last Occurrence
+  if (algoId?.includes('first-and-last') || algoId?.includes('occurrence')) {
+    const match = expl.match(/\[(\d+)[,\s]+(\d+)\]/);
+    return {
+      label: 'First & Last Occurrence',
+      value: match ? `Range: [First: ${match[1]}, Last: ${match[2]}] ✓` : 'Occurrences identified ✓',
+      type: 'success',
+    };
+  }
+
+  // Sieve of Eratosthenes
+  if (algoId?.includes('sieve')) {
+    let primes = [];
+    if (Array.isArray(data)) {
+      primes = data
+        .map((isP, i) => (isP ? i : null))
+        .filter((x) => x !== null && x >= 2);
+    }
+    return {
+      label: 'Prime Numbers Generated',
+      value:
+        primes.length > 0
+          ? `Primes (${primes.length}): [${primes.slice(0, 20).join(', ')}${primes.length > 20 ? '...' : ''}]`
+          : 'Sieve complete',
+      type: 'success',
+    };
+  }
+
+  // GCD & LCM
+  if (algoId?.includes('gcd') || algoId?.includes('lcm')) {
+    const match = expl.match(/=\s*(\d+)/i) || expl.match(/is\s*(\d+)/i);
+    return {
+      label: algoId?.includes('lcm') ? 'Least Common Multiple (LCM)' : 'Greatest Common Divisor (GCD)',
+      value: match ? `${match[1]}` : (snap?.mathState?.result ?? 'Computed ✓'),
+      type: 'success',
+    };
+  }
+
+  // Minimum Platforms
+  if (algoId?.includes('minimum-platforms') || algoId?.includes('platforms')) {
+    const match =
+      expl.match(/(\d+)\s*platform/i) ||
+      expl.match(/max(?:imum)?[:=\s]+(\d+)/i);
+    return {
+      label: 'Minimum Platforms Required',
+      value: match ? `${match[1]} Platforms` : 'Platform calculation complete ✓',
+      type: 'success',
+    };
+  }
+
+  // Gas Station
+  if (algoId?.includes('gas-station')) {
+    const match = expl.match(/index\s+(\d+)/i) || expl.match(/station\s+(\d+)/i);
+    const notPossible =
+      expl.toLowerCase().includes('not possible') || expl.toLowerCase().includes('-1');
+    return {
+      label: 'Gas Station Circuit Start',
+      value: notPossible
+        ? 'Circuit impossible (-1) ✗'
+        : match
+          ? `Start at station index ${match[1]} ✓`
+          : 'Starting station found ✓',
+      type: notPossible ? 'failure' : 'success',
+    };
+  }
+
+  // Jump Game
+  if (algoId?.includes('jump-game')) {
+    const canJump =
+      expl.toLowerCase().includes('can reach') ||
+      expl.toLowerCase().includes('reached') ||
+      expl.toLowerCase().includes('true');
+    return {
+      label: 'Jump Game Result',
+      value: canJump ? 'Can Reach Last Index: TRUE ✓' : 'Cannot Reach Last Index: FALSE ✗',
+      type: canJump ? 'success' : 'failure',
+    };
+  }
+
+  // Only genuine sorting algorithms get the "Sorted Array" label
+  const isSortingAlgo =
+    algoId?.includes('bubble') ||
+    algoId?.includes('selection-sort') ||
+    algoId?.includes('insertion-sort') ||
+    algoId?.includes('merge-sort') ||
+    algoId?.includes('quick-sort') ||
+    algoId?.includes('heap-sort') ||
+    algoId?.includes('radix') ||
+    algoId?.includes('counting-sort') ||
+    algoId?.includes('bucket-sort') ||
+    algoId?.includes('tim-sort');
+
+  if (isSortingAlgo && Array.isArray(data) && data.length > 0 && data.every((x) => typeof x === 'number')) {
     return { label: 'Sorted Array', value: `[${data.join(', ')}]`, type: 'array' };
+  }
+
+  // Non-sorting generic array output
+  if (Array.isArray(data) && data.length > 0 && data.every((x) => typeof x === 'number')) {
+    return { label: 'Final Array State', value: `[${data.join(', ')}]`, type: 'array' };
   }
 
   // BFS / DFS Traversal Path
@@ -125,6 +399,17 @@ function deriveOutput(algoId, snap) {
   // Trapping Rain Water
   if (snap?.data?.water !== undefined) {
     return { label: 'Total Trapped Water', value: `${snap.data.water} units`, type: 'number' };
+  }
+
+  // A* Search
+  if (algoId?.includes('a-star') && snap?.graphState?.path) {
+    const { path, goalNode, startNode, optimalCost, gScores } = snap.graphState;
+    const cost = optimalCost !== undefined ? optimalCost : gScores?.[goalNode];
+    return {
+      label: `A* Shortest Path (${startNode} → ${goalNode})`,
+      value: `[ ${path.join(' → ')} ] (Total Path Cost: ${cost !== undefined && cost !== Infinity ? cost : 'Calculated'}) 🎉`,
+      type: 'success',
+    };
   }
 
   // Dijkstra / Floyd-Warshall / Bellman-Ford — dist array
@@ -158,23 +443,189 @@ function deriveOutput(algoId, snap) {
 
   // N-Queens
   if (algoId?.includes('queens')) {
-    const match = expl.match(/solution/i);
-    return { label: 'Result', value: match ? 'Valid queen placement found ✓' : 'Placement complete', type: 'success' };
+    const board = snap?.queensState?.board || snap?.data?.board || [];
+    const isSolution = snap?.queensState?.phase === 'solution' || expl.match(/solution/i);
+    if (isSolution && board.length > 0 && !board.includes(-1)) {
+      const placements = board.map((col, row) => `(Row ${row}, Col ${col})`).join(', ');
+      return {
+        label: 'N-Queens Placements',
+        value: `Queens at: [${placements}] ✓`,
+        type: 'success'
+      };
+    }
+    return {
+      label: 'N-Queens Result',
+      value: isSolution ? 'Valid queen placement found ✓' : 'Exploring chessboard with backtracking...',
+      type: isSolution ? 'success' : 'array'
+    };
   }
 
-  // Knight's Tour
+  // Word Search (Backtracking)
+  if (algoId?.includes('word-search') || algoId === 'word-search') {
+    const word = snap?.data?.word || '';
+    const path = snap?.data?.path || [];
+    const isFound = snap?.highlights?.result === true || (word && path.length === word.length);
+    if (isFound) {
+      const pathStr = path.map(([r, c]) => `(${r},${c})`).join(' → ');
+      return {
+        label: 'Word Search Result',
+        value: `Found "${word}" at path: ${pathStr} ✓`,
+        type: 'success'
+      };
+    }
+    if (snap?.highlights?.result === false) {
+      return {
+        label: 'Word Search Result',
+        value: `Word "${word}" NOT found in grid ✗`,
+        type: 'failure'
+      };
+    }
+    return {
+      label: 'Word Search Progress',
+      value: `Matching "${word}": ${path.length}/${word.length} characters found`,
+      type: 'array'
+    };
+  }
+
+  // Generate Parentheses
+  if (algoId?.includes('generate-parentheses') || algoId === 'generate-parentheses') {
+    const results = snap?.data?.results || [];
+    if (results.length > 0) {
+      return {
+        label: `Generated Parentheses (${results.length} valid combinations)`,
+        value: results.map((p) => `"${p}"`).join(', '),
+        type: 'success'
+      };
+    }
+    return {
+      label: 'Generated Parentheses',
+      value: 'Generating combinations with recursion & backtracking...',
+      type: 'array'
+    };
+  }
+
+  // Letter Combinations
+  if (algoId?.includes('letter-combinations') || algoId === 'letter-combinations') {
+    const combs = snap?.data?.combinations || [];
+    const digits = snap?.data?.digits || '';
+    if (combs.length > 0) {
+      return {
+        label: `Letter Combinations for "${digits}" (${combs.length} results)`,
+        value: combs.map((c) => `"${c}"`).join(', '),
+        type: 'success'
+      };
+    }
+    return {
+      label: 'Letter Combinations',
+      value: 'Exploring keypad mappings...',
+      type: 'array'
+    };
+  }
+
+  // Palindrome Partitioning
+  if (algoId?.includes('palindrome-partitioning') || algoId === 'palindrome-partitioning') {
+    const completed = snap?.data?.completed || [];
+    const str = snap?.data?.str || '';
+    if (completed.length > 0) {
+      return {
+        label: `Palindrome Partitions (${completed.length} total)`,
+        value: completed.map((p) => `[${p.join(', ')}]`).join('  |  '),
+        type: 'success'
+      };
+    }
+    return {
+      label: 'Palindrome Partitioning',
+      value: `Exploring palindromic partitions for "${str}"...`,
+      type: 'array'
+    };
+  }
+
+  // Permutations
+  if (algoId?.includes('permutations') || algoId === 'permutations') {
+    const completed = snap?.data?.completed || [];
+    if (completed.length > 0) {
+      return {
+        label: `All Permutations (${completed.length} unique sets)`,
+        value: completed.map((p) => `[${p.join(', ')}]`).join('  |  '),
+        type: 'success'
+      };
+    }
+    return {
+      label: 'Permutations Progress',
+      value: 'Generating permutations recursively...',
+      type: 'array'
+    };
+  }
+
+  // Crossword Solver
+  if (algoId?.includes('crossword-solver') || algoId === 'crossword-solver') {
+    const board = snap?.data?.board || [];
+    const words = snap?.data?.words || [];
+    if (words.length === 0 && board.length > 0) {
+      return {
+        label: 'Crossword Solved',
+        value: 'All words placed successfully in grid ✓',
+        type: 'success'
+      };
+    }
+    return {
+      label: 'Crossword Solver',
+      value: snap?.data?.activeWord ? `Placing word: ${snap.data.activeWord}` : 'Solving crossword grid...',
+      type: 'array'
+    };
+  }
+
+  // Knight's Tour (BFS & Backtracking modes)
   if (algoId?.includes('knights-tour') || algoId?.includes('knight')) {
+    const mode = snap?.knightState?.mode || 'bfs';
     const isDone = snap?.knightState?.phase === 'done';
     const isFail = snap?.knightState?.phase === 'fail';
     const size = snap?.knightState?.size || 5;
-    const moveCount = snap?.knightState?.moveCount ?? 0;
-    if (isDone) {
-      return { label: "Knight's Tour Result", value: `Complete! Knight visited all ${size * size} cells ✓`, type: 'success' };
+    const totalCells = snap?.knightState?.totalCells || size * size;
+    const sr = snap?.knightState?.startRow ?? 0;
+    const sc = snap?.knightState?.startCol ?? 0;
+
+    if (mode === 'backtracking') {
+      const moveCount = snap?.knightState?.moveCount ?? 0;
+      if (isDone) {
+        return {
+          label: "Knight's Tour (Backtracking)",
+          value: `Complete! Knight visited all ${totalCells} squares on ${size}×${size} board from (${sr},${sc}) ✓`,
+          type: 'success'
+        };
+      }
+      if (isFail) {
+        return {
+          label: "Knight's Tour (Backtracking)",
+          value: snap?.explanation || `No complete tour found from (${sr},${sc}) ✗`,
+          type: 'failure'
+        };
+      }
+      return {
+        label: "Knight's Tour Progress",
+        value: `Move ${moveCount + 1} of ${totalCells} (${Math.round(((moveCount + 1) / totalCells) * 100)}%)`,
+        type: 'array'
+      };
     }
-    if (isFail) {
-      return { label: "Knight's Tour Result", value: 'No complete tour found from (0,0) ✗', type: 'failure' };
+
+    // BFS Mode
+    const minSteps = snap?.knightState?.minSteps;
+    const path = snap?.knightState?.shortestPath || [];
+    const dr = snap?.knightState?.destRow ?? 4;
+    const dc = snap?.knightState?.destCol ?? 4;
+    const pathStr = path.length > 0 ? path.map(([r, c]) => `(${r},${c})`).join(' → ') : '';
+    if (isDone || (minSteps !== null && minSteps !== undefined)) {
+      return {
+        label: "Minimum Knight Steps (BFS)",
+        value: `${minSteps} moves  [ ${pathStr} ] 🎉`,
+        type: 'success'
+      };
     }
-    return { label: "Knight's Tour Progress", value: `Move ${moveCount + 1} of ${size * size}`, type: 'array' };
+    return {
+      label: "Knight's Path Search (BFS)",
+      value: `BFS exploring shortest path from (${sr},${sc}) to (${dr},${dc})...`,
+      type: 'array'
+    };
   }
 
   // Sliding Puzzle
@@ -248,12 +699,12 @@ function deriveOutput(algoId, snap) {
     return { label: 'Sorted Output', value: `[${snap.data.output.join(', ')}]`, type: 'array' };
   }
   if (snap?.data?.arr && Array.isArray(snap.data.arr) && snap.data.phase === 'done') {
-    return { label: 'Sorted Array', value: `[${snap.data.arr.join(', ')}]`, type: 'array' };
+    return { label: isSortingAlgo ? 'Sorted Array' : 'Final Array State', value: `[${snap.data.arr.join(', ')}]`, type: 'array' };
   }
 
   // Radix / bucket sort final (exp === -1)
   if (snap?.data?.arr && Array.isArray(snap.data.arr) && snap.data.exp === -1) {
-    return { label: 'Sorted Array', value: `[${snap.data.arr.join(', ')}]`, type: 'array' };
+    return { label: isSortingAlgo ? 'Sorted Array' : 'Final Array State', value: `[${snap.data.arr.join(', ')}]`, type: 'array' };
   }
 
   // DP matrix (knapsack)
@@ -280,24 +731,45 @@ function deriveOutput(algoId, snap) {
   }
 
   // Rat in a Maze
-  if (algoId?.includes('rat-in-a-maze') && snap?.gridState) {
-    const isSuccess = snap.gridState.phase === 'success';
-    const destRow = snap.gridState.mazeRows != null ? snap.gridState.mazeRows - 1 : 3;
-    const destCol = snap.gridState.mazeCols != null ? snap.gridState.mazeCols - 1 : 3;
+  if (algoId?.includes('rat-in-a-maze') || algoId === 'rat-in-a-maze') {
+    const isSuccess = snap?.gridState?.phase === 'success';
+    const isUnsolvable = snap?.gridState?.phase === 'unsolvable';
+    const actualPath = snap?.data?.path || [];
+    const pathCells = [];
+    actualPath.forEach((row, r) => {
+      row.forEach((val, c) => {
+        if (val === 1) pathCells.push(`(${r},${c})`);
+      });
+    });
+    if (isSuccess && pathCells.length > 0) {
+      return {
+        label: 'Solved Maze Path',
+        value: `Path: ${pathCells.join(' → ')} (${pathCells.length} steps) ✓`,
+        type: 'success'
+      };
+    }
     return {
       label: 'Rat in a Maze Result',
-      value: isSuccess ? `Path Solved Successfully! Rat reached (${destRow}, ${destCol}) ✓` : 'Blocked — No solution found for this maze layout ✗',
-      type: isSuccess ? 'success' : 'failure'
+      value: isUnsolvable ? 'Blocked — No solution found for this maze layout ✗' : 'Exploring paths with DFS backtracking...',
+      type: isUnsolvable ? 'failure' : 'array'
     };
   }
 
   // Sudoku Solver
-  if (algoId?.includes('sudoku') && snap?.gridState) {
-    const isSuccess = snap.gridState.phase === 'success';
+  if (algoId?.includes('sudoku') || algoId === 'sudoku-solver') {
+    const isSuccess = snap?.gridState?.phase === 'success';
+    const board = snap?.data?.board || [];
+    if (isSuccess && board.length > 0) {
+      return {
+        label: 'Sudoku Solver Result',
+        value: 'Board Solved Successfully without constraint violations ✓',
+        type: 'success'
+      };
+    }
     return {
-      label: 'Sudoku Solver Result',
-      value: isSuccess ? 'Board Solved Successfully ✓' : 'Unsolvable board configuration ✗',
-      type: isSuccess ? 'success' : 'failure'
+      label: 'Sudoku Solver Progress',
+      value: 'Placing candidate digits and backtracking on conflicts...',
+      type: 'array'
     };
   }
 

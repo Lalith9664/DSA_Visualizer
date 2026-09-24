@@ -15,6 +15,8 @@ export {
   trappingRainWaterSteps,
   xorOperationsSteps,
   twoSumTwoPointerSteps,
+  threeSumSteps,
+  fourSumSteps,
   slidingWindowMaxSteps,
   pascalTriangleSteps,
   fastExponentiationSteps,

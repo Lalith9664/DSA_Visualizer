@@ -248,6 +248,32 @@ const SECOND_INPUT_CONFIG = {
       return (a + b).toString();
     },
   },
+  "three-sum": {
+    label: "Target Sum",
+    defaultVal: "0",
+    randomVal: (arr) => {
+      if (arr && arr.length >= 3) {
+        const i = 0, j = Math.floor(arr.length / 2), k = arr.length - 1;
+        return ((arr[i] ?? 0) + (arr[j] ?? 0) + (arr[k] ?? 0)).toString();
+      }
+      return "0";
+    },
+  },
+  "four-sum": {
+    label: "Target Sum",
+    defaultVal: "0",
+    randomVal: (arr) => {
+      if (arr && arr.length >= 4) {
+        return (
+          (arr[0] ?? 0) +
+          (arr[1] ?? 0) +
+          (arr[2] ?? 0) +
+          (arr[arr.length - 1] ?? 0)
+        ).toString();
+      }
+      return "0";
+    },
+  },
   "fast-exponentiation": {
     label: "Exponent",
     defaultVal: "10",
@@ -397,6 +423,11 @@ const SECOND_INPUT_CONFIG = {
     defaultVal: "9999",
     randomVal: () => "9999",
   },
+  "a-star-search": {
+    label: "Goal Vertex",
+    defaultVal: "5",
+    randomVal: () => "5",
+  },
 };
 
 // Helper: generate a blank (all-0) maze grid string of given dimensions
@@ -419,6 +450,9 @@ const getCustomInputPlaceholder = (algo) => {
       return "Enter grid (0=open, 1=wall). Each row on a new line, cells space-separated, e.g.:\n0 1 0 0\n0 0 0 1\n1 0 0 0\n0 1 0 0";
     }
     return "Enter grid board layout (space-separated cells, newline-separated rows), e.g.:\n0 1 0 0\n0 0 0 1\n1 0 0 0";
+  }
+  if (algo.id === "a-star-search" || algo.id === "a-star") {
+    return "Enter graph edges: u v weight (newline separated rows), e.g.:\n0 1 4\n0 2 2\n1 2 1\n1 3 5\n2 3 8\n2 4 10\n3 4 2\n3 5 6\n4 5 3";
   }
   if (algo.inputType === "graph") {
     return "Enter graph edges: u v weight (newline separated rows), e.g.:\n0 1 4\n0 2 1\n2 1 2\n1 3 5";
@@ -546,12 +580,16 @@ const VisualizerPage = () => {
   const [mazeDestCol, setMazeDestCol] = useState(3);
   // N-Queens board size state
   const [queenSize, setQueenSize] = useState(4);
-  // Knight's Tour board size and start cell
+  // Knight's Tour board size, start/end cell, and algorithm mode (BFS vs Backtracking)
   const [knightSize, setKnightSize] = useState(5);
   const [knightStartRow, setKnightStartRow] = useState(0);
   const [knightStartCol, setKnightStartCol] = useState(0);
   const [knightDestRow, setKnightDestRow] = useState(4);
   const [knightDestCol, setKnightDestCol] = useState(4);
+  const [knightMode, setKnightMode] = useState("bfs"); // "bfs" | "backtracking"
+  // A* Search Start and Goal nodes
+  const [aStarStart, setAStarStart] = useState(0);
+  const [aStarGoal, setAStarGoal] = useState(5);
 
   useEffect(() => {
     if (isExpanded) {
@@ -668,6 +706,7 @@ const VisualizerPage = () => {
         queueOperationsSteps,
         bstTraversalSteps,
         dijkstraSteps,
+        aStarSearchSteps,
         towerOfHanoiSteps,
         climbingStairsSteps,
         twoSumHashSteps,
@@ -750,6 +789,8 @@ const VisualizerPage = () => {
         trappingRainWaterSteps,
         floydWarshallSteps,
         twoSumTwoPointerSteps,
+        threeSumSteps,
+        fourSumSteps,
         bstInsertSteps,
         bstDeleteSteps,
         avlInsertSteps,
@@ -867,21 +908,29 @@ const VisualizerPage = () => {
       let computedSteps = [];
 
       // Parse target value cleanly
-      let target = 5;
+      let target = 0;
       let parsedInput = rawInput;
 
-      if (rawInput.includes("\n")) {
+      if (
+        algo.inputType !== "graph" &&
+        algo.inputType !== "grid" &&
+        algo.inputType !== "word-search-grid" &&
+        rawInput.includes("\n")
+      ) {
         const lines = rawInput.split("\n");
         parsedInput = lines[0];
         if (lines[1] && lines[1].toLowerCase().includes("target")) {
-          target = parseInt(lines[1].replace(/[^0-9-]/g, "")) || 5;
+          const parsed = parseInt(lines[1].replace(/[^0-9-]/g, ""));
+          if (!isNaN(parsed)) target = parsed;
         } else if (lines[1]) {
-          target = parseInt(lines[1].trim()) || 5;
+          const parsed = parseInt(lines[1].trim());
+          if (!isNaN(parsed)) target = parsed;
         }
       }
 
-      if (rawTarget !== "") {
-        target = parseInt(rawTarget) || 5;
+      if (rawTarget !== "" && rawTarget !== undefined && rawTarget !== null) {
+        const parsed = parseInt(rawTarget);
+        if (!isNaN(parsed)) target = parsed;
       }
 
       try {
@@ -987,8 +1036,15 @@ const VisualizerPage = () => {
             case "generate-subsets-using-bitmask":
               computedSteps = generateSubsetsUsingBitmaskSteps(arr);
               break;
+            case "two-sum":
             case "two-sum-two-pointer":
               computedSteps = twoSumTwoPointerSteps(arr, target);
+              break;
+            case "three-sum":
+              computedSteps = threeSumSteps(arr, target);
+              break;
+            case "four-sum":
+              computedSteps = fourSumSteps(arr, target);
               break;
             // NEW: Array Roadmap Topics
             case "array-traversal":
@@ -1461,6 +1517,8 @@ const VisualizerPage = () => {
             algo.id === "find-connected-components"
           ) {
             computedSteps = connectedComponentsSteps(rawInput);
+          } else if (algo.id === "a-star-search" || algo.id === "a-star") {
+            computedSteps = aStarSearchSteps(rawInput, aStarStart, aStarGoal);
           } else {
             computedSteps = dijkstraSteps(rawInput);
           }
@@ -1493,7 +1551,7 @@ const VisualizerPage = () => {
             // rawInput could be a size number or use queenSize from state
             computedSteps = nQueensSteps(rawInput);
           } else if (algo.id === "knights-tour") {
-            computedSteps = knightsTourSteps(parseInt(rawInput) || 5, knightStartRow, knightStartCol, knightDestRow, knightDestCol);
+            computedSteps = knightsTourSteps(parseInt(rawInput) || 5, knightStartRow, knightStartCol, knightDestRow, knightDestCol, knightMode);
           } else if (algo.id === "generate-parentheses") {
             computedSteps = generateParenthesesSteps(parseInt(rawInput) || 3);
           } else {
@@ -1844,16 +1902,16 @@ const VisualizerPage = () => {
     } else if (algoId === "sliding-puzzle") {
       setCustomInput("1 2 3 4 5 6 7 0 8");
     } else {
-      setCustomInput("");
+      setCustomInput(initialInput || "");
     }
-    setTargetInput("");
+    setTargetInput(initialTarget || "");
     setDeleteInput("");
 
-    // Clear visualization steps on load so it starts empty
-    setSteps([]);
-
     if (!cancelled) {
-      setTimeout(() => setIsNavigating(false), 250);
+      setTimeout(() => {
+        setIsNavigating(false);
+        generateSteps(initialInput || "", initialTarget || "");
+      }, 50);
     }
 
     return () => {
@@ -1867,7 +1925,7 @@ const VisualizerPage = () => {
     if (algoId === "knights-tour") {
       generateSteps(String(knightSize), "");
     }
-  }, [knightSize, knightStartRow, knightStartCol, knightDestRow, knightDestCol, algoId, isNavigating]);
+  }, [knightSize, knightStartRow, knightStartCol, knightDestRow, knightDestCol, knightMode, algoId, isNavigating]);
 
   useEffect(() => {
     if (isNavigating) return;
@@ -1889,6 +1947,13 @@ const VisualizerPage = () => {
       generateSteps(customInput, "");
     }
   }, [customInput, algoId, isNavigating]);
+
+  useEffect(() => {
+    if (isNavigating) return;
+    if (algoId === "a-star-search" || algoId === "a-star") {
+      generateSteps(customInput || algo.defaultInput, String(aStarGoal));
+    }
+  }, [aStarStart, aStarGoal, algoId, isNavigating]);
 
   const handleApplyCustomInput = () => {
     const isInsertion =
@@ -2028,13 +2093,54 @@ const VisualizerPage = () => {
     let randTarget = "";
 
     if (algo.inputType === "array" || algo.inputType === "heap") {
-      const arr = Array.from(
-        { length: 6 },
-        () => Math.floor(Math.random() * 20) + 1,
-      );
-      randStr = arr.join(" ");
-      if (secondInputConfig) {
-        randTarget = secondInputConfig.randomVal(arr);
+      if (algo.id === "remove-duplicates" || algo.id === "remove-duplicates-two-pointer") {
+        // Generate a sorted array with duplicate entries
+        const base = Array.from(
+          { length: 7 },
+          () => Math.floor(Math.random() * 15) + 1,
+        ).sort((a, b) => a - b);
+        // Guarantee at least 2 duplicates
+        if (base.length >= 4) {
+          base[1] = base[0];
+          base[3] = base[2];
+        }
+        randStr = base.join(" ");
+      } else if (algo.id === "two-pointer" || algo.id === "two-sum-two-pointer" || algo.id === "two-sum") {
+        const arr = Array.from(
+          { length: 6 },
+          () => Math.floor(Math.random() * 20) + 1,
+        ).sort((a, b) => a - b);
+        randStr = arr.join(" ");
+        if (secondInputConfig) {
+          randTarget = secondInputConfig.randomVal(arr);
+        }
+      } else if (algo.id === "three-sum") {
+        const arr = Array.from(
+          { length: 6 },
+          () => Math.floor(Math.random() * 21) - 10,
+        ).sort((a, b) => a - b);
+        randStr = arr.join(" ");
+        if (secondInputConfig) {
+          randTarget = secondInputConfig.randomVal(arr);
+        }
+      } else if (algo.id === "four-sum") {
+        const arr = Array.from(
+          { length: 7 },
+          () => Math.floor(Math.random() * 21) - 10,
+        ).sort((a, b) => a - b);
+        randStr = arr.join(" ");
+        if (secondInputConfig) {
+          randTarget = secondInputConfig.randomVal(arr);
+        }
+      } else {
+        const arr = Array.from(
+          { length: 6 },
+          () => Math.floor(Math.random() * 20) + 1,
+        );
+        randStr = arr.join(" ");
+        if (secondInputConfig) {
+          randTarget = secondInputConfig.randomVal(arr);
+        }
       }
     } else if (algo.inputType === "linked-list") {
       if (algo.id === "merge-sorted-lists") {
@@ -2642,22 +2748,53 @@ const VisualizerPage = () => {
         </div>
       )}
 
-      {/* ── Knight's Tour: Board Size picker ── */}
+      {/* ── Knight's Tour / Shortest Path Controls ── */}
       {algoId === "knights-tour" && (
         <div className="flex flex-col gap-3">
+          {/* Algorithm Mode Switcher */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
+              Algorithm Mode
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setKnightMode("bfs")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 border ${
+                  knightMode === "bfs"
+                    ? "bg-amber-500 text-white border-amber-400 shadow-md scale-105"
+                    : "bg-white/5 dark:bg-white/5 border-white/10 text-text-secondary hover:text-text-primary hover:bg-amber-500/10"
+                }`}
+              >
+                <span>⚡</span> BFS (Shortest Path)
+              </button>
+              <button
+                onClick={() => setKnightMode("backtracking")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 border ${
+                  knightMode === "backtracking"
+                    ? "bg-purple-600 text-white border-purple-400 shadow-md scale-105"
+                    : "bg-white/5 dark:bg-white/5 border-white/10 text-text-secondary hover:text-text-primary hover:bg-purple-500/10"
+                }`}
+              >
+                <span>♟️</span> Backtracking (Full Tour)
+              </button>
+            </div>
+          </div>
+
           {/* Board size */}
           <div className="flex flex-col gap-1">
             <span className="text-[9px] font-extrabold text-text-secondary uppercase tracking-wider pl-1 select-none">
               Board Size (N × N)
             </span>
             <div className="flex items-center gap-2">
-              {[5, 6, 7].map((n) => (
+              {[5, 6, 7, 8].map((n) => (
                 <button
                   key={n}
                   onClick={() => {
                     setKnightSize(n);
                     setKnightStartRow(Math.min(knightStartRow, n - 1));
                     setKnightStartCol(Math.min(knightStartCol, n - 1));
+                    setKnightDestRow(Math.min(knightDestRow, n - 1));
+                    setKnightDestCol(Math.min(knightDestCol, n - 1));
                     setCustomInput(String(n));
                   }}
                   className={`w-9 h-9 rounded-lg text-sm font-extrabold transition-all duration-200 border ${
@@ -2669,14 +2806,15 @@ const VisualizerPage = () => {
                   {n}
                 </button>
               ))}
-              <span className="text-[9px] text-text-secondary opacity-60 font-mono pl-1">knight visits all {knightSize}×{knightSize} = {knightSize * knightSize} cells</span>
+              <span className="text-[9px] text-text-secondary opacity-60 font-mono pl-1">{knightSize}×{knightSize} grid ({knightSize * knightSize} squares)</span>
             </div>
           </div>
-          {/* Start & Destination position */}
+
+          {/* Start & End Cell Pickers */}
           <div className="flex gap-4 items-center flex-wrap">
-            {/* Start */}
+            {/* Start Cell */}
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-green-400 select-none">🏁 Start (row, col)</span>
+              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-green-400 select-none">🏁 Start Cell (row, col)</span>
               <div className="flex items-center gap-1.5">
                 <input
                   type="number" min={0} max={knightSize - 1}
@@ -2691,12 +2829,20 @@ const VisualizerPage = () => {
                   onChange={e => setKnightStartCol(Math.min(Math.max(0, parseInt(e.target.value) || 0), knightSize - 1))}
                   className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-green-400"
                 />
+                <button
+                  onClick={() => { setKnightStartRow(0); setKnightStartCol(0); }}
+                  className="px-2 py-1 text-[10px] font-mono rounded bg-white/5 hover:bg-white/10 text-text-secondary hover:text-text-primary border border-white/10 ml-1"
+                >
+                  (0,0)
+                </button>
               </div>
             </div>
-            <span className="text-text-secondary text-sm mt-4">→</span>
-            {/* Destination */}
+
+            <span className="text-text-secondary text-sm mt-4 font-bold">→</span>
+
+            {/* End / Target Cell */}
             <div className="flex flex-col gap-1">
-              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-amber-400 select-none">🎯 Destination (row, col)</span>
+              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-amber-400 select-none">🎯 Target End (row, col)</span>
               <div className="flex items-center gap-1.5">
                 <input
                   type="number" min={0} max={knightSize - 1}
@@ -2711,9 +2857,47 @@ const VisualizerPage = () => {
                   onChange={e => setKnightDestCol(Math.min(Math.max(0, parseInt(e.target.value) || 0), knightSize - 1))}
                   className="w-12 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-amber-400"
                 />
+                <button
+                  onClick={() => {
+                    const end = knightMode === "backtracking" && knightSize % 2 === 0 ? knightSize - 2 : knightSize - 1;
+                    setKnightDestRow(end);
+                    setKnightDestCol(knightSize - 1);
+                  }}
+                  className="px-2 py-1 text-[10px] font-mono rounded bg-white/5 hover:bg-white/10 text-text-secondary hover:text-text-primary border border-white/10 ml-1"
+                >
+                  Corner ({knightMode === "backtracking" && knightSize % 2 === 0 ? knightSize - 2 : knightSize - 1},{knightSize - 1})
+                </button>
               </div>
             </div>
           </div>
+
+          {knightMode === "bfs" ? (
+            <div className="text-[10px] text-cyan-400/90 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+              <span>💡</span>
+              <span><strong>BFS Mode:</strong> Explores knight moves level-by-level to guarantee finding the <strong>minimum steps (shortest path)</strong> from Start to Target!</span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <div className="text-[10px] text-purple-300 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                <span>♟️</span>
+                <span><strong>Backtracking Mode:</strong> Uses Warnsdorff's heuristic to find a full Hamiltonian tour visiting all <strong>{knightSize * knightSize} squares</strong> starting at ({knightStartRow},{knightStartCol}) and concluding at ({knightDestRow},{knightDestCol})!</span>
+              </div>
+              {/* Color parity note for Backtracking */}
+              {knightSize % 2 === 1 ? (
+                ((knightStartRow + knightStartCol) % 2 !== 0 || (knightDestRow + knightDestCol) % 2 !== 0) && (
+                  <div className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg">
+                    ⚠️ Parity Rule: On an odd {knightSize}×{knightSize} board ({knightSize * knightSize} squares), both Start and End cells must have even parity ((row+col) is even, e.g. (0,0) → ({knightSize - 1},{knightSize - 1})) for a full tour.
+                  </div>
+                )
+              ) : (
+                (knightStartRow + knightStartCol) % 2 === (knightDestRow + knightDestCol) % 2 && (
+                  <div className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg">
+                    ⚠️ Parity Rule: On an even {knightSize}×{knightSize} board ({knightSize * knightSize} squares), Start and End must have opposite color parity (one even, one odd, e.g. (0,0) → ({knightSize - 2},{knightSize - 1})) for a full tour.
+                  </div>
+                )
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -2743,6 +2927,68 @@ const VisualizerPage = () => {
               </button>
             ))}
             <span className="text-[9px] text-text-secondary opacity-60 font-mono pl-1">or type 9 numbers (0–8)</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── A* Search: Start & Goal Node Selectors ── */}
+      {(algoId === "a-star-search" || algoId === "a-star") && (
+        <div className="flex flex-col gap-2 p-3 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+          <div className="flex gap-4 items-center flex-wrap">
+            {/* Start Node */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-green-400 select-none">
+                🏁 Start Node ID
+              </span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={aStarStart}
+                  onChange={(e) =>
+                    setAStarStart(Math.max(0, parseInt(e.target.value) || 0))
+                  }
+                  className="w-14 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-green-400"
+                />
+                <button
+                  onClick={() => setAStarStart(0)}
+                  className="px-2 py-1 text-[10px] font-mono rounded bg-white/5 hover:bg-white/10 text-text-secondary hover:text-text-primary border border-white/10"
+                >
+                  Node 0
+                </button>
+              </div>
+            </div>
+
+            <span className="text-text-secondary text-sm mt-4 font-bold">→</span>
+
+            {/* Goal Node */}
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider pl-1 text-amber-400 select-none">
+                🎯 Goal Node ID
+              </span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={aStarGoal}
+                  onChange={(e) =>
+                    setAStarGoal(Math.max(0, parseInt(e.target.value) || 0))
+                  }
+                  className="w-14 h-8 text-center text-sm font-extrabold font-mono rounded-lg bg-white/5 border border-white/10 text-text-primary focus:outline-none focus:border-amber-400"
+                />
+                <button
+                  onClick={() => setAStarGoal(5)}
+                  className="px-2 py-1 text-[10px] font-mono rounded bg-white/5 hover:bg-white/10 text-text-secondary hover:text-text-primary border border-white/10"
+                >
+                  Node 5
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="text-[10px] text-cyan-300/90 font-mono">
+            💡 A* evaluates frontier nodes ordered by minimum <strong>f(n) = g(n) + h(n)</strong> (g = actual cost from start, h = heuristic distance to goal).
           </div>
         </div>
       )}

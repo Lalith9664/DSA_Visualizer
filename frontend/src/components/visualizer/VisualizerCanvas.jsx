@@ -76,6 +76,8 @@ const VisualizerCanvas = ({
   const {
     data,
     highlights = {},
+    pointerState,
+    rotateState,
     listState,
     stackState,
     queueState,
@@ -174,6 +176,1120 @@ const VisualizerCanvas = ({
             </motion.div>
           );
         })}
+      </div>
+    );
+  };
+
+  // --- 1A. RENDER REMOVE DUPLICATES (Two Pointer: slow/fast) ---
+  const renderRemoveDuplicatesCanvas = () => {
+    const arr = Array.isArray(data)
+      ? data
+      : data && Array.isArray(data.arr)
+        ? data.arr
+        : [];
+    const { slow = -1, fast = -1 } = currentSnap.pointerState || {};
+    const maxValue = Math.max(...arr.map(Number).filter((x) => !isNaN(x)), 1);
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+        {/* Top Legend Bar */}
+        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8 pt-1 pb-4 select-none">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm ring-2 ring-emerald-500/20" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              SLOW (WRITER)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-sm ring-2 ring-purple-500/20" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              FAST (SCANNER)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm ring-2 ring-amber-500/20" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+              UNIQUE (WRITTEN)
+            </span>
+          </div>
+        </div>
+
+        {/* Main Bars Container */}
+        <div className="w-full h-56 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+          {arr.map((val, idx) => {
+            const isSlow = idx === slow;
+            const isFast = idx === fast;
+            const isBoth = isSlow && isFast;
+            const isWritten = idx <= slow;
+            const heightPercent = Math.max(
+              25,
+              Math.min(85, (val / maxValue) * 75 + 15),
+            );
+
+            let barBg = "";
+            let borderClass = "";
+            let glowClass = "";
+
+            if (isSlow && !isBoth) {
+              barBg =
+                "bg-gradient-to-t from-emerald-600 to-emerald-400 text-white";
+              borderClass = "border-emerald-400 dark:border-emerald-300";
+              glowClass = "shadow-[0_0_15px_rgba(16,185,129,0.45)]";
+            } else if (isFast && !isBoth) {
+              barBg =
+                "bg-gradient-to-t from-purple-600 to-purple-400 text-white";
+              borderClass = "border-purple-400 dark:border-purple-300";
+              glowClass = "shadow-[0_0_15px_rgba(168,85,247,0.45)]";
+            } else if (isBoth) {
+              barBg =
+                "bg-gradient-to-t from-emerald-500 via-teal-500 to-purple-500 text-white";
+              borderClass = "border-emerald-300 dark:border-purple-300";
+              glowClass = "shadow-[0_0_15px_rgba(16,185,129,0.5)]";
+            } else if (isWritten) {
+              barBg = "bg-gradient-to-t from-amber-600 to-amber-500 text-white";
+              borderClass = "border-amber-400/80 dark:border-amber-500/80";
+              glowClass = "shadow-[0_0_10px_rgba(245,158,11,0.25)]";
+            } else {
+              barBg =
+                "bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500";
+              borderClass = "border-slate-200 dark:border-slate-700/60";
+              glowClass = "opacity-40";
+            }
+
+            return (
+              <motion.div
+                key={idx}
+                layout
+                transition={{ type: "spring", stiffness: 220, damping: 22 }}
+                className="flex-1 max-w-[80px] flex flex-col items-center justify-end h-full gap-1.5 relative group"
+              >
+                {/* Pointer indicators & value above bar */}
+                <div className="flex flex-col items-center justify-end min-h-[44px] mb-1 select-none">
+                  {isBoth ? (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[10px] font-black text-emerald-500 font-mono tracking-tighter">
+                        S / F
+                      </span>
+                      <span className="text-[9px] text-emerald-500">▼</span>
+                    </div>
+                  ) : isSlow ? (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[11px] font-black text-emerald-500 font-mono">
+                        S
+                      </span>
+                      <span className="text-[9px] text-emerald-500">▼</span>
+                    </div>
+                  ) : isFast ? (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[11px] font-black text-purple-500 font-mono">
+                        F
+                      </span>
+                      <span className="text-[9px] text-purple-500">▼</span>
+                    </div>
+                  ) : null}
+
+                  {/* Bar Value Header */}
+                  <span
+                    className={`font-mono text-xs font-bold ${
+                      isSlow
+                        ? "text-emerald-500 font-black"
+                        : isFast
+                          ? "text-purple-500 font-black"
+                          : isWritten
+                            ? "text-amber-500 dark:text-amber-400 font-extrabold"
+                            : "text-slate-400 dark:text-slate-500 font-semibold"
+                    }`}
+                  >
+                    {val}
+                  </span>
+                </div>
+
+                {/* The Vertical Bar */}
+                <div
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-xl border transition-all duration-300 relative flex items-start justify-center pt-2 ${barBg} ${borderClass} ${glowClass}`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-white/25 rounded-t-xl" />
+                </div>
+
+                {/* Index Pill */}
+                <div className="mt-1">
+                  <span
+                    className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border select-none ${
+                      isSlow
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                        : isFast
+                          ? "bg-purple-500/15 border-purple-500/40 text-purple-600 dark:text-purple-400"
+                          : isWritten
+                            ? "bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-400"
+                            : "bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500"
+                    }`}
+                  >
+                    {idx}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Bottom Status Stats Line */}
+        <div className="w-full flex items-center justify-center gap-6 pt-3 mt-1 font-mono text-[11px] font-bold select-none border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-emerald-600 dark:text-emerald-400">
+            slow @{" "}
+            <span className="font-extrabold text-xs">
+              {slow >= 0 ? slow : "-"}
+            </span>
+          </span>
+          <span className="text-purple-600 dark:text-purple-400">
+            fast @{" "}
+            <span className="font-extrabold text-xs">
+              {fast >= 0 ? fast : "-"}
+            </span>
+          </span>
+          <span className="text-amber-600 dark:text-amber-400">
+            unique so far:{" "}
+            <span className="font-extrabold text-xs">
+              {slow >= 0 ? slow + 1 : 0}
+            </span>
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 1A2. RENDER TWO POINTER (Left / Right / Multi-Pointer) ---
+  const renderTwoPointerCanvas = () => {
+    const rawData = currentSnap?.data !== undefined ? currentSnap.data : data;
+    const arr = Array.isArray(rawData)
+      ? rawData
+      : (rawData && Array.isArray(rawData.arr))
+        ? rawData.arr
+        : (data && Array.isArray(data.arr))
+          ? data.arr
+          : (Array.isArray(data) ? data : []);
+
+    const pState =
+      currentSnap?.pointerState ||
+      (rawData && typeof rawData === "object" && !Array.isArray(rawData) ? rawData : {}) ||
+      (data && typeof data === "object" && !Array.isArray(data) ? data : {});
+
+    const ptrI = pState.i !== undefined ? pState.i : -1;
+    const ptrJ = pState.j !== undefined ? pState.j : -1;
+    const ptrLeft = pState.left !== undefined ? pState.left : (pState.l !== undefined ? pState.l : -1);
+    const ptrRight = pState.right !== undefined ? pState.right : (pState.r !== undefined ? pState.r : -1);
+    const currentSum = pState.sum !== undefined ? pState.sum : null;
+    const targetVal = pState.target !== undefined ? pState.target : null;
+
+    const nums = arr.map(Number).filter((x) => !isNaN(x));
+    const minVal = nums.length > 0 ? Math.min(...nums) : 0;
+    const maxVal = nums.length > 0 ? Math.max(...nums) : 10;
+    const valRange = Math.max(Math.abs(maxVal - minVal), 1);
+
+    const isMultiPointer = ptrI >= 0 || ptrJ >= 0;
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+        {/* Top Target / Sum / Pointer Badges Header */}
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-1 pb-3 select-none">
+          {targetVal !== null && (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-primary/10 border border-primary/20">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
+                Target Sum:
+              </span>
+              <span className="font-mono text-xs font-black text-primary">
+                {targetVal}
+              </span>
+            </div>
+          )}
+          {currentSum !== null && (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
+                Current Sum:
+              </span>
+              <span className="font-mono text-xs font-black text-amber-500">
+                {currentSum}
+              </span>
+            </div>
+          )}
+
+          {ptrI >= 0 && (
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                i ({ptrI})
+              </span>
+            </div>
+          )}
+
+          {ptrJ >= 0 && (
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-fuchsia-500 shadow-sm" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-fuchsia-600 dark:text-fuchsia-400">
+                j ({ptrJ})
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-sm" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              LEFT (L)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              RIGHT (R)
+            </span>
+          </div>
+        </div>
+
+        {/* Array Bars */}
+        <div className="w-full h-56 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+          {arr.map((val, idx) => {
+            const isI = idx === ptrI;
+            const isJ = idx === ptrJ;
+            const isLeft = idx === ptrLeft;
+            const isRight = idx === ptrRight;
+            const isMatched =
+              highlights[idx] === "sorted" ||
+              highlights[idx] === "found" ||
+              (!isMultiPointer && isLeft && isRight && currentSum === targetVal);
+
+            const numVal = Number(val);
+            const heightPercent = !isNaN(numVal) && nums.length > 0
+              ? Math.max(22, Math.min(88, ((numVal - minVal) / valRange) * 60 + 28))
+              : 50;
+
+            let barBg = "";
+            let borderClass = "";
+            let glowClass = "";
+
+            if (isMatched) {
+              barBg =
+                "bg-gradient-to-t from-emerald-600 to-emerald-400 text-white";
+              borderClass = "border-emerald-400";
+              glowClass = "shadow-[0_0_15px_rgba(16,185,129,0.5)]";
+            } else if (isI) {
+              barBg = "bg-gradient-to-t from-amber-600 to-amber-400 text-white";
+              borderClass = "border-amber-400";
+              glowClass = "shadow-[0_0_15px_rgba(245,158,11,0.45)]";
+            } else if (isJ) {
+              barBg = "bg-gradient-to-t from-fuchsia-600 to-fuchsia-400 text-white";
+              borderClass = "border-fuchsia-400";
+              glowClass = "shadow-[0_0_15px_rgba(217,70,239,0.45)]";
+            } else if (isLeft) {
+              barBg = "bg-gradient-to-t from-cyan-600 to-cyan-400 text-white";
+              borderClass = "border-cyan-400";
+              glowClass = "shadow-[0_0_15px_rgba(6,182,212,0.45)]";
+            } else if (isRight) {
+              barBg =
+                "bg-gradient-to-t from-indigo-600 to-indigo-400 text-white";
+              borderClass = "border-indigo-400";
+              glowClass = "shadow-[0_0_15px_rgba(99,102,241,0.45)]";
+            } else {
+              barBg =
+                "bg-white dark:bg-slate-800/80 text-text-primary dark:text-[#F4F7FE]";
+              borderClass = "border-slate-200 dark:border-slate-700";
+            }
+
+            return (
+              <motion.div
+                key={idx}
+                layout
+                transition={{ type: "spring", stiffness: 220, damping: 22 }}
+                className="flex-1 max-w-[80px] flex flex-col items-center justify-end h-full gap-1.5 relative group"
+              >
+                {/* Pointer indicator & value */}
+                <div className="flex flex-col items-center justify-end min-h-[44px] mb-1 select-none">
+                  {isI && (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[11px] font-black text-amber-500 font-mono">
+                        i
+                      </span>
+                      <span className="text-[9px] text-amber-500">▼</span>
+                    </div>
+                  )}
+                  {isJ && (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[11px] font-black text-fuchsia-500 font-mono">
+                        j
+                      </span>
+                      <span className="text-[9px] text-fuchsia-500">▼</span>
+                    </div>
+                  )}
+                  {isLeft && (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[11px] font-black text-cyan-500 font-mono">
+                        L
+                      </span>
+                      <span className="text-[9px] text-cyan-500">▼</span>
+                    </div>
+                  )}
+                  {isRight && (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[11px] font-black text-indigo-500 font-mono">
+                        R
+                      </span>
+                      <span className="text-[9px] text-indigo-500">▼</span>
+                    </div>
+                  )}
+                  <span
+                    className={`font-mono text-xs font-bold ${
+                      isI
+                        ? "text-amber-500 font-black"
+                        : isJ
+                          ? "text-fuchsia-500 font-black"
+                          : isLeft
+                            ? "text-cyan-500 font-black"
+                            : isRight
+                              ? "text-indigo-500 font-black"
+                              : "text-text-secondary"
+                    }`}
+                  >
+                    {val}
+                  </span>
+                </div>
+
+                {/* Vertical Bar */}
+                <div
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-xl border transition-all duration-300 relative flex items-start justify-center pt-2 ${barBg} ${borderClass} ${glowClass}`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-white/20 rounded-t-xl" />
+                </div>
+
+                {/* Index Pill */}
+                <div className="mt-1">
+                  <span
+                    className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border select-none ${
+                      isI
+                        ? "bg-amber-500/15 border-amber-500/40 text-amber-600 dark:text-amber-400"
+                        : isJ
+                          ? "bg-fuchsia-500/15 border-fuchsia-500/40 text-fuchsia-600 dark:text-fuchsia-400"
+                          : isLeft
+                            ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-600 dark:text-cyan-400"
+                            : isRight
+                              ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-600 dark:text-indigo-400"
+                              : "bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500"
+                    }`}
+                  >
+                    {idx}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Footer Status */}
+        <div className="w-full flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-3 mt-1 font-mono text-[11px] font-bold select-none border-t border-slate-100 dark:border-slate-800/60">
+          {ptrI >= 0 && (
+            <span className="text-amber-600 dark:text-amber-400">
+              i @ <span className="font-extrabold text-xs">{ptrI}</span>
+            </span>
+          )}
+          {ptrJ >= 0 && (
+            <span className="text-fuchsia-600 dark:text-fuchsia-400">
+              j @ <span className="font-extrabold text-xs">{ptrJ}</span>
+            </span>
+          )}
+          <span className="text-cyan-600 dark:text-cyan-400">
+            L @{" "}
+            <span className="font-extrabold text-xs">
+              {ptrLeft >= 0 ? ptrLeft : "-"}
+            </span>
+          </span>
+          <span className="text-indigo-600 dark:text-indigo-400">
+            R @{" "}
+            <span className="font-extrabold text-xs">
+              {ptrRight >= 0 ? ptrRight : "-"}
+            </span>
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 1A3. RENDER ROTATE ARRAY (3-Step Reversal) ---
+  const renderRotateArrayCanvas = () => {
+    const arr = Array.isArray(data)
+      ? data
+      : data && Array.isArray(data.arr)
+        ? data.arr
+        : [];
+    const {
+      k = 0,
+      phase = "",
+      start = -1,
+      end = -1,
+    } = currentSnap.rotateState || {};
+    const maxValue = Math.max(...arr.map(Number).filter((x) => !isNaN(x)), 1);
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+        {/* Header with rotation info */}
+        <div className="flex flex-wrap items-center justify-center gap-6 pt-1 pb-3 select-none">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-primary/10 border border-primary/20">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
+              Rotate Shift (k):
+            </span>
+            <span className="font-mono text-xs font-black text-primary">
+              {k}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              Phase: {phase || "Processing"}
+            </span>
+          </div>
+        </div>
+
+        {/* Array Bars / Cells */}
+        <div className="w-full h-56 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+          {arr.map((val, idx) => {
+            const isSwap =
+              highlights[idx] === "swap" || idx === start || idx === end;
+            const isSorted = highlights[idx] === "sorted";
+            const heightPercent = Math.max(
+              25,
+              Math.min(85, (val / maxValue) * 75 + 15),
+            );
+
+            let barBg = "";
+            let borderClass = "";
+            let glowClass = "";
+
+            if (isSwap) {
+              barBg = "bg-gradient-to-t from-red-500 to-rose-400 text-white";
+              borderClass = "border-red-400";
+              glowClass = "shadow-[0_0_15px_rgba(239,68,68,0.45)]";
+            } else if (isSorted) {
+              barBg =
+                "bg-gradient-to-t from-emerald-600 to-emerald-400 text-white";
+              borderClass = "border-emerald-400";
+              glowClass = "shadow-[0_0_15px_rgba(16,185,129,0.35)]";
+            } else {
+              barBg =
+                "bg-white dark:bg-slate-800/80 text-text-primary dark:text-[#F4F7FE]";
+              borderClass = "border-slate-200 dark:border-slate-700";
+            }
+
+            return (
+              <motion.div
+                key={idx}
+                layout
+                transition={{ type: "spring", stiffness: 220, damping: 22 }}
+                className="flex-1 max-w-[80px] flex flex-col items-center justify-end h-full gap-1.5 relative group"
+              >
+                <div className="flex flex-col items-center justify-end min-h-[32px] mb-1 select-none">
+                  {isSwap && (
+                    <span className="text-[10px] font-black text-rose-500 font-mono animate-bounce">
+                      SWAP
+                    </span>
+                  )}
+                  <span className="font-mono text-xs font-bold text-text-secondary">
+                    {val}
+                  </span>
+                </div>
+
+                <div
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-xl border transition-all duration-300 relative flex items-start justify-center pt-2 ${barBg} ${borderClass} ${glowClass}`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-white/20 rounded-t-xl" />
+                </div>
+
+                <div className="mt-1">
+                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border select-none bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500">
+                    {idx}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="w-full flex items-center justify-center gap-6 pt-3 mt-1 font-mono text-[11px] font-bold select-none border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-text-secondary">
+            Rotates right by shifting {k} positions in 3 reversal steps
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 1A4. RENDER REVERSE ARRAY (Two Pointer Inward Swap) ---
+  const renderReverseArrayCanvas = () => {
+    const arr = Array.isArray(data)
+      ? data
+      : data && Array.isArray(data.arr)
+        ? data.arr
+        : [];
+    const left = highlights?.left ?? -1;
+    const right = highlights?.right ?? -1;
+    const maxValue = Math.max(...arr.map(Number).filter((x) => !isNaN(x)), 1);
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-center gap-6 pt-1 pb-3 select-none">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-sm" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+              LEFT POINTER (0 → N/2)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              RIGHT POINTER (N-1 → N/2)
+            </span>
+          </div>
+        </div>
+
+        {/* Bars */}
+        <div className="w-full h-56 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+          {arr.map((val, idx) => {
+            const isLeft = idx === left;
+            const isRight = idx === right;
+            const isSwapped =
+              highlights.swapped &&
+              Array.isArray(highlights.swapped) &&
+              highlights.swapped.includes(idx);
+            const isSorted =
+              highlights.sorted &&
+              Array.isArray(highlights.sorted) &&
+              highlights.sorted.includes(idx);
+            const heightPercent = Math.max(
+              25,
+              Math.min(85, (val / maxValue) * 75 + 15),
+            );
+
+            let barBg = "";
+            let borderClass = "";
+            let glowClass = "";
+
+            if (isSwapped) {
+              barBg = "bg-gradient-to-t from-red-500 to-rose-400 text-white";
+              borderClass = "border-red-400";
+              glowClass = "shadow-[0_0_15px_rgba(239,68,68,0.45)]";
+            } else if (isLeft) {
+              barBg = "bg-gradient-to-t from-cyan-600 to-cyan-400 text-white";
+              borderClass = "border-cyan-400";
+              glowClass = "shadow-[0_0_15px_rgba(6,182,212,0.45)]";
+            } else if (isRight) {
+              barBg =
+                "bg-gradient-to-t from-indigo-600 to-indigo-400 text-white";
+              borderClass = "border-indigo-400";
+              glowClass = "shadow-[0_0_15px_rgba(99,102,241,0.45)]";
+            } else if (isSorted) {
+              barBg =
+                "bg-gradient-to-t from-emerald-600 to-emerald-400 text-white";
+              borderClass = "border-emerald-400";
+            } else {
+              barBg =
+                "bg-white dark:bg-slate-800/80 text-text-primary dark:text-[#F4F7FE]";
+              borderClass = "border-slate-200 dark:border-slate-700";
+            }
+
+            return (
+              <motion.div
+                key={idx}
+                layout
+                transition={{ type: "spring", stiffness: 220, damping: 22 }}
+                className="flex-1 max-w-[80px] flex flex-col items-center justify-end h-full gap-1.5 relative group"
+              >
+                <div className="flex flex-col items-center justify-end min-h-[44px] mb-1 select-none">
+                  {isLeft && (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[11px] font-black text-cyan-500 font-mono">
+                        L
+                      </span>
+                      <span className="text-[9px] text-cyan-500">▼</span>
+                    </div>
+                  )}
+                  {isRight && (
+                    <div className="flex flex-col items-center animate-bounce">
+                      <span className="text-[11px] font-black text-indigo-500 font-mono">
+                        R
+                      </span>
+                      <span className="text-[9px] text-indigo-500">▼</span>
+                    </div>
+                  )}
+                  <span className="font-mono text-xs font-bold text-text-secondary">
+                    {val}
+                  </span>
+                </div>
+
+                <div
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-xl border transition-all duration-300 relative flex items-start justify-center pt-2 ${barBg} ${borderClass} ${glowClass}`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-white/20 rounded-t-xl" />
+                </div>
+
+                <div className="mt-1">
+                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border select-none bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500">
+                    {idx}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="w-full flex items-center justify-center gap-6 pt-3 mt-1 font-mono text-[11px] font-bold select-none border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-cyan-600 dark:text-cyan-400">
+            L @ {left >= 0 ? left : "-"}
+          </span>
+          <span className="text-indigo-600 dark:text-indigo-400">
+            R @ {right >= 0 ? right : "-"}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 1A5. RENDER MOORE'S VOTING (Majority Element) ---
+  const renderMooresVotingCanvas = () => {
+    const arr = Array.isArray(data) ? data : [];
+    const candidate = currentSnap.stats?.candidate;
+    const count = currentSnap.stats?.count ?? 0;
+    const isVerified = currentStep > arr.length;
+    const maxValue = Math.max(...arr.map(Number).filter((x) => !isNaN(x)), 1);
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+        {/* KPI Score Cards */}
+        <div className="flex justify-around gap-4 w-full mb-3">
+          <div className="flex-1 flex flex-col items-center p-3 rounded-2xl bg-primary/10 border border-primary/20 shadow-sm relative overflow-hidden">
+            <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase">
+              Current Candidate
+            </span>
+            <span className="text-2xl font-black mt-1 font-mono text-primary">
+              {candidate !== undefined && candidate !== "None"
+                ? candidate
+                : "None"}
+            </span>
+          </div>
+          <div className="flex-1 flex flex-col items-center p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 shadow-sm relative overflow-hidden">
+            <span className="text-[10px] font-extrabold tracking-widest text-amber-600 dark:text-amber-400 uppercase">
+              {isVerified ? "Verified Count" : "Vote Balance (Count)"}
+            </span>
+            <span className="text-2xl font-black mt-1 font-mono text-amber-500">
+              {count}
+            </span>
+          </div>
+          <div className="flex-1 flex flex-col items-center p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-sm relative overflow-hidden">
+            <span className="text-[10px] font-extrabold tracking-widest text-emerald-600 dark:text-emerald-400 uppercase">
+              Majority Threshold
+            </span>
+            <span className="text-2xl font-black mt-1 font-mono text-emerald-500">
+              &gt; {Math.floor(arr.length / 2)}
+            </span>
+          </div>
+        </div>
+
+        {/* Array Bars */}
+        <div className="w-full h-48 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+          {arr.map((val, idx) => {
+            const isActive = highlights[idx] === "active";
+            const isVisited = highlights[idx] === "visited";
+            const isCandidateVal = String(val) === String(candidate);
+            const heightPercent = Math.max(
+              25,
+              Math.min(85, (val / maxValue) * 75 + 15),
+            );
+
+            let barBg = "";
+            let borderClass = "";
+            let glowClass = "";
+
+            if (isActive) {
+              barBg = "bg-gradient-to-t from-primary to-cyan-400 text-white";
+              borderClass = "border-primary";
+              glowClass = "shadow-[0_0_15px_rgba(59,130,246,0.5)]";
+            } else if (isVisited && isCandidateVal) {
+              barBg =
+                "bg-gradient-to-t from-emerald-600 to-emerald-400 text-white";
+              borderClass = "border-emerald-400";
+            } else if (isCandidateVal) {
+              barBg =
+                "bg-gradient-to-t from-amber-500/80 to-amber-400/80 text-white";
+              borderClass = "border-amber-400";
+            } else {
+              barBg =
+                "bg-white dark:bg-slate-800/80 text-text-primary dark:text-[#F4F7FE]";
+              borderClass = "border-slate-200 dark:border-slate-700";
+            }
+
+            return (
+              <motion.div
+                key={idx}
+                layout
+                transition={{ type: "spring", stiffness: 220, damping: 22 }}
+                className="flex-1 max-w-[80px] flex flex-col items-center justify-end h-full gap-1.5 relative group"
+              >
+                <div className="flex flex-col items-center justify-end min-h-[32px] mb-1 select-none">
+                  {isActive && (
+                    <span className="text-[10px] font-black text-primary font-mono animate-bounce">
+                      SCAN
+                    </span>
+                  )}
+                  <span className="font-mono text-xs font-bold text-text-secondary">
+                    {val}
+                  </span>
+                </div>
+
+                <div
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-xl border transition-all duration-300 relative flex items-start justify-center pt-2 ${barBg} ${borderClass} ${glowClass}`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-white/20 rounded-t-xl" />
+                </div>
+
+                <div className="mt-1">
+                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border select-none bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500">
+                    {idx}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="w-full flex items-center justify-center gap-6 pt-3 mt-1 font-mono text-[11px] font-bold select-none border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-text-secondary">
+            Finds element appearing &gt; n/2 times in O(N) time and O(1) space
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 1A6. RENDER CANDY DISTRIBUTION (Greedy 2-Pass) ---
+  const renderCandyDistributionCanvas = () => {
+    const candyArr = Array.isArray(data) ? data : [];
+    const totalCandies = candyArr.reduce((a, b) => a + Number(b), 0);
+    const maxCandies = Math.max(
+      ...candyArr.map(Number).filter((x) => !isNaN(x)),
+      1,
+    );
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+        {/* KPI Top Bar */}
+        <div className="flex flex-wrap items-center justify-center gap-6 pt-1 pb-3 select-none">
+          <div className="flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-amber-500/15 border border-amber-500/30">
+            <span className="text-base">🍬</span>
+            <span className="text-xs font-black text-amber-600 dark:text-amber-400">
+              Total Candies Allocated: {totalCandies}
+            </span>
+          </div>
+        </div>
+
+        {/* Candies Columns */}
+        <div className="w-full h-56 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+          {candyArr.map((candyCount, idx) => {
+            const isActive = highlights[idx] === "active";
+            const isSuccess = highlights[idx] === "success";
+            const isCompare = highlights[idx] === "compare";
+            const heightPercent = Math.max(
+              25,
+              Math.min(85, (candyCount / maxCandies) * 75 + 15),
+            );
+
+            let barBg = "";
+            let borderClass = "";
+            let glowClass = "";
+
+            if (isSuccess || isActive) {
+              barBg = "bg-gradient-to-t from-amber-500 to-yellow-400 text-white";
+              borderClass = "border-amber-400";
+              glowClass = "shadow-[0_0_15px_rgba(245,158,11,0.5)]";
+            } else if (isCompare) {
+              barBg = "bg-gradient-to-t from-primary to-cyan-400 text-white";
+              borderClass = "border-primary";
+            } else {
+              barBg =
+                "bg-gradient-to-t from-amber-600/60 to-amber-500/60 text-white";
+              borderClass = "border-amber-500/40";
+            }
+
+            return (
+              <motion.div
+                key={idx}
+                layout
+                transition={{ type: "spring", stiffness: 220, damping: 22 }}
+                className="flex-1 max-w-[80px] flex flex-col items-center justify-end h-full gap-1.5 relative group"
+              >
+                <div className="flex flex-col items-center justify-end min-h-[36px] mb-1 select-none">
+                  <span className="text-xs font-black text-amber-500">
+                    🍬 x{candyCount}
+                  </span>
+                </div>
+
+                <div
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-xl border transition-all duration-300 relative flex items-center justify-center ${barBg} ${borderClass} ${glowClass}`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-white/30 rounded-t-xl" />
+                  <span className="font-mono text-sm font-black text-white drop-shadow">
+                    {candyCount}
+                  </span>
+                </div>
+
+                <div className="mt-1">
+                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border select-none bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500">
+                    Child {idx}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="w-full flex items-center justify-center gap-6 pt-3 mt-1 font-mono text-[11px] font-bold select-none border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-text-secondary">
+            Greedy 2-pass allocation (Left pass + Right pass) ensuring higher-rating neighbors get more candies
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 1A7. RENDER DUTCH NATIONAL FLAG (3-Way Partition) ---
+  const renderDutchNationalFlagCanvas = () => {
+    const arr = Array.isArray(data) ? data : [];
+    return (
+      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+        {/* Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-6 pt-1 pb-3 select-none">
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-red-500 shadow-sm" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-red-600 dark:text-red-400">
+              0 (Red Bucket)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-blue-500 shadow-sm" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              1 (White/Blue Bucket)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              2 (Green Bucket)
+            </span>
+          </div>
+        </div>
+
+        {/* Array Cells */}
+        <div className="w-full h-56 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+          {arr.map((val, idx) => {
+            const isCompare = highlights[idx] === "compare";
+            const isSwap = highlights[idx] === "swap";
+
+            let barBg = "";
+            let borderClass = "";
+
+            if (val === 0) {
+              barBg = "bg-gradient-to-t from-red-600 to-red-400 text-white";
+              borderClass = "border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.4)]";
+            } else if (val === 1) {
+              barBg = "bg-gradient-to-t from-blue-600 to-blue-400 text-white";
+              borderClass =
+                "border-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.4)]";
+            } else {
+              barBg =
+                "bg-gradient-to-t from-emerald-600 to-emerald-400 text-white";
+              borderClass =
+                "border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)]";
+            }
+
+            const heightPercent = val === 0 ? 40 : val === 1 ? 65 : 90;
+
+            return (
+              <motion.div
+                key={idx}
+                layout
+                transition={{ type: "spring", stiffness: 220, damping: 22 }}
+                className="flex-1 max-w-[80px] flex flex-col items-center justify-end h-full gap-1.5 relative group"
+              >
+                <div className="flex flex-col items-center justify-end min-h-[32px] mb-1 select-none">
+                  {isSwap && (
+                    <span className="text-[10px] font-black text-rose-500 font-mono animate-bounce">
+                      SWAP
+                    </span>
+                  )}
+                  {isCompare && (
+                    <span className="text-[10px] font-black text-primary font-mono animate-bounce">
+                      MID
+                    </span>
+                  )}
+                  <span className="font-mono text-xs font-bold text-text-secondary">
+                    {val}
+                  </span>
+                </div>
+
+                <div
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-xl border transition-all duration-300 relative flex items-center justify-center ${barBg} ${borderClass}`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-white/20 rounded-t-xl" />
+                  <span className="font-mono text-base font-black text-white drop-shadow">
+                    {val}
+                  </span>
+                </div>
+
+                <div className="mt-1">
+                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border select-none bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500">
+                    {idx}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="w-full flex items-center justify-center gap-6 pt-3 mt-1 font-mono text-[11px] font-bold select-none border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-text-secondary">
+            Dutch National Flag: 3-way in-place partition using low, mid, high pointers
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // --- 1A8. RENDER EQUILIBRIUM INDEX ---
+  const renderEquilibriumIndexCanvas = () => {
+    const arr = Array.isArray(data) ? data : [];
+    const {
+      leftSum = 0,
+      rightSum = 0,
+      currentIdx = -1,
+    } = currentSnap.prefixState || {};
+    const maxValue = Math.max(...arr.map(Number).filter((x) => !isNaN(x)), 1);
+
+    return (
+      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+        {/* KPI Score Cards */}
+        <div className="flex justify-around gap-4 w-full mb-2">
+          <div className="flex-1 flex flex-col items-center p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 shadow-sm relative overflow-hidden">
+            <span className="text-[10px] font-extrabold tracking-widest text-cyan-600 dark:text-cyan-400 uppercase">
+              Left Sum (0 to i-1)
+            </span>
+            <span className="text-2xl font-black mt-1 font-mono text-cyan-500">
+              {leftSum}
+            </span>
+          </div>
+          <div className="flex-1 flex flex-col items-center p-3 rounded-2xl bg-primary/10 border border-primary/20 shadow-sm relative overflow-hidden">
+            <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase">
+              Pivot Index arr[{currentIdx !== -1 ? currentIdx : "-"}]
+            </span>
+            <span className="text-2xl font-black mt-1 font-mono text-primary">
+              {currentIdx !== -1 && arr[currentIdx] !== undefined
+                ? arr[currentIdx]
+                : "-"}
+            </span>
+          </div>
+          <div className="flex-1 flex flex-col items-center p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 shadow-sm relative overflow-hidden">
+            <span className="text-[10px] font-extrabold tracking-widest text-indigo-600 dark:text-indigo-400 uppercase">
+              Right Sum (i+1 to n-1)
+            </span>
+            <span className="text-2xl font-black mt-1 font-mono text-indigo-500">
+              {rightSum}
+            </span>
+          </div>
+        </div>
+
+        {/* Array Bars */}
+        <div className="w-full h-48 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+          {arr.map((val, idx) => {
+            const isPivot = idx === currentIdx;
+            const isLeft = currentIdx !== -1 && idx < currentIdx;
+            const isRight = currentIdx !== -1 && idx > currentIdx;
+            const isMatch = highlights[idx] === "sorted";
+            const heightPercent = Math.max(
+              25,
+              Math.min(85, (val / maxValue) * 75 + 15),
+            );
+
+            let barBg = "";
+            let borderClass = "";
+            let glowClass = "";
+
+            if (isMatch) {
+              barBg =
+                "bg-gradient-to-t from-emerald-600 to-emerald-400 text-white";
+              borderClass = "border-emerald-400";
+              glowClass = "shadow-[0_0_18px_rgba(16,185,129,0.5)]";
+            } else if (isPivot) {
+              barBg =
+                "bg-gradient-to-t from-purple-600 to-purple-400 text-white";
+              borderClass = "border-purple-400";
+              glowClass = "shadow-[0_0_15px_rgba(168,85,247,0.5)]";
+            } else if (isLeft) {
+              barBg =
+                "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border-cyan-500/40";
+            } else if (isRight) {
+              barBg =
+                "bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border-indigo-500/40";
+            } else {
+              barBg =
+                "bg-white dark:bg-slate-800/80 text-text-primary dark:text-[#F4F7FE]";
+              borderClass = "border-slate-200 dark:border-slate-700";
+            }
+
+            return (
+              <motion.div
+                key={idx}
+                layout
+                transition={{ type: "spring", stiffness: 220, damping: 22 }}
+                className="flex-1 max-w-[80px] flex flex-col items-center justify-end h-full gap-1.5 relative group"
+              >
+                <div className="flex flex-col items-center justify-end min-h-[32px] mb-1 select-none">
+                  {isPivot && (
+                    <span className="text-[10px] font-black text-purple-500 font-mono animate-bounce">
+                      PIVOT
+                    </span>
+                  )}
+                  <span className="font-mono text-xs font-bold text-text-secondary">
+                    {val}
+                  </span>
+                </div>
+
+                <div
+                  style={{ height: `${heightPercent}%` }}
+                  className={`w-full rounded-t-xl border transition-all duration-300 relative flex items-start justify-center pt-2 ${barBg} ${borderClass} ${glowClass}`}
+                >
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-white/20 rounded-t-xl" />
+                </div>
+
+                <div className="mt-1">
+                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border select-none bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/50 text-slate-400 dark:text-slate-500">
+                    {idx}
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="w-full flex items-center justify-center gap-6 pt-3 mt-1 font-mono text-[11px] font-bold select-none border-t border-slate-100 dark:border-slate-800/60">
+          <span className="text-text-secondary">
+            Equilibrium condition: sum(0..i-1) === sum(i+1..n-1)
+          </span>
+        </div>
       </div>
     );
   };
@@ -1330,10 +2446,16 @@ const VisualizerCanvas = ({
                 }
 
                 const baseAddr = colorScheme === "blue" ? 0x100 : 0x200;
-                const nextAddr = idx === items.length - 1 ? "NULL" : `0x${(baseAddr + (idx + 1) * 8).toString(16).toUpperCase()}`;
+                const nextAddr =
+                  idx === items.length - 1
+                    ? "NULL"
+                    : `0x${(baseAddr + (idx + 1) * 8).toString(16).toUpperCase()}`;
 
                 return (
-                  <div key={idx} className="flex items-center gap-2 sm:gap-3 relative">
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 sm:gap-3 relative"
+                  >
                     {/* Address above the node */}
                     <span className="absolute -top-4 left-1 font-mono text-[6px] sm:text-[7px] text-slate-500/80">
                       0x{(baseAddr + idx * 8).toString(16).toUpperCase()}
@@ -1342,12 +2464,20 @@ const VisualizerCanvas = ({
                       className={`w-18 sm:w-22 h-8 sm:h-10 rounded-lg border flex overflow-hidden shadow-sm transition-all duration-300 ${bgClass} ${borderClass}`}
                     >
                       <div className="w-10 sm:w-13 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30 font-mono font-bold text-[9px] sm:text-[10px] text-text-primary dark:text-slate-200 leading-none">
-                        <span className="text-[4px] uppercase text-slate-500/50 scale-75 select-none pb-0.5">data</span>
+                        <span className="text-[4px] uppercase text-slate-500/50 scale-75 select-none pb-0.5">
+                          data
+                        </span>
                         {val}
                       </div>
                       <div className="flex-1 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20 px-0.5">
-                        <span className="text-[4px] uppercase text-slate-500/50 scale-75 select-none pb-0.5">next</span>
-                        <span className={`font-mono text-[5px] sm:text-[6px] font-black ${nextAddr === "NULL" ? "text-red-500" : "text-primary"}`}>{nextAddr}</span>
+                        <span className="text-[4px] uppercase text-slate-500/50 scale-75 select-none pb-0.5">
+                          next
+                        </span>
+                        <span
+                          className={`font-mono text-[5px] sm:text-[6px] font-black ${nextAddr === "NULL" ? "text-red-500" : "text-primary"}`}
+                        >
+                          {nextAddr}
+                        </span>
                       </div>
                     </div>
                     {idx < items.length - 1 ? (
@@ -1398,7 +2528,10 @@ const VisualizerCanvas = ({
               </span>
               <div className="flex gap-2 sm:gap-4 items-center flex-wrap min-h-[50px] sm:min-h-[60px]">
                 {merged.map((val, idx) => {
-                  const nextAddr = idx === merged.length - 1 ? "NULL" : `0x${(0x300 + (idx + 1) * 8).toString(16).toUpperCase()}`;
+                  const nextAddr =
+                    idx === merged.length - 1
+                      ? "NULL"
+                      : `0x${(0x300 + (idx + 1) * 8).toString(16).toUpperCase()}`;
                   return (
                     <motion.div
                       key={idx}
@@ -1411,22 +2544,32 @@ const VisualizerCanvas = ({
                       </span>
                       <div className="w-18 sm:w-22 h-8 sm:h-10 rounded-lg border border-success bg-success/5 dark:bg-success/15 flex overflow-hidden shadow-inner font-bold">
                         <div className="w-10 sm:w-13 h-full flex flex-col justify-center items-center border-r border-success/30 bg-success/10 font-mono text-[9px] sm:text-[10px] text-success leading-none">
-                          <span className="text-[4px] uppercase text-success/50 scale-75 select-none pb-0.5">data</span>
+                          <span className="text-[4px] uppercase text-success/50 scale-75 select-none pb-0.5">
+                            data
+                          </span>
                           {val}
                         </div>
                         <div className="flex-1 h-full flex flex-col justify-center items-center bg-success/5 px-0.5">
-                          <span className="text-[4px] uppercase text-success/50 scale-75 select-none pb-0.5">next</span>
-                          <span className={`font-mono text-[5px] sm:text-[6px] font-black ${nextAddr === "NULL" ? "text-red-500" : "text-success"}`}>{nextAddr}</span>
+                          <span className="text-[4px] uppercase text-success/50 scale-75 select-none pb-0.5">
+                            next
+                          </span>
+                          <span
+                            className={`font-mono text-[5px] sm:text-[6px] font-black ${nextAddr === "NULL" ? "text-red-500" : "text-success"}`}
+                          >
+                            {nextAddr}
+                          </span>
                         </div>
                       </div>
-                    {idx < merged.length - 1 ? (
-                      <span className="text-success text-xs sm:text-sm">→</span>
-                    ) : (
-                      <span className="text-success text-[7px] sm:text-[8px] font-black">
-                        ∅
-                      </span>
-                    )}
-                  </motion.div>
+                      {idx < merged.length - 1 ? (
+                        <span className="text-success text-xs sm:text-sm">
+                          →
+                        </span>
+                      ) : (
+                        <span className="text-success text-[7px] sm:text-[8px] font-black">
+                          ∅
+                        </span>
+                      )}
+                    </motion.div>
                   );
                 })}
                 {merged.length === 0 && (
@@ -1490,35 +2633,39 @@ const VisualizerCanvas = ({
                 key={node.id}
                 className="flex items-center gap-2 sm:gap-4 flex-shrink-0 relative"
               >
-                  <div className="flex flex-col items-center relative">
-                    {/* Address label above the node card */}
-                    <span className="absolute -top-5 font-mono text-[7px] sm:text-[8px] font-extrabold text-slate-500 dark:text-slate-400 select-none tracking-wider uppercase">
-                      0x{(1000 + idx * 8).toString(16).toUpperCase()}
-                    </span>
+                <div className="flex flex-col items-center relative">
+                  {/* Address label above the node card */}
+                  <span className="absolute -top-5 font-mono text-[7px] sm:text-[8px] font-extrabold text-slate-500 dark:text-slate-400 select-none tracking-wider uppercase">
+                    0x{(1000 + idx * 8).toString(16).toUpperCase()}
+                  </span>
 
-                    {/* Node Structure */}
-                    <motion.div
-                      layout
-                      className={`w-16 sm:w-24 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
-                    >
-                      <div className="w-10 sm:w-16 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
-                        <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
-                          data
-                        </span>
-                        <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
-                          {node.val}
-                        </span>
-                      </div>
+                  {/* Node Structure */}
+                  <motion.div
+                    layout
+                    className={`w-16 sm:w-24 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
+                  >
+                    <div className="w-10 sm:w-16 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
+                      <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
+                        data
+                      </span>
+                      <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
+                        {node.val}
+                      </span>
+                    </div>
 
-                      <div className="flex-1 h-full flex flex-col justify-center items-center relative bg-slate-100/30 dark:bg-slate-950/20 px-1">
-                        <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
-                          next
-                        </span>
-                        <span className={`font-mono text-[7px] sm:text-[8px] font-black tracking-tight ${idx === listNodes.length - 1 ? 'text-red-500 dark:text-red-400' : 'text-primary'}`}>
-                          {idx === listNodes.length - 1 ? "NULL" : `0x${(1000 + (idx + 1) * 8).toString(16).toUpperCase()}`}
-                        </span>
-                      </div>
-                    </motion.div>
+                    <div className="flex-1 h-full flex flex-col justify-center items-center relative bg-slate-100/30 dark:bg-slate-950/20 px-1">
+                      <span className="text-slate-500/60 uppercase select-none text-[5px] sm:text-[6px]">
+                        next
+                      </span>
+                      <span
+                        className={`font-mono text-[7px] sm:text-[8px] font-black tracking-tight ${idx === listNodes.length - 1 ? "text-red-500 dark:text-red-400" : "text-primary"}`}
+                      >
+                        {idx === listNodes.length - 1
+                          ? "NULL"
+                          : `0x${(1000 + (idx + 1) * 8).toString(16).toUpperCase()}`}
+                      </span>
+                    </div>
+                  </motion.div>
 
                   {/* Pointer Tags */}
                   <div className="absolute -bottom-8 flex flex-col gap-1 items-center z-10">
@@ -1689,47 +2836,55 @@ const VisualizerCanvas = ({
                 key={node.id}
                 className="flex items-center gap-4 sm:gap-12 flex-shrink-0 relative"
               >
-                  <div className="flex flex-col items-center relative">
-                    {/* Address label above the node card */}
-                    <span className="absolute -top-5 font-mono text-[7px] sm:text-[8px] font-extrabold text-slate-500 dark:text-slate-400 select-none tracking-wider uppercase">
-                      0x{(1000 + idx * 8).toString(16).toUpperCase()}
-                    </span>
+                <div className="flex flex-col items-center relative">
+                  {/* Address label above the node card */}
+                  <span className="absolute -top-5 font-mono text-[7px] sm:text-[8px] font-extrabold text-slate-500 dark:text-slate-400 select-none tracking-wider uppercase">
+                    0x{(1000 + idx * 8).toString(16).toUpperCase()}
+                  </span>
 
-                    {/* DLL Node Structure (3 cells: prev, data, next) */}
-                    <motion.div
-                      layout
-                      className={`w-24 sm:w-36 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
-                    >
-                      {/* Prev Pointer Cell */}
-                      <div className="w-8 sm:w-10 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-100/30 dark:bg-slate-950/20 px-0.5">
-                        <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
-                          prev
-                        </span>
-                        <span className={`font-mono text-[5px] sm:text-[6px] font-bold tracking-tight ${idx === 0 ? 'text-red-500 dark:text-red-400' : 'text-purple-500'}`}>
-                          {idx === 0 ? "NULL" : `0x${(1000 + (idx - 1) * 8).toString(16).toUpperCase()}`}
-                        </span>
-                      </div>
+                  {/* DLL Node Structure (3 cells: prev, data, next) */}
+                  <motion.div
+                    layout
+                    className={`w-24 sm:w-36 h-10 sm:h-12 rounded-xl border flex overflow-hidden shadow-sm relative transition-all duration-300 ${bgClass} ${borderClass}`}
+                  >
+                    {/* Prev Pointer Cell */}
+                    <div className="w-8 sm:w-10 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-100/30 dark:bg-slate-950/20 px-0.5">
+                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
+                        prev
+                      </span>
+                      <span
+                        className={`font-mono text-[5px] sm:text-[6px] font-bold tracking-tight ${idx === 0 ? "text-red-500 dark:text-red-400" : "text-purple-500"}`}
+                      >
+                        {idx === 0
+                          ? "NULL"
+                          : `0x${(1000 + (idx - 1) * 8).toString(16).toUpperCase()}`}
+                      </span>
+                    </div>
 
-                      {/* Data Cell */}
-                      <div className="flex-1 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
-                        <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
-                          data
-                        </span>
-                        <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
-                          {node.val}
-                        </span>
-                      </div>
+                    {/* Data Cell */}
+                    <div className="flex-1 h-full flex flex-col justify-center items-center border-r border-slate-200/40 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/30">
+                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
+                        data
+                      </span>
+                      <span className="text-xs sm:text-sm font-mono font-black text-text-primary dark:text-[#F4F7FE]">
+                        {node.val}
+                      </span>
+                    </div>
 
-                      {/* Next Pointer Cell */}
-                      <div className="w-8 sm:w-10 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20 px-0.5">
-                        <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
-                          next
-                        </span>
-                        <span className={`font-mono text-[5px] sm:text-[6px] font-bold tracking-tight ${idx === listNodes.length - 1 ? 'text-red-500 dark:text-red-400' : 'text-primary'}`}>
-                          {idx === listNodes.length - 1 ? "NULL" : `0x${(1000 + (idx + 1) * 8).toString(16).toUpperCase()}`}
-                        </span>
-                      </div>
-                    </motion.div>
+                    {/* Next Pointer Cell */}
+                    <div className="w-8 sm:w-10 h-full flex flex-col justify-center items-center bg-slate-100/30 dark:bg-slate-950/20 px-0.5">
+                      <span className="text-slate-500/60 uppercase select-none text-[4px] sm:text-[5px]">
+                        next
+                      </span>
+                      <span
+                        className={`font-mono text-[5px] sm:text-[6px] font-bold tracking-tight ${idx === listNodes.length - 1 ? "text-red-500 dark:text-red-400" : "text-primary"}`}
+                      >
+                        {idx === listNodes.length - 1
+                          ? "NULL"
+                          : `0x${(1000 + (idx + 1) * 8).toString(16).toUpperCase()}`}
+                      </span>
+                    </div>
+                  </motion.div>
 
                   {/* Pointer Tags */}
                   <div className="absolute -bottom-8 flex flex-col gap-1 items-center z-10">
@@ -1932,7 +3087,13 @@ const VisualizerCanvas = ({
                           next
                         </span>
                         <span className="font-mono text-[7px] sm:text-[8px] font-black tracking-tight text-primary">
-                          0x{(idx === listNodes.length - 1 ? 1000 : 1000 + (idx + 1) * 8).toString(16).toUpperCase()}
+                          0x
+                          {(idx === listNodes.length - 1
+                            ? 1000
+                            : 1000 + (idx + 1) * 8
+                          )
+                            .toString(16)
+                            .toUpperCase()}
                         </span>
                       </div>
                     </motion.div>
@@ -3310,54 +4471,94 @@ const VisualizerCanvas = ({
       }
     }
 
-    // Dynamic circular layout for graph nodes
+    // Dynamic layout for graph nodes
     const nodeCoords = {};
     const n = rawNodes.length;
-    const centerX = 50; // percentage
-    const centerY = 135; // pixels (vertical center of container)
-    const radiusX = 35; // percentage radius
-    const radiusY = 85; // pixel radius
+    const isAStar = Boolean(graphState?.fScores);
 
-    rawNodes.forEach((node, idx) => {
-      if (n === 4) {
-        // Keep original layout for exactly 4 nodes to match default description
-        const fixedCoords = {
-          0: { x: 20, y: 130 },
-          1: { x: 50, y: 60 },
-          2: { x: 50, y: 200 },
-          3: { x: 80, y: 130 },
-        };
-        nodeCoords[node] =
-          fixedCoords[node] !== undefined
-            ? fixedCoords[node]
-            : fixedCoords[idx];
-      } else {
-        const angle = (2 * Math.PI * idx) / n - Math.PI / 2;
-        nodeCoords[node] = {
-          x: centerX + radiusX * Math.cos(angle),
-          y: centerY + radiusY * Math.sin(angle),
-        };
-      }
-    });
+    if (isAStar && graphState?.coords) {
+      rawNodes.forEach((node) => {
+        if (graphState.coords[node]) {
+          nodeCoords[node] = {
+            x: graphState.coords[node].x,
+            y: (graphState.coords[node].y / 100) * 190 + 35,
+          };
+        } else {
+          nodeCoords[node] = { x: 50, y: 130 };
+        }
+      });
+    } else {
+      const centerX = 50; // percentage
+      const centerY = 135; // pixels (vertical center of container)
+      const radiusX = 35; // percentage radius
+      const radiusY = 85; // pixel radius
+
+      rawNodes.forEach((node, idx) => {
+        if (n === 4) {
+          // Keep original layout for exactly 4 nodes to match default description
+          const fixedCoords = {
+            0: { x: 20, y: 130 },
+            1: { x: 50, y: 60 },
+            2: { x: 50, y: 200 },
+            3: { x: 80, y: 130 },
+          };
+          nodeCoords[node] =
+            fixedCoords[node] !== undefined
+              ? fixedCoords[node]
+              : fixedCoords[idx];
+        } else {
+          const angle = (2 * Math.PI * idx) / n - Math.PI / 2;
+          nodeCoords[node] = {
+            x: centerX + radiusX * Math.cos(angle),
+            y: centerY + radiusY * Math.sin(angle),
+          };
+        }
+      });
+    }
 
     return (
-      <div 
+      <div
         className="w-full min-h-[340px] flex flex-col justify-between items-center gap-4 p-6 font-sans text-left relative overflow-hidden bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-3xl select-none"
         style={{
-          boxShadow: theme === "light" 
-            ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
-            : "10px 10px 25px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255, 255, 255, 0.05)"
+          boxShadow:
+            theme === "light"
+              ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
+              : "10px 10px 25px rgba(0, 0, 0, 0.4), inset 1px 1px 2px rgba(255, 255, 255, 0.05)",
         }}
       >
         {/* Top Header */}
-        <div className="w-full flex items-center justify-between z-10 px-1">
-          <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
-            Graph Network Topology
-          </span>
-          <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 uppercase font-mono tracking-wider">
-            {activeNode !== null ? `Active Node: ${activeNode}` : "Idle"}
-          </span>
-        </div>
+        {isAStar ? (
+          <div className="w-full flex items-center justify-between z-10 px-1 flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+                A* Search (f = g + h)
+              </span>
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-mono">
+                🏁 Start: {graphState.startNode}
+              </span>
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-mono">
+                🎯 Goal: {graphState.goalNode}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                📂 Open: [{(graphState.openSet || []).join(", ") || "∅"}]
+              </span>
+              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                🔒 Closed: [{(graphState.closedSet || []).join(", ") || "∅"}]
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full flex items-center justify-between z-10 px-1">
+            <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+              Graph Network Topology
+            </span>
+            <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 uppercase font-mono tracking-wider">
+              {activeNode !== null ? `Active Node: ${activeNode}` : "Idle"}
+            </span>
+          </div>
+        )}
 
         {/* Graph Area */}
         <div className="w-full h-64 relative flex-grow">
@@ -3383,7 +4584,10 @@ const VisualizerCanvas = ({
                 markerHeight="5"
                 orient="auto-start-reverse"
               >
-                <path d="M 0 0 L 10 5 L 0 10 z" fill={theme === "light" ? "#94a3b8" : "#334155"} />
+                <path
+                  d="M 0 0 L 10 5 L 0 10 z"
+                  fill={theme === "light" ? "#94a3b8" : "#334155"}
+                />
               </marker>
             </defs>
 
@@ -3399,12 +4603,23 @@ const VisualizerCanvas = ({
                   ((relaxingEdge.u === edge.u && relaxingEdge.v === edge.v) ||
                     (relaxingEdge.u === edge.v && relaxingEdge.v === edge.u)));
               const isMstEdge = edge.visited;
+              const isPathEdge = graphState?.pathEdges?.some(
+                (pe) =>
+                  (pe.u === edge.u && pe.v === edge.v) ||
+                  (pe.u === edge.v && pe.v === edge.u)
+              );
 
-              let strokeColor = theme === "light" ? "rgba(203, 213, 225, 0.8)" : "rgba(51, 65, 85, 0.5)"; // Sleek slate
+              let strokeColor =
+                theme === "light"
+                  ? "rgba(203, 213, 225, 0.8)"
+                  : "rgba(51, 65, 85, 0.5)"; // Sleek slate
               let strokeWidth = "1.5";
               let className = "";
 
-              if (isActiveEdge) {
+              if (isPathEdge) {
+                strokeColor = "#f59e0b"; // Gold / Amber
+                strokeWidth = "3.5";
+              } else if (isActiveEdge) {
                 strokeColor = "#06b6d4"; // Vibrant Cyan
                 strokeWidth = "2.5";
                 className = "edge-flow-active";
@@ -3435,14 +4650,32 @@ const VisualizerCanvas = ({
                         height="14"
                         rx="6"
                         fill={theme === "light" ? "#ffffff" : "#020617"} // Space background
-                        stroke={isActiveEdge ? "rgba(6, 182, 212, 0.4)" : isMstEdge ? "rgba(16, 185, 129, 0.4)" : theme === "light" ? "rgba(203, 213, 225, 0.8)" : "rgba(51, 65, 85, 0.4)"}
+                        stroke={
+                          isPathEdge
+                            ? "rgba(245, 158, 11, 0.6)"
+                            : isActiveEdge
+                              ? "rgba(6, 182, 212, 0.4)"
+                              : isMstEdge
+                                ? "rgba(16, 185, 129, 0.4)"
+                                : theme === "light"
+                                  ? "rgba(203, 213, 225, 0.8)"
+                                  : "rgba(51, 65, 85, 0.4)"
+                        }
                         strokeWidth="1"
                       />
                       <text
                         x={`${(uCoord.x + vCoord.x) / 2}%`}
                         y={(uCoord.y + vCoord.y) / 2 - 1}
                         textAnchor="middle"
-                        fill={isActiveEdge ? "#06b6d4" : isMstEdge ? "#10b981" : "#64748b"}
+                        fill={
+                          isPathEdge
+                            ? "#f59e0b"
+                            : isActiveEdge
+                              ? "#06b6d4"
+                              : isMstEdge
+                                ? "#10b981"
+                                : "#64748b"
+                        }
                         className="font-mono text-[9px] font-black"
                       >
                         w:{edge.w}
@@ -3465,13 +4698,26 @@ const VisualizerCanvas = ({
             const label =
               nodeLabels[node] !== undefined ? nodeLabels[node] : node;
 
-            let nodeClass = "bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 shadow-[0_4px_6px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.3)] hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white";
-            if (isActive)
+            const fVal = graphState?.fScores?.[node];
+            const gVal = graphState?.gScores?.[node];
+            const hVal = graphState?.hScores?.[node];
+            const isPathNode = graphState?.path?.includes(node);
+            const isStart = isAStar && node === graphState.startNode;
+            const isGoal = isAStar && node === graphState.goalNode;
+
+            let nodeClass =
+              "bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 shadow-[0_4px_6px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1.5px_1px_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.3)] hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white";
+            
+            if (isPathNode) {
+              nodeClass =
+                "bg-gradient-to-b from-amber-500 to-orange-600 border-amber-300 text-white shadow-[0_0_22px_rgba(245,158,11,0.7),inset_0_1px_2px_rgba(255,255,255,0.3)] scale-110";
+            } else if (isActive) {
               nodeClass =
                 "bg-gradient-to-b from-cyan-500 to-blue-600 border-cyan-300 text-white shadow-[0_0_20px_rgba(6,182,212,0.6),inset_0_1px_2px_rgba(255,255,255,0.2)] scale-110";
-            else if (isVisited)
+            } else if (isVisited) {
               nodeClass =
                 "bg-gradient-to-b from-emerald-500 to-teal-600 border-emerald-300 text-white shadow-[0_0_20px_rgba(16,185,129,0.5),inset_0_1px_2px_rgba(255,255,255,0.2)]";
+            }
 
             return (
               <div
@@ -3482,18 +4728,35 @@ const VisualizerCanvas = ({
                   transform: "translate(-50%, -50%)",
                 }}
                 className={`
-                  absolute w-12 h-12 rounded-full border flex flex-col items-center justify-center font-sans font-bold z-10 transition-all duration-300 backdrop-blur-sm
+                  absolute w-14 h-14 rounded-full border flex flex-col items-center justify-center font-sans font-bold z-10 transition-all duration-300 backdrop-blur-sm
                   ${nodeClass}
                 `}
               >
-                <span className="text-xs font-black tracking-wide leading-none">{label}</span>
-                {hasDist && (
+                <div className="flex items-center gap-0.5">
+                  {isStart && <span className="text-[9px]">🏁</span>}
+                  {isGoal && <span className="text-[9px]">🎯</span>}
+                  <span className="text-xs font-black tracking-wide leading-none">
+                    {label}
+                  </span>
+                </div>
+                {isAStar && fVal !== undefined ? (
                   <span
-                    className={`text-[8px] font-black tracking-wider leading-none mt-1 font-mono uppercase ${isActive || isVisited ? "text-cyan-100" : "text-slate-500"}`}
+                    className={`text-[7.5px] font-black tracking-tighter leading-none mt-1 font-mono uppercase ${
+                      isActive || isVisited || isPathNode ? "text-white" : "text-amber-500 dark:text-amber-400"
+                    }`}
+                  >
+                    f:{fVal === Infinity ? "∞" : fVal}
+                    {gVal !== undefined && gVal !== Infinity ? ` (${gVal}+${hVal})` : ""}
+                  </span>
+                ) : hasDist ? (
+                  <span
+                    className={`text-[8px] font-black tracking-wider leading-none mt-1 font-mono uppercase ${
+                      isActive || isVisited ? "text-cyan-100" : "text-slate-500"
+                    }`}
                   >
                     d:{nodeDist}
                   </span>
-                )}
+                ) : null}
               </div>
             );
           })}
@@ -3518,9 +4781,10 @@ const VisualizerCanvas = ({
       <div
         className="w-full min-h-[360px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl"
         style={{
-          boxShadow: theme === "light"
-            ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
-            : "10px 10px 25px rgba(0, 0, 0, 0.5), inset 4px 4px 10px rgba(255, 255, 255, 0.05), inset -4px -4px 10px rgba(0, 0, 0, 0.5)",
+          boxShadow:
+            theme === "light"
+              ? "8px 10px 20px rgba(0, 0, 0, 0.03), inset 1px 1px 2px rgba(255, 255, 255, 0.9)"
+              : "10px 10px 25px rgba(0, 0, 0, 0.5), inset 4px 4px 10px rgba(255, 255, 255, 0.05), inset -4px -4px 10px rgba(0, 0, 0, 0.5)",
         }}
       >
         <div className="w-full flex items-center justify-between z-10">
@@ -3668,11 +4932,12 @@ const VisualizerCanvas = ({
 
   // --- Letter Combinations of a Phone Number ---
   const renderLetterCombinationsCanvas = () => {
-    const digits = data?.digits || "23";
-    const currentPrefix = data?.currentPrefix || "";
-    const activeDigit = data?.activeDigit || "";
-    const letters = data?.letters || "";
-    const combinations = data?.combinations || [];
+    const snapData = currentSnap?.data || data || {};
+    const digits = snapData.digits || "23";
+    const currentPrefix = snapData.currentPrefix || "";
+    const activeDigit = snapData.activeDigit || "";
+    const letters = snapData.letters || "";
+    const combinations = snapData.combinations || [];
 
     const keypadLayout = [
       { num: "1", letters: "" },
@@ -3704,7 +4969,7 @@ const VisualizerCanvas = ({
               let bgClass = "bg-slate-900 text-slate-600";
               if (isActive) {
                 borderClass = "border-amber-500";
-                bgClass = "bg-amber-500/20 text-amber-500 font-extrabold";
+                bgClass = "bg-amber-500/20 text-amber-500 font-extrabold shadow-[0_0_10px_rgba(245,158,11,0.4)]";
               } else if (isTarget) {
                 borderClass = "border-primary/50";
                 bgClass = "bg-primary/5 text-primary-light";
@@ -3810,24 +5075,27 @@ const VisualizerCanvas = ({
 
   // --- Palindrome Partitioning ---
   const renderPalindromePartitioningCanvas = () => {
-    const str = data?.str || "aab";
-    const current = data?.current || [];
-    const subStr = data?.subStr || "";
-    const completed = data?.completed || [];
+    const snapData = currentSnap?.data || data || {};
+    const str = snapData.str || "aab";
+    const current = snapData.current || [];
+    const subStr = snapData.subStr || "";
+    const completed = snapData.completed || [];
+    const matchedIndex = snapData.matchedIndex;
 
     return (
       <div className="w-full min-h-[320px] flex flex-col md:flex-row gap-6 p-6 font-sans text-left relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl">
         <div className="flex-1 flex flex-col justify-between gap-4">
           <div className="flex flex-col gap-2">
             <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase">
-              Active String Slicing
+              Active String Slicing (Backtracking DFS)
             </span>
             <div className="flex gap-2.5 items-center mt-2">
               {str.split("").map((char, idx) => {
                 const isSubStrChar =
                   subStr &&
-                  idx <= data?.matchedIndex &&
-                  idx >= data?.matchedIndex - subStr.length + 1;
+                  matchedIndex !== undefined &&
+                  idx <= matchedIndex &&
+                  idx >= matchedIndex - subStr.length + 1;
 
                 return (
                   <div
@@ -3907,10 +5175,11 @@ const VisualizerCanvas = ({
 
   // --- Permutations ---
   const renderPermutationsCanvas = () => {
-    const arr = data?.arr || [];
-    const current = data?.current || [];
-    const remaining = data?.remaining || [];
-    const completed = data?.completed || [];
+    const snapData = currentSnap?.data || data || {};
+    const arr = snapData.arr || [];
+    const current = snapData.current || [];
+    const remaining = snapData.remaining || [];
+    const completed = snapData.completed || [];
 
     return (
       <div className="w-full min-h-[320px] flex flex-col md:flex-row gap-6 p-6 font-sans text-left relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl">
@@ -4001,15 +5270,16 @@ const VisualizerCanvas = ({
 
   // --- Crossword Solver ---
   const renderCrosswordCanvas = () => {
-    const board = data?.board || [[]];
-    const words = data?.words || [];
-    const activeWord = data?.activeWord || "";
+    const snapData = currentSnap?.data || data || {};
+    const board = snapData.board || [[]];
+    const words = snapData.words || [];
+    const activeWord = snapData.activeWord || "";
 
     return (
       <div className="w-full min-h-[320px] flex flex-col md:flex-row gap-6 p-6 font-sans text-left relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl">
         <div className="flex-1 flex flex-col items-center justify-center gap-3">
           <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase w-full text-left">
-            Crossword Matrix
+            Crossword Matrix (Backtracking Solver)
           </span>
           <div className="flex flex-col gap-1.5 p-3.5 bg-slate-950 border border-slate-850 rounded-2xl shadow-inner mt-2">
             {board.map((row, rIdx) => (
@@ -4093,10 +5363,11 @@ const VisualizerCanvas = ({
 
   // --- Branch and Bound Concept ---
   const renderBranchAndBoundCanvas = () => {
-    const nodes = data?.nodes || [];
+    const snapData = currentSnap?.data || data || {};
+    const nodes = snapData.nodes || [];
     const activeNodeId =
-      data?.activeNodeId !== undefined ? data.activeNodeId : null;
-    const minCost = data?.minCost || 999;
+      snapData.activeNodeId !== undefined ? snapData.activeNodeId : null;
+    const minCost = snapData.minCost || 999;
 
     return (
       <div className="w-full min-h-[340px] flex flex-col gap-4 p-6 font-sans text-left relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl">
@@ -4220,68 +5491,114 @@ const VisualizerCanvas = ({
       phase,
     } = currentSnap.queensState || {};
 
+    const cellSize = Math.min(52, Math.floor(250 / size));
+    const cols = ["A", "B", "C", "D", "E", "F", "G", "H"].slice(0, size);
+
     return (
-      <div className="w-full h-72 flex items-center justify-center gap-6 px-6">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
-            width: `${Math.min(size * 45, 240)}px`,
-            height: `${Math.min(size * 45, 240)}px`,
-          }}
-          className="border border-slate-700 bg-slate-950 shadow-lg rounded-lg overflow-hidden"
-        >
-          {Array.from({ length: size }).map((_, r) =>
-            Array.from({ length: size }).map((_, c) => {
-              const hasQueen = board[r] === c;
-              const isDark = (r + c) % 2 === 1;
-              const isCurrent =
-                currentLoc && currentLoc.row === r && currentLoc.col === c;
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-between p-4 font-sans">
+        {/* Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 pb-2 select-none text-[10px] font-mono font-bold">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <span className="text-base leading-none">👑</span>
+            <span className="text-amber-600 dark:text-amber-400">Queen Placed</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="text-emerald-600 dark:text-emerald-400">Safe Position</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+            <span className="text-rose-600 dark:text-rose-400">Under Attack / Backtrack</span>
+          </div>
+        </div>
 
-              let cellClass = isDark ? "bg-slate-900" : "bg-slate-800";
-              if (isCurrent) {
+        {/* Board with Coordinates */}
+        <div className="flex flex-col items-center my-auto">
+          {/* Top Col Headers */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
+            }}
+            className="mb-1 text-center font-mono text-[10px] font-extrabold text-slate-400 select-none"
+          >
+            {cols.map((colLetter, i) => (
+              <span key={i}>{colLetter}</span>
+            ))}
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
+              gridTemplateRows: `repeat(${size}, ${cellSize}px)`,
+            }}
+            className="border-2 border-slate-700 bg-slate-950 shadow-2xl rounded-2xl overflow-hidden"
+          >
+            {Array.from({ length: size }).map((_, r) =>
+              Array.from({ length: size }).map((_, c) => {
+                const hasQueen = board[r] === c;
+                const isDark = (r + c) % 2 === 1;
+                const isCurrent =
+                  currentLoc && currentLoc.row === r && currentLoc.col === c;
                 const status = highlights[`${r}-${c}`];
-                if (status === "swap") {
-                  cellClass = "bg-red-500/30 border-red-500";
-                } else if (status === "pivot") {
-                  cellClass = "bg-green-500/30 border-green-500";
-                } else {
-                  cellClass = "bg-blue-500/30 border-blue-500";
-                }
-              }
 
-              return (
-                <div
-                  key={`${r}-${c}`}
-                  className={`
-                    aspect-square flex items-center justify-center border border-slate-700/35 relative transition-all duration-300
-                    ${cellClass}
-                  `}
-                >
-                  {hasQueen && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className={`text-base md:text-xl font-bold select-none ${phase === "solution" ? "text-green-400 drop-shadow-[0_0_8px_#4ade80]" : "text-yellow-500 drop-shadow-[0_0_8px_#eab308]"}`}
-                    >
-                      👑
-                    </motion.span>
-                  )}
-                  {isCurrent && (
-                    <span className="absolute inset-0 border border-accent animate-pulse" />
-                  )}
-                </div>
-              );
-            }),
-          )}
+                let cellClass = isDark ? "bg-slate-900" : "bg-slate-800";
+                if (isCurrent) {
+                  if (status === "swap") {
+                    cellClass = "bg-rose-500/35 border-2 border-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.5)]";
+                  } else if (status === "pivot") {
+                    cellClass = "bg-emerald-500/35 border-2 border-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]";
+                  } else {
+                    cellClass = "bg-amber-500/35 border-2 border-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]";
+                  }
+                }
+
+                return (
+                  <div
+                    key={`${r}-${c}`}
+                    className={`
+                      aspect-square flex items-center justify-center border border-slate-700/40 relative transition-all duration-300
+                      ${cellClass}
+                    `}
+                  >
+                    {hasQueen && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className={`text-lg md:text-2xl font-bold select-none z-10 ${
+                          phase === "solution"
+                            ? "drop-shadow-[0_0_12px_#10b981]"
+                            : "drop-shadow-[0_0_10px_#f59e0b]"
+                        }`}
+                      >
+                        👑
+                      </motion.span>
+                    )}
+                    {isCurrent && !hasQueen && (
+                      <span className="text-xs select-none animate-pulse font-bold text-slate-400">
+                        {status === "swap" ? "❌" : "🔍"}
+                      </span>
+                    )}
+                    <span className="absolute bottom-0.5 right-1 text-[6.5px] opacity-35 font-mono text-slate-400 select-none">
+                      {cols[c]}{r + 1}
+                    </span>
+                  </div>
+                );
+              }),
+            )}
+          </div>
         </div>
       </div>
     );
   };
 
-  // --- 8.6 RENDER KNIGHT'S TOUR CHESSBOARD ---
+  // --- 8.6 RENDER KNIGHT'S VISUALIZATION CANVAS (BFS + BACKTRACKING) ---
   const renderKnightsTourCanvas = () => {
+    const kState = currentSnap?.knightState || {};
     const {
+      mode = "bfs",
+      dist = [],
       board = [],
       size = 5,
       currentRow,
@@ -4289,89 +5606,246 @@ const VisualizerCanvas = ({
       phase,
       startRow = 0,
       startCol = 0,
-      destRow = 4,
-      destCol = 4,
-    } = currentSnap.knightState || {};
+      destRow = size - 1,
+      destCol = size - 1,
+      minSteps = null,
+      shortestPath = [],
+      queue = [],
+      totalCells = size * size,
+    } = kState;
 
-    const cellSize = Math.min(48, Math.floor(280 / size));
+    const isBacktrackingMode = mode === "backtracking";
+    const grid = isBacktrackingMode ? board : (dist.length > 0 ? dist : board);
+    const visitedCount = grid.reduce((acc, row) => acc + (Array.isArray(row) ? row.filter(v => v !== -1).length : 0), 0);
+    const progressPct = Math.round((visitedCount / (totalCells || 25)) * 100);
+    const cellSize = Math.min(52, Math.floor(290 / size));
+
+    const pathIndexMap = new Map();
+    shortestPath.forEach(([pr, pc], idx) => {
+      pathIndexMap.set(`${pr}-${pc}`, idx);
+    });
+
+    const colLabels = ["A", "B", "C", "D", "E", "F", "G", "H"].slice(0, size);
 
     return (
-      <div className="w-full h-72 flex flex-col items-center justify-center gap-3 px-4">
-        {/* Board */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
-            gridTemplateRows: `repeat(${size}, ${cellSize}px)`,
-          }}
-          className="border border-slate-700 rounded-xl overflow-hidden shadow-2xl"
-        >
-          {Array.from({ length: size }).map((_, r) =>
-            Array.from({ length: size }).map((_, c) => {
-              const moveNum = board[r]?.[c] ?? -1;
-              const isDark = (r + c) % 2 === 1;
-              const isKnight = currentRow === r && currentCol === c;
-              const isVisited = moveNum >= 0;
-              const isBacktrack = isKnight && phase === 'backtrack';
-              const isStart = r === startRow && c === startCol;
-              const isDest = r === destRow && c === destCol;
-
-              let cellClass = isDark ? 'bg-slate-800' : 'bg-slate-700';
-              if (isBacktrack) cellClass = 'bg-red-600/60 border-2 border-red-400';
-              else if (isKnight) cellClass = 'bg-amber-500/70 border-2 border-amber-300';
-              else if (isVisited) cellClass = isDark ? 'bg-emerald-900/80' : 'bg-emerald-800/60';
-
-              return (
-                <div
-                  key={`${r}-${c}`}
-                  style={{ width: cellSize, height: cellSize }}
-                  className={`flex items-center justify-center relative transition-all duration-200 ${cellClass} ${
-                    isStart && !isKnight ? 'ring-2 ring-inset ring-green-500/80' : ''
-                  } ${
-                    isDest && !isKnight ? 'ring-2 ring-inset ring-rose-500/80' : ''
-                  }`}
-                >
-                  {isKnight && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="text-base md:text-lg select-none z-10 drop-shadow-[0_0_8px_#fbbf24]"
-                    >
-                      ♞
-                    </motion.span>
-                  )}
-                  {isVisited && !isKnight && (
-                    <span
-                      className="text-[9px] md:text-[11px] font-extrabold text-emerald-300 font-mono select-none"
-                    >
-                      {moveNum + 1}
-                    </span>
-                  )}
-                  {isStart && (
-                    <span className="absolute top-0.5 left-1 text-[7px] text-green-400 font-extrabold select-none opacity-80">
-                      S
-                    </span>
-                  )}
-                  {isDest && (
-                    <span className="absolute bottom-0.5 right-1 text-[7px] text-rose-400 font-extrabold select-none opacity-80">
-                      D
-                    </span>
-                  )}
-                  {phase === 'done' && isVisited && (
-                    <span className="absolute inset-0 bg-emerald-400/10" />
-                  )}
-                </div>
-              );
-            })
-          )}
+      <div className="w-full flex flex-col items-center justify-center gap-3 px-4 py-2">
+        {/* Header Badge */}
+        <div className="flex items-center justify-between w-full max-w-md px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-400 font-bold">
+              {isBacktrackingMode ? "♟️ Full Tour (Backtracking)" : "⚡ Shortest Path (BFS)"}
+            </span>
+            <span className="text-text-secondary">|</span>
+            <span className="text-emerald-400 font-extrabold">
+              {isBacktrackingMode
+                ? `Visited: ${visitedCount} / ${totalCells} squares`
+                : (minSteps !== null ? `Min Steps: ${minSteps} moves 🎉` : `Explored: ${visitedCount}/${totalCells}`)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {!isBacktrackingMode && <span className="text-[11px] text-text-secondary">Queue: {queue.length}</span>}
+            <div className="w-20 h-2 rounded-full bg-slate-700 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-200 ${
+                  isBacktrackingMode ? "bg-gradient-to-r from-purple-500 to-indigo-400" : "bg-gradient-to-r from-emerald-500 to-teal-400"
+                }`}
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
         </div>
+
+        {/* Board with Coordinates */}
+        <div className="relative flex flex-col items-center">
+          {/* Top Column Labels */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
+              marginLeft: "20px",
+            }}
+            className="mb-1 text-center"
+          >
+            {colLabels.map((lbl, c) => (
+              <span key={c} className="text-[10px] font-bold text-slate-400 font-mono select-none">
+                {lbl}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex items-center">
+            {/* Left Row Labels */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateRows: `repeat(${size}, ${cellSize}px)`,
+              }}
+              className="mr-1 text-right flex flex-col justify-around"
+            >
+              {Array.from({ length: size }).map((_, r) => (
+                <span key={r} style={{ height: cellSize }} className="flex items-center justify-center text-[10px] font-bold text-slate-400 font-mono select-none w-4">
+                  {size - r}
+                </span>
+              ))}
+            </div>
+
+            {/* Chessboard Grid */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${size}, ${cellSize}px)`,
+                gridTemplateRows: `repeat(${size}, ${cellSize}px)`,
+              }}
+              className="border-2 border-slate-700/80 rounded-xl overflow-hidden shadow-2xl bg-slate-900/60"
+            >
+              {Array.from({ length: size }).map((_, r) =>
+                Array.from({ length: size }).map((_, c) => {
+                  const val = grid[r]?.[c] ?? -1;
+                  const isDark = (r + c) % 2 === 1;
+                  const isKnight = currentRow === r && currentCol === c;
+                  const isVisited = val >= 0;
+                  const isBacktrack = isKnight && phase === "backtrack";
+                  const isStart = r === startRow && c === startCol;
+                  const isDest = r === destRow && c === destCol;
+                  const pathStep = pathIndexMap.get(`${r}-${c}`);
+                  const isOnShortestPath = !isBacktrackingMode && pathStep !== undefined;
+                  const isDone = phase === "done";
+                  const isFinalTourMove = isBacktrackingMode && val === totalCells - 1;
+
+                  let cellBg = isDark ? "bg-slate-800/90" : "bg-slate-700/70";
+                  let borderClass = "border border-white/5";
+
+                  if (isBacktrack) {
+                    cellBg = "bg-rose-600/50";
+                    borderClass = "border-2 border-rose-400 shadow-[inset_0_0_12px_rgba(244,63,94,0.6)]";
+                  } else if (isOnShortestPath) {
+                    cellBg = isDest ? "bg-amber-500/80" : "bg-emerald-600/80";
+                    borderClass = "border-2 border-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6)]";
+                  } else if (isKnight) {
+                    cellBg = "bg-amber-500/70";
+                    borderClass = "border-2 border-amber-300 shadow-[0_0_14px_rgba(251,191,36,0.8)]";
+                  } else if (isDest && !isVisited) {
+                    cellBg = isDark ? "bg-rose-950/60" : "bg-rose-900/50";
+                    borderClass = "border-2 border-dashed border-rose-400/90";
+                  } else if (isVisited) {
+                    if (isBacktrackingMode) {
+                      cellBg = isDark ? "bg-emerald-950/80" : "bg-emerald-900/70";
+                      borderClass = "border border-emerald-500/30";
+                    } else {
+                      cellBg = isDark ? "bg-cyan-950/70" : "bg-cyan-900/50";
+                      borderClass = "border border-cyan-500/30";
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={`${r}-${c}`}
+                      style={{ width: cellSize, height: cellSize }}
+                      className={`flex items-center justify-center relative transition-all duration-200 ${cellBg} ${borderClass}`}
+                    >
+                      {/* Knight piece on current square */}
+                      {isKnight && !isDone && (
+                        <motion.span
+                          initial={{ scale: 0.4 }}
+                          animate={{ scale: 1 }}
+                          className="text-lg md:text-xl select-none z-10 drop-shadow-[0_0_8px_#fbbf24] text-white"
+                        >
+                          ♞
+                        </motion.span>
+                      )}
+
+                      {/* Backtracking mode move number */}
+                      {isBacktrackingMode && isVisited && !isKnight && (
+                        <span className={`text-[10px] md:text-xs font-black font-mono select-none ${
+                          isFinalTourMove ? "text-teal-200 font-extrabold" : "text-emerald-300"
+                        }`}>
+                          {val + 1}
+                        </span>
+                      )}
+
+                      {/* BFS mode path step badge */}
+                      {!isBacktrackingMode && isOnShortestPath && (
+                        <span className="text-[11px] md:text-xs font-black font-mono select-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] z-10">
+                          {pathStep === 0 ? "0" : `#${pathStep}`}
+                        </span>
+                      )}
+
+                      {/* BFS mode distance on explored cell */}
+                      {!isBacktrackingMode && !isOnShortestPath && isVisited && !isKnight && (
+                        <span className="text-[10px] md:text-[11px] font-bold font-mono select-none text-cyan-300/80">
+                          {val}
+                        </span>
+                      )}
+
+                      {/* Start Badge */}
+                      {isStart && (
+                        <span className="absolute top-0.5 left-1 text-[7px] text-green-400 font-extrabold select-none opacity-80" title="Start Square">
+                          🏁
+                        </span>
+                      )}
+
+                      {/* Target Destination Badge */}
+                      {isDest && (
+                        <span className="absolute bottom-0.5 right-1 text-[7px] text-amber-300 font-extrabold select-none opacity-90" title="Target End Square">
+                          🎯
+                        </span>
+                      )}
+
+                      {/* Complete Trophy Badge */}
+                      {isDone && (isDest || isFinalTourMove) && (
+                        <span className="absolute -top-2 -right-1 text-sm select-none animate-bounce" title="Finished!">
+                          🏆
+                        </span>
+                      )}
+                    </div>
+                  );
+                }),
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Legend */}
-        <div className="flex gap-3 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500 inline-block" /> Current</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-800 inline-block" /> Visited</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-600 inline-block" /> Backtrack</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-green-500 inline-block" /> Start</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border border-rose-500 inline-block" /> Destination</span>
+        <div className="flex flex-wrap items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 pt-1">
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-amber-500 shadow-[0_0_6px_#fbbf24] inline-block" />{" "}
+            Current (♞)
+          </span>
+          {isBacktrackingMode ? (
+            <>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded bg-emerald-800 border border-emerald-500/40 inline-block" />{" "}
+                Visited (Move #)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded bg-rose-600 inline-block" />{" "}
+                Backtrack
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-xs">🏁</span> Start
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-xs">🎯</span> Target End
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded bg-cyan-900 border border-cyan-500/40 inline-block" />{" "}
+                Explored (Dist)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded bg-emerald-600 border border-amber-300 inline-block" />{" "}
+                Shortest Path (🌟)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-xs">🏁</span> Start
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-xs">🎯</span> Target End
+              </span>
+            </>
+          )}
         </div>
       </div>
     );
@@ -4380,7 +5854,11 @@ const VisualizerCanvas = ({
   // --- 8.7 RENDER SLIDING PUZZLE (8-PUZZLE) ---
   const renderSlidingPuzzleCanvas = () => {
     const {
-      grid = [[1,2,3],[4,5,6],[7,8,0]],
+      grid = [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 0],
+      ],
       moveNum = 0,
       move,
       tileVal,
@@ -4390,16 +5868,20 @@ const VisualizerCanvas = ({
       totalMoves = 0,
     } = currentSnap.puzzleState || {};
 
-    const GOAL = [[1,2,3],[4,5,6],[7,8,0]];
+    const GOAL = [
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 0],
+    ];
     const tileColors = [
-      'from-violet-600 to-purple-700',
-      'from-blue-600 to-blue-700',
-      'from-cyan-600 to-cyan-700',
-      'from-teal-600 to-teal-700',
-      'from-emerald-600 to-emerald-700',
-      'from-lime-600 to-lime-700',
-      'from-amber-500 to-orange-600',
-      'from-rose-600 to-red-700',
+      "from-violet-600 to-purple-700",
+      "from-blue-600 to-blue-700",
+      "from-cyan-600 to-cyan-700",
+      "from-teal-600 to-teal-700",
+      "from-emerald-600 to-emerald-700",
+      "from-lime-600 to-lime-700",
+      "from-amber-500 to-orange-600",
+      "from-rose-600 to-red-700",
     ];
 
     return (
@@ -4407,15 +5889,34 @@ const VisualizerCanvas = ({
         {/* Progress bar */}
         <div className="w-48 flex flex-col gap-1">
           <div className="flex justify-between text-[9px] font-bold text-text-secondary">
-            <span>Move {moveNum} / {totalMoves}</span>
-            <span className={phase === 'done' ? 'text-green-400' : phase === 'unsolvable' ? 'text-red-400' : 'text-accent'}>
-              {phase === 'done' ? '✓ Solved!' : phase === 'unsolvable' ? '✗ Unsolvable' : phase === 'init' ? 'BFS Ready' : `Sliding ${move}`}
+            <span>
+              Move {moveNum} / {totalMoves}
+            </span>
+            <span
+              className={
+                phase === "done"
+                  ? "text-green-400"
+                  : phase === "unsolvable"
+                    ? "text-red-400"
+                    : "text-accent"
+              }
+            >
+              {phase === "done"
+                ? "✓ Solved!"
+                : phase === "unsolvable"
+                  ? "✗ Unsolvable"
+                  : phase === "init"
+                    ? "BFS Ready"
+                    : `Sliding ${move}`}
             </span>
           </div>
           <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-300 ${phase === 'done' ? 'bg-green-400' : 'bg-primary'}`}
-              style={{ width: totalMoves > 0 ? `${(moveNum / totalMoves) * 100}%` : '0%' }}
+              className={`h-full rounded-full transition-all duration-300 ${phase === "done" ? "bg-green-400" : "bg-primary"}`}
+              style={{
+                width:
+                  totalMoves > 0 ? `${(moveNum / totalMoves) * 100}%` : "0%",
+              }}
             />
           </div>
         </div>
@@ -4432,29 +5933,33 @@ const VisualizerCanvas = ({
                 <motion.div
                   key={`${r}-${c}`}
                   layout
-                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
                   className={`w-14 h-14 flex items-center justify-center rounded-xl font-extrabold text-xl select-none
-                    ${isBlank
-                      ? 'bg-slate-800/40 border-2 border-dashed border-slate-600'
-                      : `bg-gradient-to-br ${tileColors[(tile - 1) % tileColors.length]} text-white shadow-lg
-                        ${isGoalCorrect && phase === 'done' ? 'ring-2 ring-green-400 ring-offset-1 ring-offset-slate-900' : ''}
-                        ${isCurrent && !isBlank ? 'ring-2 ring-amber-400 scale-105' : ''}
+                    ${
+                      isBlank
+                        ? "bg-slate-800/40 border-2 border-dashed border-slate-600"
+                        : `bg-gradient-to-br ${tileColors[(tile - 1) % tileColors.length]} text-white shadow-lg
+                        ${isGoalCorrect && phase === "done" ? "ring-2 ring-green-400 ring-offset-1 ring-offset-slate-900" : ""}
+                        ${isCurrent && !isBlank ? "ring-2 ring-amber-400 scale-105" : ""}
                       `
                     }
                   `}
                 >
-                  {isBlank ? '' : tile}
+                  {isBlank ? "" : tile}
                 </motion.div>
               );
-            })
+            }),
           )}
         </div>
 
         {/* Goal state hint */}
         <div className="flex items-center gap-1.5 text-[9px] text-slate-500 font-mono">
           <span>Goal:</span>
-          {[1,2,3,4,5,6,7,8,'□'].map((t, i) => (
-            <span key={i} className="w-4 h-4 flex items-center justify-center rounded bg-slate-800 text-[8px] font-bold">
+          {[1, 2, 3, 4, 5, 6, 7, 8, "□"].map((t, i) => (
+            <span
+              key={i}
+              className="w-4 h-4 flex items-center justify-center rounded bg-slate-800 text-[8px] font-bold"
+            >
               {t}
             </span>
           ))}
@@ -4466,9 +5971,9 @@ const VisualizerCanvas = ({
   const renderGridCanvas = () => {
     if (algorithm.id === "rat-in-a-maze") {
       const {
-        currentRow,
-        currentCol,
-        phase,
+        currentRow = -1,
+        currentCol = -1,
+        phase = "searching",
         mazeRows,
         mazeCols,
         startRow = 0,
@@ -4476,20 +5981,50 @@ const VisualizerCanvas = ({
         destRow = 3,
         destCol = 3,
       } = currentSnap.gridState || {};
-      const actualMaze = currentSnap.data?.maze || [];
-      const actualPath = currentSnap.data?.path || [];
+      const snapData = currentSnap?.data || data || {};
+      const actualMaze = snapData.maze || [];
+      const actualPath = snapData.path || [];
+      const actualDeadEnds = snapData.deadEnds || [];
       const gridRows = mazeRows || actualMaze.length || 4;
       const gridCols = mazeCols || (actualMaze[0] ? actualMaze[0].length : 4);
-      const cellSize = Math.min(52, Math.floor(260 / Math.max(gridRows, gridCols)));
+      const cellSize = Math.min(
+        54,
+        Math.floor(250 / Math.max(gridRows, gridCols)),
+      );
 
-      // If destRow/destCol are defaults, dynamically set to last cell if undefined
+      // Start and destination coordinates
       const sr = startRow;
       const sc = startCol;
-      const dr = destRow ?? (gridRows - 1);
-      const dc = destCol ?? (gridCols - 1);
+      const dr = destRow ?? gridRows - 1;
+      const dc = destCol ?? gridCols - 1;
 
       return (
-        <div className="w-full h-72 flex flex-col items-center justify-center gap-4 px-6">
+        <div className="w-full min-h-[300px] flex flex-col items-center justify-between p-4 font-sans">
+          {/* Maze Legend & Status Header */}
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 pb-3 select-none text-[10px] font-mono font-bold">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <span className="text-base leading-none">🐭</span>
+              <span className="text-slate-600 dark:text-slate-300">Start ({sr},{sc})</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <span className="text-base leading-none">🧀</span>
+              <span className="text-amber-600 dark:text-amber-400">Target ({dr},{dc})</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <span className="text-emerald-600 dark:text-emerald-400">Active Path</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 flex items-center justify-center text-[7px] text-white font-black">✕</span>
+              <span className="text-rose-600 dark:text-rose-400">Backtracked (Dead End)</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800">
+              <span className="text-sm leading-none">🧱</span>
+              <span className="text-slate-500">Wall</span>
+            </div>
+          </div>
+
+          {/* Maze Grid */}
           <div
             style={{
               display: "grid",
@@ -4497,56 +6032,63 @@ const VisualizerCanvas = ({
               width: `${gridCols * cellSize}px`,
               height: `${gridRows * cellSize}px`,
             }}
-            className="border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-md rounded-2xl overflow-hidden p-2 gap-1.5"
+            className="border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 shadow-md rounded-2xl overflow-hidden p-2 gap-1.5 my-auto"
           >
             {Array.from({ length: gridRows }).map((_, r) =>
               Array.from({ length: gridCols }).map((_, c) => {
                 const isWall = actualMaze[r] && actualMaze[r][c] === 1;
                 const isPath = actualPath[r] && actualPath[r][c] === 1;
+                const isDeadEnd = actualDeadEnds[r] && actualDeadEnds[r][c] === 1 && !isPath;
                 const isCurrent = currentRow === r && currentCol === c;
                 const cellStatus = highlights[`${r}-${c}`];
+                const isBacktracking = isCurrent && (cellStatus === "swap" || phase === "backtrack");
 
                 let cellClass =
                   "bg-white dark:bg-slate-900 border-slate-200/50 dark:border-slate-800/80";
                 if (isWall) {
                   cellClass =
-                    "bg-slate-800 dark:bg-slate-950 border-slate-900/60 dark:border-slate-950";
+                    "bg-slate-800 dark:bg-slate-950 border-slate-900/60 dark:border-slate-950 shadow-inner";
+                } else if (isBacktracking) {
+                  cellClass = "bg-rose-500/25 border-2 border-rose-500 text-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.4)]";
+                } else if (isCurrent) {
+                  cellClass =
+                    "bg-amber-500/25 border-2 border-amber-500 text-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.4)]";
                 } else if (isPath) {
                   cellClass =
-                    "bg-green-500/20 border-green-500/40 text-green-600 dark:text-green-400";
-                }
-
-                if (isCurrent) {
-                  if (cellStatus === "swap") {
-                    cellClass = "bg-red-500/20 border-red-500 text-red-500";
-                  } else {
-                    cellClass =
-                      "bg-yellow-500/20 border-yellow-500 text-yellow-600 dark:text-yellow-400";
-                  }
+                    "bg-emerald-500/20 border-emerald-500/50 text-emerald-600 dark:text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]";
+                } else if (isDeadEnd) {
+                  cellClass =
+                    "bg-rose-500/10 border border-rose-500/30 text-rose-400";
                 }
 
                 return (
                   <div
                     key={`${r}-${c}`}
                     className={`
-                      aspect-square flex flex-col items-center justify-center border rounded-xl relative transition-all duration-300 font-mono text-[9px] font-bold text-slate-500
+                      aspect-square flex flex-col items-center justify-center border rounded-xl relative transition-all duration-300 font-mono text-[9px] font-bold
                       ${cellClass}
                     `}
                   >
                     {isWall ? (
                       <span className="text-[14px]">🧱</span>
+                    ) : isCurrent ? (
+                      <span className="text-[18px] z-10 animate-bounce">
+                        {isBacktracking ? "↩️" : "🐭"}
+                      </span>
                     ) : r === sr && c === sc ? (
                       <span className="text-[16px] z-10">🐭</span>
                     ) : r === dr && c === dc ? (
                       <span className="text-[16px] z-10">🧀</span>
                     ) : isPath ? (
-                      <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                      <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                    ) : isDeadEnd ? (
+                      <span className="text-[11px] font-black text-rose-500 select-none opacity-80">✕</span>
                     ) : null}
 
                     {isCurrent && (
-                      <span className="absolute inset-0 border-2 border-accent rounded-xl animate-pulse" />
+                      <span className="absolute inset-0 border-2 border-amber-400 dark:border-amber-300 rounded-xl animate-ping opacity-40" />
                     )}
-                    <span className="absolute bottom-0.5 right-1 text-[6px] opacity-40 font-normal">
+                    <span className="absolute bottom-0.5 right-1 text-[6px] opacity-35 font-normal">
                       {r},{c}
                     </span>
                   </div>
@@ -4927,23 +6469,28 @@ const VisualizerCanvas = ({
 
   const renderXorAccumulatorCanvas = (isSingleNumber) => {
     const arr = isSingleNumber
-      ? (Array.isArray(data) ? data : [])
-      : (data?.arr || []);
-    
+      ? Array.isArray(data)
+        ? data
+        : []
+      : data?.arr || [];
+
     const currentIdx = isSingleNumber
       ? (currentSnap.bitState?.currentIdx ?? -1)
       : (data?.index ?? -1);
-    
+
     const xorSum = isSingleNumber
       ? (currentSnap.bitState?.xorSum ?? 0)
       : (data?.result ?? 0);
 
-    const currentVal = (currentIdx >= 0 && currentIdx < arr.length) ? arr[currentIdx] : null;
+    const currentVal =
+      currentIdx >= 0 && currentIdx < arr.length ? arr[currentIdx] : null;
 
     return (
       <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
         <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-1">
-          {isSingleNumber ? "Single Number (XOR Accumulator)" : "Cumulative XOR Operations"}
+          {isSingleNumber
+            ? "Single Number (XOR Accumulator)"
+            : "Cumulative XOR Operations"}
         </span>
 
         {/* Array horizontal display */}
@@ -4963,7 +6510,9 @@ const VisualizerCanvas = ({
                 }`}
               >
                 <span className="text-xs font-extrabold">{val}</span>
-                <span className="text-[7px] text-slate-400 select-none">idx:{idx}</span>
+                <span className="text-[7px] text-slate-400 select-none">
+                  idx:{idx}
+                </span>
               </div>
             );
           })}
@@ -4971,9 +6520,10 @@ const VisualizerCanvas = ({
 
         {/* Bit calculations block */}
         <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
-          {renderBitRow('XOR Accumulator', xorSum, 'text-green-500')}
-          {currentVal !== null && renderBitRow('Current Element', currentVal, 'text-accent')}
-          
+          {renderBitRow("XOR Accumulator", xorSum, "text-green-500")}
+          {currentVal !== null &&
+            renderBitRow("Current Element", currentVal, "text-accent")}
+
           {currentVal !== null && (
             <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
               <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary">
@@ -4995,12 +6545,12 @@ const VisualizerCanvas = ({
         <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
           Brian Kernighan's Set Bits Count
         </span>
-        
+
         <div className="flex flex-col gap-3 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-lg items-center">
-          {renderBitRow('Current n', num, 'text-accent', 16)}
-          
+          {renderBitRow("Current n", num, "text-accent", 16)}
+
           <div className="w-full max-w-md h-px bg-slate-200 dark:bg-slate-800/60 my-2" />
-          
+
           <div className="flex justify-between items-center text-xs font-bold w-full max-w-md px-1.5">
             <span className="text-slate-500">Set Bits Count:</span>
             <span className="font-mono bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-3 py-1 rounded-full font-black text-sm">
@@ -5065,25 +6615,35 @@ const VisualizerCanvas = ({
   };
 
   const renderBitRow = (label, value, colorClass, width = 8) => {
-    const binary = (value ?? 0).toString(2).padStart(width, '0').slice(-width);
-    const boxSize = width <= 8 ? 'w-7 h-7 text-xs' : 'w-5 h-5 sm:w-6 sm:h-6 text-[10px]';
-    const gapClass = width <= 8 ? 'gap-1' : 'gap-0.5 sm:gap-1';
-    
+    const binary = (value ?? 0).toString(2).padStart(width, "0").slice(-width);
+    const boxSize =
+      width <= 8 ? "w-7 h-7 text-xs" : "w-5 h-5 sm:w-6 sm:h-6 text-[10px]";
+    const gapClass = width <= 8 ? "gap-1" : "gap-0.5 sm:gap-1";
+
     return (
       <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 w-full">
-        <span className="w-full sm:w-32 text-center sm:text-right text-xs font-extrabold text-text-secondary uppercase tracking-wider select-none">{label}:</span>
+        <span className="w-full sm:w-32 text-center sm:text-right text-xs font-extrabold text-text-secondary uppercase tracking-wider select-none">
+          {label}:
+        </span>
         <div className={`flex ${gapClass} flex-nowrap justify-center`}>
-          {binary.split('').map((bit, idx) => (
-            <span key={idx} className={`${boxSize} rounded-md flex items-center justify-center font-black border transition-all duration-300 shadow-sm flex-shrink-0 ${
-              bit === '1'
-                ? 'bg-primary/20 border-primary/40 text-primary dark:text-purple-300 dark:bg-purple-900/30'
-                : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60'
-            }`}>
+          {binary.split("").map((bit, idx) => (
+            <span
+              key={idx}
+              className={`${boxSize} rounded-md flex items-center justify-center font-black border transition-all duration-300 shadow-sm flex-shrink-0 ${
+                bit === "1"
+                  ? "bg-primary/20 border-primary/40 text-primary dark:text-purple-300 dark:bg-purple-900/30"
+                  : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60"
+              }`}
+            >
               {bit}
             </span>
           ))}
         </div>
-        <span className={`w-16 text-center sm:text-left text-xs font-mono font-black ${colorClass}`}>({value})</span>
+        <span
+          className={`w-16 text-center sm:text-left text-xs font-mono font-black ${colorClass}`}
+        >
+          ({value})
+        </span>
       </div>
     );
   };
@@ -5091,25 +6651,29 @@ const VisualizerCanvas = ({
   const renderBitwiseOpCanvas = () => {
     const { n, mask, result } = data || {};
     const { operation, phase } = currentSnap.bitState || {};
-    
+
     return (
       <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
         <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
           Bitwise {operation} Operation
         </span>
-        
+
         <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
-          {renderBitRow('Number n', n, 'text-accent')}
-          {renderBitRow('Mask', mask, 'text-purple-400')}
-          
+          {renderBitRow("Number n", n, "text-accent")}
+          {renderBitRow("Mask", mask, "text-purple-400")}
+
           <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
             <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary uppercase">
-              {operation === 'AND' ? '& (AND)' : operation === 'OR' ? '| (OR)' : '^ (XOR)'}
+              {operation === "AND"
+                ? "& (AND)"
+                : operation === "OR"
+                  ? "| (OR)"
+                  : "^ (XOR)"}
             </span>
           </div>
-          
-          {phase === 'done' ? (
-            renderBitRow('Result', result, 'text-green-500')
+
+          {phase === "done" ? (
+            renderBitRow("Result", result, "text-green-500")
           ) : (
             <div className="flex items-center justify-between gap-4 w-full max-w-lg h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
               Click next to apply {operation}...
@@ -5123,24 +6687,24 @@ const VisualizerCanvas = ({
   const renderBitwiseNotCanvas = () => {
     const { n, result } = data || {};
     const { phase } = currentSnap.bitState || {};
-    
+
     return (
       <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
         <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
           Bitwise NOT Operation
         </span>
-        
+
         <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
-          {renderBitRow('Number n', n, 'text-accent')}
-          
+          {renderBitRow("Number n", n, "text-accent")}
+
           <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
             <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary">
               ~ (NOT)
             </span>
           </div>
-          
-          {phase === 'done' ? (
-            renderBitRow('~n Result', result & 0xff, 'text-green-500')
+
+          {phase === "done" ? (
+            renderBitRow("~n Result", result & 0xff, "text-green-500")
           ) : (
             <div className="flex items-center justify-between gap-4 w-full max-w-lg h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
               Click next to invert bits...
@@ -5154,25 +6718,32 @@ const VisualizerCanvas = ({
   const renderBitwiseShiftCanvas = () => {
     const { n, shift, result } = data || {};
     const { operation, phase } = currentSnap.bitState || {};
-    
+
     return (
       <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
         <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
-          Bitwise {operation === 'LEFT_SHIFT' ? 'Left Shift' : 'Right Shift'}
+          Bitwise {operation === "LEFT_SHIFT" ? "Left Shift" : "Right Shift"}
         </span>
-        
+
         <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
-          {renderBitRow('Number n', n, 'text-accent')}
-          
+          {renderBitRow("Number n", n, "text-accent")}
+
           <div className="flex justify-between w-full max-w-lg px-1.5 text-xs font-bold text-text-secondary">
             <span>Shift Positions:</span>
-            <span className="text-primary font-mono">{shift} places ({operation === 'LEFT_SHIFT' ? '<<' : '>>'})</span>
+            <span className="text-primary font-mono">
+              {shift} places ({operation === "LEFT_SHIFT" ? "<<" : ">>"})
+            </span>
           </div>
-          
+
           <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1" />
-          
-          {phase === 'done' ? (
-            renderBitRow('Result', result, 'text-green-500', operation === 'LEFT_SHIFT' ? 12 : 8)
+
+          {phase === "done" ? (
+            renderBitRow(
+              "Result",
+              result,
+              "text-green-500",
+              operation === "LEFT_SHIFT" ? 12 : 8,
+            )
           ) : (
             <div className="flex items-center justify-between gap-4 w-full max-w-lg h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16">
               Click next to shift bits...
@@ -5186,31 +6757,34 @@ const VisualizerCanvas = ({
   const renderBitwiseGrayCodeCanvas = () => {
     const { n, shifted, result } = data || {};
     const { phase } = currentSnap.bitState || {};
-    
+
     return (
       <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
         <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
           Binary to Gray Code Conversion
         </span>
-        
+
         <div className="flex flex-col gap-2.5 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
-          {renderBitRow('n (Binary)', n, 'text-accent')}
-          
-          {phase !== 'init' && renderBitRow('n >> 1', shifted, 'text-purple-400')}
-          
-          {phase !== 'init' && (
+          {renderBitRow("n (Binary)", n, "text-accent")}
+
+          {phase !== "init" &&
+            renderBitRow("n >> 1", shifted, "text-purple-400")}
+
+          {phase !== "init" && (
             <div className="w-full max-w-lg h-px bg-slate-200 dark:bg-slate-800/60 my-1 relative">
               <span className="absolute -top-2.5 right-12 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-text-secondary">
                 ^ (XOR)
               </span>
             </div>
           )}
-          
-          {phase === 'done' ? (
-            renderBitRow('Gray Code', result, 'text-green-500')
+
+          {phase === "done" ? (
+            renderBitRow("Gray Code", result, "text-green-500")
           ) : (
             <div className="flex items-center justify-between gap-4 w-full max-w-lg h-7 opacity-50 italic text-[11px] text-text-secondary font-medium justify-center pl-16 animate-pulse">
-              {phase === 'init' ? 'Click next to shift...' : 'Click next to XOR...'}
+              {phase === "init"
+                ? "Click next to shift..."
+                : "Click next to XOR..."}
             </div>
           )}
         </div>
@@ -5220,41 +6794,45 @@ const VisualizerCanvas = ({
 
   const renderBitmaskingConceptCanvas = () => {
     const { n, operation, mask, val, bitIdx } = data || {};
-    
+
     return (
       <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
         <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest mb-2">
           Bitmasking operations: Get, Set, Clear
         </span>
-        
+
         <div className="flex flex-col gap-3 p-5 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-xl w-full max-w-xl items-center">
-          {renderBitRow('Number n', n, 'text-accent')}
-          
-          {operation !== 'init' && (
+          {renderBitRow("Number n", n, "text-accent")}
+
+          {operation !== "init" && (
             <div className="w-full max-w-lg flex flex-col gap-2 mt-1 border-t border-slate-100 dark:border-slate-800/60 pt-3">
               <div className="flex justify-between items-center text-xs font-bold text-text-secondary">
                 <span>Operation:</span>
-                <span className="text-primary font-mono uppercase tracking-wider">{operation} Bit at position {bitIdx}</span>
+                <span className="text-primary font-mono uppercase tracking-wider">
+                  {operation} Bit at position {bitIdx}
+                </span>
               </div>
-              
-              {renderBitRow('Mask', mask, 'text-purple-400')}
-              
+
+              {renderBitRow("Mask", mask, "text-purple-400")}
+
               <div className="w-full h-px bg-slate-200 dark:bg-slate-800/60 my-1" />
-              
-              {operation === 'get' ? (
+
+              {operation === "get" ? (
                 <div className="flex justify-between items-center text-xs font-bold w-full max-w-lg px-1">
-                  <span className="text-emerald-600 dark:text-emerald-400">Bit is Set?</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    Bit is Set?
+                  </span>
                   <span className="font-mono bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full font-black">
-                    {val === 1 ? 'YES (1)' : 'NO (0)'}
+                    {val === 1 ? "YES (1)" : "NO (0)"}
                   </span>
                 </div>
               ) : (
-                renderBitRow('New n', val, 'text-green-500')
+                renderBitRow("New n", val, "text-green-500")
               )}
             </div>
           )}
-          
-          {operation === 'init' && (
+
+          {operation === "init" && (
             <div className="text-xs text-text-secondary italic text-center animate-pulse pt-2">
               Click next to demonstrate operations step-by-step...
             </div>
@@ -5267,70 +6845,99 @@ const VisualizerCanvas = ({
   const renderBitwiseSubsetsCanvas = () => {
     const { items, currentMask, currentSubset, subsets } = data || {};
     const { phase } = currentSnap.bitState || {};
-    
+
     return (
       <div className="w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-3xl">
         <span className="text-[10px] font-mono text-slate-400 uppercase font-black tracking-widest">
           Subsets Generation using Binary Masking
         </span>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mt-1">
           {/* Left panel: Active generator state */}
           <div className="flex flex-col gap-3 p-4 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-md justify-between">
             <div>
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Set Elements</span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
+                Set Elements
+              </span>
               <div className="flex gap-2 mt-1.5 flex-wrap">
                 {items?.map((item, idx) => (
-                  <span key={idx} className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-text-primary">
+                  <span
+                    key={idx}
+                    className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-text-primary"
+                  >
                     {item}
                   </span>
                 ))}
               </div>
             </div>
-            
-            {phase === 'generating' && (
+
+            {phase === "generating" && (
               <div className="border-t border-slate-100 dark:border-slate-800/60 pt-3 flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-text-secondary">Binary Mask Index:</span>
-                  <span className="font-mono text-accent font-black">i = {currentMask}</span>
+                  <span className="font-bold text-text-secondary">
+                    Binary Mask Index:
+                  </span>
+                  <span className="font-mono text-accent font-black">
+                    i = {currentMask}
+                  </span>
                 </div>
-                {renderBitRow('Mask Bits', currentMask, 'text-purple-400', items.length)}
-                
+                {renderBitRow(
+                  "Mask Bits",
+                  currentMask,
+                  "text-purple-400",
+                  items.length,
+                )}
+
                 <div className="flex justify-between items-center text-xs mt-1 bg-primary/5 border border-primary/10 rounded-xl p-2.5">
-                  <span className="font-bold text-primary">Selected Subset:</span>
-                  <span className="font-mono text-primary font-black">[{currentSubset?.join(', ')}]</span>
+                  <span className="font-bold text-primary">
+                    Selected Subset:
+                  </span>
+                  <span className="font-mono text-primary font-black">
+                    [{currentSubset?.join(", ")}]
+                  </span>
                 </div>
               </div>
             )}
-            
-            {phase === 'init' && (
+
+            {phase === "init" && (
               <div className="text-xs text-text-secondary italic text-center animate-pulse py-4">
                 Click next to start subset iteration...
               </div>
             )}
-            {phase === 'done' && (
+            {phase === "done" && (
               <div className="text-xs text-green-500 font-bold text-center py-4 bg-green-500/10 rounded-xl border border-green-500/20">
                 🎉 All subsets generated successfully!
               </div>
             )}
           </div>
-          
+
           {/* Right panel: Subsets list scroll view */}
           <div className="flex flex-col gap-2 p-4 bg-white dark:bg-[#161b26] border border-slate-200 dark:border-slate-800/80 rounded-2xl shadow-md max-h-[220px] overflow-y-auto">
             <div className="flex justify-between items-center pb-1.5 border-b border-slate-100 dark:border-slate-850">
-              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Generated Subsets</span>
-              <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{subsets?.length || 0} items</span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
+                Generated Subsets
+              </span>
+              <span className="text-[10px] font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                {subsets?.length || 0} items
+              </span>
             </div>
             <div className="flex flex-col gap-1.5 mt-1 font-mono text-[11px] text-text-secondary">
               {subsets && subsets.length > 0 ? (
                 subsets.map((sub, idx) => (
-                  <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-900/50 py-1 px-2.5 rounded-lg border border-slate-100 dark:border-slate-850">
+                  <div
+                    key={idx}
+                    className="flex gap-2 items-center bg-slate-50 dark:bg-slate-900/50 py-1 px-2.5 rounded-lg border border-slate-100 dark:border-slate-850"
+                  >
                     <span className="text-slate-400 select-none">{idx}:</span>
-                    <span className="text-text-primary font-bold">{sub === '[]' ? '[ empty ]' : sub}</span>
+                    <span className="text-text-primary font-bold">
+                      {sub === "[]" ? "[ empty ]" : sub}
+                    </span>
                   </div>
                 ))
               ) : (
-                <div className="text-slate-400 text-center py-12 italic">No subsets generated yet.</div>
+                <div className="text-slate-400 text-center py-12 italic">
+                  No subsets generated yet.
+                </div>
               )}
             </div>
           </div>
@@ -6009,7 +7616,8 @@ const VisualizerCanvas = ({
   const renderDpCanvas = () => {
     const resolvedId = algorithm.counterpartId || algorithm.id;
     if (resolvedId === "generate-parentheses") {
-      const { results = [], callStack = [], current = "" } = data || {};
+      const snapData = currentSnap?.data || data || {};
+      const { results = [], callStack = [], current = "" } = snapData;
 
       return (
         <div className="w-full h-auto flex flex-col items-center justify-center p-4 gap-4">
@@ -7088,91 +8696,141 @@ const VisualizerCanvas = ({
 
   // --- WORD SEARCH GRID CANVAS ---
   const renderWordSearchCanvas = () => {
-    const { grid = [], word = "", path = [] } = data || {};
+    const snapData = currentSnap?.data || data || {};
+    const { grid = [], word = "", path = [], deadEnds = [] } = snapData;
     const {
       current,
       backtrack: bt,
       invalid,
       start: startCell,
       result,
-    } = highlights;
-    const pathSet = new Set(path.map(([r, c]) => `${r},${c}`));
+    } = highlights || {};
+
+    const pathMap = new Map();
+    path.forEach(([r, c], idx) => {
+      pathMap.set(`${r},${c}`, idx + 1);
+    });
 
     return (
-      <div className="w-full h-72 flex flex-col items-center justify-center gap-4 p-4">
-        <div className="flex gap-6 items-start">
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider text-center mb-1">
-              Grid
+      <div className="w-full min-h-[300px] flex flex-col items-center justify-between p-4 font-sans">
+        {/* Header Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 pb-3 select-none text-[10px] font-mono font-bold">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-sm" />
+            <span className="text-cyan-600 dark:text-cyan-400">Matched Path</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+            <span className="text-amber-600 dark:text-amber-400">Current Search</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/30">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 flex items-center justify-center text-[7px] text-white font-black">✕</span>
+            <span className="text-rose-600 dark:text-rose-400">Backtracked (Dead End)</span>
+          </div>
+        </div>
+
+        <div className="w-full flex flex-col md:flex-row gap-6 items-center justify-center my-auto">
+          {/* Character Grid */}
+          <div className="flex flex-col gap-1.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-md">
+            <span className="text-[10px] font-mono text-slate-400 uppercase font-extrabold tracking-wider text-center mb-1">
+              Grid Matrix
             </span>
             {grid.map((row, r) => (
-              <div key={r} className="flex gap-1">
+              <div key={r} className="flex gap-1.5">
                 {row.map((ch, c) => {
                   const key = `${r},${c}`;
-                  const inPath = pathSet.has(key);
+                  const pathIndex = pathMap.get(key);
+                  const inPath = pathIndex !== undefined;
                   const isCurrent =
                     current && current[0] === r && current[1] === c;
                   const isBacktrack = bt && bt[0] === r && bt[1] === c;
+                  const isDeadEnd = deadEnds[r] && deadEnds[r][c] === 1 && !inPath;
                   const isStart =
                     startCell && startCell[0] === r && startCell[1] === c;
+
                   let cls =
-                    "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-text-primary";
-                  if (isBacktrack)
-                    cls = "bg-red-500/20 border-red-500 text-red-400 font-bold";
-                  else if (isCurrent)
+                    "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-text-primary";
+                  if (isBacktrack) {
+                    cls = "bg-rose-500/25 border-2 border-rose-500 text-rose-500 font-extrabold scale-105 shadow-[0_0_10px_rgba(244,63,94,0.4)]";
+                  } else if (isCurrent) {
                     cls =
-                      "bg-green-500/20 border-green-500 text-green-400 font-extrabold scale-110";
-                  else if (inPath)
+                      "bg-amber-500/25 border-2 border-amber-500 text-amber-500 font-black scale-110 shadow-[0_0_12px_rgba(245,158,11,0.5)]";
+                  } else if (inPath) {
                     cls =
-                      "bg-blue-500/20 border-blue-500 text-blue-400 font-bold";
-                  else if (isStart)
+                      "bg-cyan-500/20 border-2 border-cyan-500 text-cyan-600 dark:text-cyan-300 font-black shadow-[0_0_10px_rgba(6,182,212,0.4)]";
+                  } else if (isDeadEnd) {
                     cls =
-                      "bg-yellow-500/20 border-yellow-500 text-yellow-400 font-bold";
+                      "bg-rose-500/10 border border-rose-500/30 text-rose-400";
+                  } else if (isStart) {
+                    cls =
+                      "bg-yellow-500/20 border border-yellow-500 text-yellow-500 font-bold";
+                  }
+
                   return (
                     <div
                       key={c}
-                      className={`w-9 h-9 flex items-center justify-center border rounded-lg font-mono text-sm transition-all duration-200 ${cls}`}
+                      className={`w-11 h-11 flex flex-col items-center justify-center border rounded-xl font-mono text-sm transition-all duration-300 relative select-none ${cls}`}
                     >
-                      {ch}
+                      <span>{ch}</span>
+                      {inPath && (
+                        <span className="absolute top-0.5 right-1 text-[7px] font-black text-cyan-500">
+                          #{pathIndex}
+                        </span>
+                      )}
+                      {isDeadEnd && !isCurrent && (
+                        <span className="absolute bottom-0.5 right-1 text-[7px] text-rose-500 font-black opacity-70">
+                          ✕
+                        </span>
+                      )}
                     </div>
                   );
                 })}
               </div>
             ))}
           </div>
-          <div className="flex flex-col gap-2 min-w-28">
-            <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">
+
+          {/* Target Word & Path Progress Panel */}
+          <div className="flex flex-col gap-3 min-w-[160px] p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-md">
+            <span className="text-[10px] font-mono text-slate-400 uppercase font-extrabold tracking-wider text-center">
               Target Word
             </span>
-            <div className="flex gap-1 flex-wrap">
+            <div className="flex gap-1.5 justify-center flex-wrap">
               {word.split("").map((ch, i) => {
                 const matched = i < path.length;
+                const isCurrentChar = i === path.length;
                 return (
                   <div
                     key={i}
-                    className={`w-8 h-8 flex items-center justify-center border rounded-lg font-mono text-sm font-bold transition-all ${
+                    className={`w-9 h-9 flex flex-col items-center justify-center border rounded-xl font-mono text-sm font-bold transition-all ${
                       matched
-                        ? "bg-green-500/20 border-green-500 text-green-400"
-                        : "bg-slate-800/30 border-slate-600 text-slate-400"
+                        ? "bg-emerald-500/20 border-emerald-500 text-emerald-500 font-black shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                        : isCurrentChar
+                          ? "bg-amber-500/20 border-amber-500 text-amber-500 font-black animate-pulse"
+                          : "bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-400"
                     }`}
                   >
-                    {ch}
+                    <span>{ch}</span>
+                    <span className="text-[6.5px] opacity-60 font-normal">
+                      {i + 1}
+                    </span>
                   </div>
                 );
               })}
             </div>
-            <div className="text-xs font-mono mt-2 text-slate-400">
-              Path: {path.length}/{word.length}
+
+            <div className="text-xs font-mono font-bold text-center mt-1 text-slate-500 dark:text-slate-400">
+              Matched: <span className="text-primary font-black">{path.length}</span> / {word.length}
             </div>
+
             {result !== undefined && (
               <div
-                className={`text-xs font-mono font-bold px-2 py-1 rounded border ${
+                className={`text-xs font-mono font-bold px-3 py-1.5 rounded-xl border text-center transition-all ${
                   result
-                    ? "text-green-400 bg-green-500/10 border-green-500/30"
-                    : "text-red-400 bg-red-500/10 border-red-500/30"
+                    ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/40 font-black shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                    : "text-rose-500 bg-rose-500/10 border-rose-500/40 font-black"
                 }`}
               >
-                {result ? "✅ FOUND" : "❌ NOT FOUND"}
+                {result ? "✅ WORD FOUND!" : "❌ NOT FOUND"}
               </div>
             )}
           </div>
@@ -7882,122 +9540,6 @@ const VisualizerCanvas = ({
     );
   };
 
-  // --- 1L. BOYER-MOORE MAJORITY VOTE CANVAS ---
-  const renderMooresVotingCanvas = () => {
-    const arr = Array.isArray(data) ? data : [];
-    const {
-      comparisons = 0,
-      candidate = "None",
-      count = 0,
-    } = currentSnap.stats || {};
-    const scannedIdx = comparisons - 1;
-
-    return (
-      <div className="w-full min-h-[300px] flex flex-col justify-between items-center gap-6 p-6 font-sans text-left">
-        {/* Title */}
-        <div className="w-full flex items-center justify-between">
-          <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase">
-            Boyer-Moore Majority Vote Visualizer
-          </span>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary uppercase">
-            Iterated: {comparisons}/{arr.length} elements
-          </span>
-        </div>
-
-        {/* Array Cards */}
-        <div className="w-full flex justify-center items-center gap-2 flex-wrap min-h-[80px]">
-          {arr.map((val, idx) => {
-            const isScanned = idx === scannedIdx;
-            const isCandidate =
-              candidate !== "None" && Number(candidate) === val;
-            const isPast = idx < scannedIdx;
-
-            let borderClass = "border-slate-200/40 dark:border-slate-700/45";
-            let bgClass = "bg-white dark:bg-slate-800 opacity-60";
-            if (isScanned) {
-              borderClass = "border-amber-500 shadow-sm";
-              bgClass =
-                "bg-amber-500/5 dark:bg-amber-500/10 opacity-100 scale-105 font-black";
-            } else if (isCandidate && isPast) {
-              borderClass = "border-primary shadow-sm";
-              bgClass = "bg-primary/5 dark:bg-primary/10 opacity-100 font-bold";
-            }
-
-            return (
-              <motion.div
-                key={idx}
-                layout
-                className={`w-12 h-14 rounded-xl border flex flex-col items-center justify-center relative transition-all duration-300 ${bgClass} ${borderClass}`}
-              >
-                {isScanned && (
-                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[6px] font-black text-amber-500 uppercase bg-amber-500/20 px-1 rounded select-none">
-                    Current
-                  </span>
-                )}
-                <span className="text-sm font-mono font-bold text-text-primary dark:text-[#F4F7FE]">
-                  {val}
-                </span>
-                <span className="text-[6px] text-slate-500/60 font-normal">
-                  #{idx}
-                </span>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Candidate & Votes Tracker Cards */}
-        <div className="w-full flex justify-center items-center gap-8 mt-2">
-          {/* Candidate Card */}
-          <div className="flex-1 max-w-[200px] h-24 rounded-2xl border border-dashed border-slate-200/60 dark:border-slate-700/60 bg-slate-50/5 dark:bg-slate-900/5 flex flex-col items-center justify-center p-3 relative">
-            <span className="absolute top-1 right-2 text-[8px] font-extrabold text-slate-500 uppercase select-none">
-              Majority Candidate
-            </span>
-            {candidate !== "None" ? (
-              <div className="flex flex-col items-center gap-0.5">
-                <span className="text-2xl font-mono font-black text-primary">
-                  {candidate}
-                </span>
-                <span className="text-[8px] font-bold text-text-secondary">
-                  Assigned Element
-                </span>
-              </div>
-            ) : (
-              <span className="text-xs text-slate-400 font-mono italic">
-                None
-              </span>
-            )}
-          </div>
-
-          {/* Votes Count Card */}
-          <div className="flex-1 max-w-[200px] h-24 rounded-2xl border border-dashed border-slate-200/60 dark:border-slate-700/60 bg-slate-50/5 dark:bg-slate-900/5 flex flex-col items-center justify-center p-3 relative">
-            <span className="absolute top-1 right-2 text-[8px] font-extrabold text-slate-500 uppercase select-none">
-              Votes / Count
-            </span>
-            <div className="flex flex-col items-center gap-1.5 w-full">
-              <span className="text-xl font-mono font-black text-amber-500">
-                {count}
-              </span>
-              <div className="flex gap-1 items-center justify-center h-2">
-                {Array.from({ length: Math.min(count, 5) }).map((_, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="w-1.5 h-1.5 rounded-full bg-amber-500"
-                  />
-                ))}
-                {count > 5 && (
-                  <span className="text-[7px] text-amber-500 font-extrabold">
-                    +
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // --- 1M. MINIMUM WINDOW SUBSTRING CANVAS ---
   const renderMinWindowSubstringCanvas = () => {
@@ -9315,6 +10857,47 @@ const VisualizerCanvas = ({
       return renderMergeArraysCanvas();
     if (resolvedId === "kadane" || resolvedId === "kadanes-algorithm")
       return renderKadaneCanvas();
+    if (
+      resolvedId === "remove-duplicates" ||
+      resolvedId === "remove-duplicates-two-pointer"
+    )
+      return renderRemoveDuplicatesCanvas();
+    if (
+      resolvedId === "two-pointer" ||
+      resolvedId === "two-pointer-technique" ||
+      resolvedId === "two-sum-two-pointer" ||
+      resolvedId === "three-sum" ||
+      resolvedId === "four-sum"
+    )
+      return renderTwoPointerCanvas();
+    if (
+      resolvedId === "rotate-array" ||
+      resolvedId === "rotate-array-k-steps"
+    )
+      return renderRotateArrayCanvas();
+    if (
+      resolvedId === "reverse-array" ||
+      resolvedId === "reverse-array-two-pointer"
+    )
+      return renderReverseArrayCanvas();
+    if (
+      resolvedId === "moores-voting-algorithm" ||
+      resolvedId === "moores-voting" ||
+      resolvedId === "majority-element"
+    )
+      return renderMooresVotingCanvas();
+    if (resolvedId === "candy-distribution" || resolvedId === "candy")
+      return renderCandyDistributionCanvas();
+    if (
+      resolvedId === "dutch-national-flag-algorithm" ||
+      resolvedId === "dutch-national-flag"
+    )
+      return renderDutchNationalFlagCanvas();
+    if (
+      resolvedId === "equilibrium-index" ||
+      resolvedId === "equilibrium-point"
+    )
+      return renderEquilibriumIndexCanvas();
     if (resolvedId === "counting-sort") return renderCountingSortCanvas();
     if (resolvedId === "trapping-rain-water")
       return renderTrappingRainWaterCanvas();
@@ -9343,14 +10926,23 @@ const VisualizerCanvas = ({
     if (resolvedId === "floyd-warshall") return renderFloydWarshallCanvas();
     if (resolvedId === "pascal-triangle") return renderPascalTriangleCanvas();
     if (resolvedId === "single-number") return renderXorAccumulatorCanvas(true);
-    if (resolvedId === "xor-operations") return renderXorAccumulatorCanvas(false);
+    if (resolvedId === "xor-operations")
+      return renderXorAccumulatorCanvas(false);
     if (resolvedId === "count-set-bits") return renderCountSetBitsCanvas();
-    if (resolvedId === "bitmask-and" || resolvedId === "bitmask-or" || resolvedId === "bitmask-xor") return renderBitwiseOpCanvas();
+    if (
+      resolvedId === "bitmask-and" ||
+      resolvedId === "bitmask-or" ||
+      resolvedId === "bitmask-xor"
+    )
+      return renderBitwiseOpCanvas();
     if (resolvedId === "bitmask-not") return renderBitwiseNotCanvas();
-    if (resolvedId === "bit-left-shift" || resolvedId === "bit-right-shift") return renderBitwiseShiftCanvas();
+    if (resolvedId === "bit-left-shift" || resolvedId === "bit-right-shift")
+      return renderBitwiseShiftCanvas();
     if (resolvedId === "bit-gray-code") return renderBitwiseGrayCodeCanvas();
-    if (resolvedId === "bitmasking-concept") return renderBitmaskingConceptCanvas();
-    if (resolvedId === "generate-subsets-using-bitmask") return renderBitwiseSubsetsCanvas();
+    if (resolvedId === "bitmasking-concept")
+      return renderBitmaskingConceptCanvas();
+    if (resolvedId === "generate-subsets-using-bitmask")
+      return renderBitwiseSubsetsCanvas();
     if (resolvedId === "palindrome-check") return renderStringCharCanvas();
     if (resolvedId === "reverse-string") return renderStringCharCanvas();
     if (resolvedId === "generate-parentheses") return renderDpCanvas();
@@ -9532,7 +11124,8 @@ const VisualizerCanvas = ({
     }
   };
 
-  const showCallStack = currentSnap && Array.isArray(currentSnap.recursionStack);
+  const showCallStack =
+    currentSnap && Array.isArray(currentSnap.recursionStack);
 
   return (
     <div
@@ -9549,13 +11142,15 @@ const VisualizerCanvas = ({
       )}
 
       {/* Render canvas or loading/empty state */}
-      <div className={`w-full ${isExpanded ? "h-full flex items-center justify-center" : ""}`}>
+      <div
+        className={`w-full ${isExpanded ? "h-full flex items-center justify-center" : ""}`}
+      >
         {showCallStack ? (
           <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch p-1 z-10">
             <div className="md:col-span-8 relative w-full flex items-center justify-center min-h-[340px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm overflow-hidden">
               {getCanvasContent()}
             </div>
-            
+
             <div className="md:col-span-4 flex flex-col gap-2.5 p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-200/85 dark:border-slate-800/85 rounded-3xl max-h-[380px] overflow-y-auto min-h-[220px]">
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center border-b border-slate-200 dark:border-slate-800/60 pb-1.5 mb-1.5 select-none">
                 Execution Call Stack
@@ -9567,7 +11162,8 @@ const VisualizerCanvas = ({
                   </div>
                 ) : (
                   currentSnap.recursionStack.map((stackVal, index) => {
-                    const isTop = index === currentSnap.recursionStack.length - 1;
+                    const isTop =
+                      index === currentSnap.recursionStack.length - 1;
                     return (
                       <motion.div
                         key={`${stackVal}-${index}`}
@@ -9584,8 +11180,12 @@ const VisualizerCanvas = ({
                         `}
                       >
                         <div className="flex items-center gap-1.5">
-                          <span className={`w-1.5 h-1.5 rounded-full ${isTop ? "bg-amber-500 animate-pulse" : "bg-slate-400"}`} />
-                          <span className="truncate max-w-[150px]">{stackVal}</span>
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${isTop ? "bg-amber-500 animate-pulse" : "bg-slate-400"}`}
+                          />
+                          <span className="truncate max-w-[150px]">
+                            {stackVal}
+                          </span>
                         </div>
                         <span className="text-[8px] font-black uppercase tracking-wider opacity-85">
                           {isTop ? "active" : "pending"}

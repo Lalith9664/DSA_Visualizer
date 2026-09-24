@@ -1039,6 +1039,358 @@ export const dijkstraSteps = (graphInput) => {
   return steps;
 };
 
+// --- A* SEARCH ALGORITHM ---
+export const aStarSearchSteps = (graphInput, startParam, goalParam) => {
+  const steps = [];
+
+  const lines = (graphInput || "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const edges = [];
+  const nodesSet = new Set();
+
+  lines.forEach((line) => {
+    const parts = line.split(/\s+/).map(Number);
+    if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      const [u, v, w] = parts;
+      edges.push({ u, v, w });
+      nodesSet.add(u);
+      nodesSet.add(v);
+    }
+  });
+
+  // Default fallback graph if input empty or malformed
+  if (nodesSet.size === 0) {
+    const defaultEdges = [
+      { u: 0, v: 1, w: 4 },
+      { u: 0, v: 2, w: 2 },
+      { u: 1, v: 2, w: 1 },
+      { u: 1, v: 3, w: 5 },
+      { u: 2, v: 3, w: 8 },
+      { u: 2, v: 4, w: 10 },
+      { u: 3, v: 4, w: 2 },
+      { u: 3, v: 5, w: 6 },
+      { u: 4, v: 5, w: 3 },
+    ];
+    defaultEdges.forEach((e) => {
+      edges.push(e);
+      nodesSet.add(e.u);
+      nodesSet.add(e.v);
+    });
+  }
+
+  const nodes = Array.from(nodesSet).sort((a, b) => a - b);
+  const V = nodes.length;
+  if (V === 0) return [];
+
+  // Determine Start and Goal
+  const parsedStart = parseInt(startParam);
+  const parsedGoal = parseInt(goalParam);
+  const startNode = !isNaN(parsedStart) && nodes.includes(parsedStart) ? parsedStart : nodes[0];
+  let goalNode = !isNaN(parsedGoal) && nodes.includes(parsedGoal) ? parsedGoal : nodes[nodes.length - 1];
+  if (goalNode === startNode && nodes.length > 1) {
+    goalNode = nodes[nodes.length - 1];
+  }
+
+  // Node spatial coordinates layout for heuristic calculation and UI rendering
+  const coords = {};
+  if (V === 6 && nodes.join(",") === "0,1,2,3,4,5") {
+    coords[0] = { x: 15, y: 50 };
+    coords[1] = { x: 38, y: 22 };
+    coords[2] = { x: 38, y: 78 };
+    coords[3] = { x: 65, y: 22 };
+    coords[4] = { x: 65, y: 78 };
+    coords[5] = { x: 88, y: 50 };
+  } else if (V === 4) {
+    coords[nodes[0]] = { x: 20, y: 50 };
+    coords[nodes[1]] = { x: 50, y: 20 };
+    coords[nodes[2]] = { x: 50, y: 80 };
+    coords[nodes[3]] = { x: 80, y: 50 };
+  } else {
+    nodes.forEach((n, idx) => {
+      if (idx === 0) {
+        coords[n] = { x: 15, y: 50 };
+      } else if (idx === V - 1) {
+        coords[n] = { x: 85, y: 50 };
+      } else {
+        const angle = (2 * Math.PI * idx) / V - Math.PI / 2;
+        coords[n] = {
+          x: Math.round(50 + 32 * Math.cos(angle)),
+          y: Math.round(50 + 35 * Math.sin(angle)),
+        };
+      }
+    });
+  }
+
+  // Heuristic calculation (scaled Euclidean distance to goal, admissible)
+  const goalCoord = coords[goalNode] || { x: 85, y: 50 };
+  const hScore = {};
+  nodes.forEach((n) => {
+    const c = coords[n] || { x: 50, y: 50 };
+    const dx = c.x - goalCoord.x;
+    const dy = c.y - goalCoord.y;
+    // Scale distance so it's admissible
+    hScore[n] = n === goalNode ? 0 : Math.max(1, Math.round(Math.hypot(dx, dy) / 12));
+  });
+
+  // Setup Adjacency Map
+  const adj = {};
+  nodes.forEach((n) => (adj[n] = []));
+  edges.forEach(({ u, v, w }) => {
+    if (adj[u]) adj[u].push({ neighbor: v, weight: w });
+    if (adj[v]) adj[v].push({ neighbor: u, weight: w }); // Undirected for visualizer ease
+  });
+
+  const gScore = {};
+  const fScore = {};
+  const parent = {};
+  const visited = {};
+
+  nodes.forEach((n) => {
+    gScore[n] = Infinity;
+    fScore[n] = Infinity;
+    parent[n] = null;
+    visited[n] = false;
+  });
+
+  gScore[startNode] = 0;
+  fScore[startNode] = hScore[startNode];
+
+  // Open Set Priority Queue (Array of node IDs)
+  let openSet = [startNode];
+  const closedSet = [];
+
+  // Helper to construct current dist snapshot for compatibility with standard graph canvas
+  const getDistObj = () => {
+    const d = {};
+    nodes.forEach((n) => {
+      d[n] = gScore[n];
+    });
+    return d;
+  };
+
+  // Step 0: Initial State
+  steps.push({
+    data: { nodes, edges, dist: getDistObj(), visited: { ...visited } },
+    graphState: {
+      activeNode: startNode,
+      relaxingEdge: null,
+      openSet: [...openSet],
+      closedSet: [...closedSet],
+      fScores: { ...fScore },
+      gScores: { ...gScore },
+      hScores: { ...hScore },
+      startNode,
+      goalNode,
+      coords,
+    },
+    highlights: { [startNode]: "pivot" },
+    explanation: `A* Search Initialized: Start node 🏁 ${startNode} → Goal node 🎯 ${goalNode}. Heuristic h(n) calculated for all nodes. Open Set = [Node ${startNode} (f = g + h = 0 + ${hScore[startNode]} = ${fScore[startNode]})].`,
+    stats: { comparisons: 0, openSetSize: 1, closedSetSize: 0, step: 0 },
+  });
+
+  let goalReached = false;
+  let iterations = 0;
+
+  while (openSet.length > 0 && iterations < 100) {
+    iterations++;
+
+    // Find node in openSet with lowest fScore (tie-break on lowest hScore)
+    let bestIdx = 0;
+    for (let i = 1; i < openSet.length; i++) {
+      const u = openSet[i];
+      const best = openSet[bestIdx];
+      if (
+        fScore[u] < fScore[best] ||
+        (fScore[u] === fScore[best] && hScore[u] < hScore[best])
+      ) {
+        bestIdx = i;
+      }
+    }
+
+    const current = openSet[bestIdx];
+    openSet.splice(bestIdx, 1);
+    closedSet.push(current);
+    visited[current] = true;
+
+    // Push step selecting active node from Open Set
+    steps.push({
+      data: { nodes, edges, dist: getDistObj(), visited: { ...visited } },
+      graphState: {
+        activeNode: current,
+        relaxingEdge: null,
+        openSet: [...openSet],
+        closedSet: [...closedSet],
+        fScores: { ...fScore },
+        gScores: { ...gScore },
+        hScores: { ...hScore },
+        startNode,
+        goalNode,
+        coords,
+      },
+      highlights: { [current]: "pivot" },
+      explanation: `Selected Node ${current} from Open Set with minimum evaluation f(${current}) = ${fScore[current]} (g: ${gScore[current]}, h: ${hScore[current]}). Moved to Closed Set.`,
+      stats: {
+        comparisons: iterations,
+        openSetSize: openSet.length,
+        closedSetSize: closedSet.length,
+        step: steps.length,
+      },
+    });
+
+    // Check if goal reached
+    if (current === goalNode) {
+      goalReached = true;
+      break;
+    }
+
+    // Expand neighbors of current
+    const neighbors = adj[current] || [];
+    for (const { neighbor: v, weight: w } of neighbors) {
+      if (closedSet.includes(v)) {
+        // Already evaluated
+        continue;
+      }
+
+      const tentativeG = gScore[current] + w;
+
+      // Evaluation step for inspecting edge
+      steps.push({
+        data: { nodes, edges, dist: getDistObj(), visited: { ...visited } },
+        graphState: {
+          activeNode: current,
+          relaxingEdge: { u: current, v },
+          openSet: [...openSet],
+          closedSet: [...closedSet],
+          fScores: { ...fScore },
+          gScores: { ...gScore },
+          hScores: { ...hScore },
+          startNode,
+          goalNode,
+          coords,
+        },
+        highlights: { [current]: "pivot", [v]: "compare" },
+        explanation: `Inspecting neighbor Node ${v} via edge (${current} → ${v}, weight ${w}). Tentative g = g(${current}) + ${w} = ${gScore[current]} + ${w} = ${tentativeG} (current g(${v}) = ${gScore[v] === Infinity ? "∞" : gScore[v]}).`,
+        stats: {
+          comparisons: iterations,
+          openSetSize: openSet.length,
+          closedSetSize: closedSet.length,
+          step: steps.length,
+        },
+      });
+
+      if (tentativeG < gScore[v]) {
+        parent[v] = current;
+        gScore[v] = tentativeG;
+        fScore[v] = tentativeG + hScore[v];
+
+        if (!openSet.includes(v)) {
+          openSet.push(v);
+        }
+
+        steps.push({
+          data: { nodes, edges, dist: getDistObj(), visited: { ...visited } },
+          graphState: {
+            activeNode: current,
+            relaxingEdge: { u: current, v },
+            openSet: [...openSet],
+            closedSet: [...closedSet],
+            fScores: { ...fScore },
+            gScores: { ...gScore },
+            hScores: { ...hScore },
+            startNode,
+            goalNode,
+            coords,
+          },
+          highlights: { [current]: "pivot", [v]: "sorted" },
+          explanation: `Found better path to Node ${v}! Updated g(${v}) = ${tentativeG}, f(${v}) = g + h = ${tentativeG} + ${hScore[v]} = ${fScore[v]}. ${openSet.includes(v) ? "Updated in" : "Added to"} Open Set.`,
+          stats: {
+            comparisons: iterations,
+            openSetSize: openSet.length,
+            closedSetSize: closedSet.length,
+            step: steps.length,
+          },
+        });
+      }
+    }
+  }
+
+  // Reconstruct path
+  if (goalReached) {
+    const path = [];
+    let curr = goalNode;
+    while (curr !== null && curr !== undefined) {
+      path.unshift(curr);
+      curr = parent[curr];
+    }
+
+    const pathEdges = [];
+    for (let i = 0; i < path.length - 1; i++) {
+      pathEdges.push({ u: path[i], v: path[i + 1] });
+    }
+
+    const pathHighlights = {};
+    path.forEach((node) => {
+      pathHighlights[node] = "sorted";
+    });
+
+    steps.push({
+      data: { nodes, edges, dist: getDistObj(), visited: { ...visited } },
+      graphState: {
+        activeNode: null,
+        relaxingEdge: null,
+        openSet: [...openSet],
+        closedSet: [...closedSet],
+        fScores: { ...fScore },
+        gScores: { ...gScore },
+        hScores: { ...hScore },
+        startNode,
+        goalNode,
+        path,
+        pathEdges,
+        coords,
+      },
+      highlights: pathHighlights,
+      explanation: `🏆 A* Search Complete! Shortest path to Goal ${goalNode} found: [ ${path.join(" → ")} ] with optimal total cost of ${gScore[goalNode]} (Explored ${closedSet.length} nodes out of ${V}).`,
+      stats: {
+        comparisons: iterations,
+        openSetSize: openSet.length,
+        closedSetSize: closedSet.length,
+        optimalCost: gScore[goalNode],
+        pathLength: path.length,
+        step: steps.length,
+      },
+    });
+  } else {
+    steps.push({
+      data: { nodes, edges, dist: getDistObj(), visited: { ...visited } },
+      graphState: {
+        activeNode: null,
+        relaxingEdge: null,
+        openSet: [],
+        closedSet: [...closedSet],
+        fScores: { ...fScore },
+        gScores: { ...gScore },
+        hScores: { ...hScore },
+        startNode,
+        goalNode,
+        coords,
+      },
+      highlights: {},
+      explanation: `A* Search finished: No path exists from Node ${startNode} to Goal Node ${goalNode}.`,
+      stats: {
+        comparisons: iterations,
+        openSetSize: 0,
+        closedSetSize: closedSet.length,
+        step: steps.length,
+      },
+    });
+  }
+
+  return steps;
+};
+
 // --- TOWER OF HANOI RECURSION ---
 
 export const towerOfHanoiSteps = (numDisks) => {
@@ -3068,6 +3420,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
 
   const sol = Array.from({ length: rows }, () => Array(cols).fill(0));
   const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+  const deadEnds = Array.from({ length: rows }, () => Array(cols).fill(0));
 
   // Parse custom direction order (e.g. "D R U L", "Right Down Left Up")
   const dirMap = {
@@ -3102,6 +3455,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
     data: {
       maze,
       path: Array.from({ length: rows }, () => Array(cols).fill(0)),
+      deadEnds: deadEnds.map((row) => [...row]),
     },
     gridState: {
       currentRow: -1,
@@ -3138,7 +3492,11 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
     sol[r][c] = 1;
 
     steps.push({
-      data: { maze, path: sol.map((row) => [...row]) },
+      data: {
+        maze,
+        path: sol.map((row) => [...row]),
+        deadEnds: deadEnds.map((row) => [...row]),
+      },
       gridState: {
         currentRow: r,
         currentCol: c,
@@ -3152,14 +3510,18 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
         phase: "searching",
       },
       highlights: { [`${r}-${c}`]: "pivot" },
-      explanation: `Exploring cell (${r}, ${c}). Marks cell in active search path.`,
+      explanation: `Exploring cell (${r}, ${c}). Added to active recursion path.`,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       recursionStack: currentPath,
     });
 
     if (r === dr && c === dc) {
       steps.push({
-        data: { maze, path: sol.map((row) => [...row]) },
+        data: {
+          maze,
+          path: sol.map((row) => [...row]),
+          deadEnds: deadEnds.map((row) => [...row]),
+        },
         gridState: {
           currentRow: r,
           currentCol: c,
@@ -3173,7 +3535,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
           phase: "success",
         },
         highlights: { [`${r}-${c}`]: "sorted" },
-        explanation: `Reached destination (${dr}, ${dc})! Path solved successfully.`,
+        explanation: `🎉 Reached destination (${dr}, ${dc})! Maze path solved successfully.`,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
         recursionStack: currentPath,
       });
@@ -3185,7 +3547,11 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
       const nc = c + ddC;
       if (isSafe(nr, nc)) {
         steps.push({
-          data: { maze, path: sol.map((row) => [...row]) },
+          data: {
+            maze,
+            path: sol.map((row) => [...row]),
+            deadEnds: deadEnds.map((row) => [...row]),
+          },
           gridState: {
             currentRow: nr,
             currentCol: nc,
@@ -3209,8 +3575,13 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
 
     sol[r][c] = 0;
     visited[r][c] = false;
+    deadEnds[r][c] = 1;
     steps.push({
-      data: { maze, path: sol.map((row) => [...row]) },
+      data: {
+        maze,
+        path: sol.map((row) => [...row]),
+        deadEnds: deadEnds.map((row) => [...row]),
+      },
       gridState: {
         currentRow: r,
         currentCol: c,
@@ -3224,7 +3595,7 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
         phase: "backtrack",
       },
       highlights: { [`${r}-${c}`]: "swap" },
-      explanation: `Dead end at (${r}, ${c}). Backtracking...`,
+      explanation: `⚠️ Dead end at (${r}, ${c}). Backtracking... Popping solve(${r}, ${c}) from recursion call stack.`,
       activeLine: 12,
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       recursionStack: currentPath,
@@ -3233,10 +3604,39 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
   };
 
   if (maze[sr][sc] === 0) {
-    solve(sr, sc);
+    const solved = solve(sr, sc);
+    if (!solved) {
+      steps.push({
+        data: {
+          maze,
+          path: Array.from({ length: rows }, () => Array(cols).fill(0)),
+          deadEnds: deadEnds.map((row) => [...row]),
+        },
+        gridState: {
+          currentRow: -1,
+          currentCol: -1,
+          mazeRows: rows,
+          mazeCols: cols,
+          mazeSize: rows,
+          startRow: sr,
+          startCol: sc,
+          destRow: dr,
+          destCol: dc,
+          phase: "unsolvable",
+        },
+        highlights: {},
+        explanation: `No path exists from (${sr}, ${sc}) to (${dr}, ${dc})! All possible routes blocked or dead ends.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        recursionStack: [],
+      });
+    }
   } else {
     steps.push({
-      data: { maze, path: sol.map((row) => [...row]) },
+      data: {
+        maze,
+        path: sol.map((row) => [...row]),
+        deadEnds: deadEnds.map((row) => [...row]),
+      },
       gridState: {
         currentRow: sr,
         currentCol: sc,
@@ -3247,11 +3647,10 @@ export const ratInAMazeSteps = (mazeGridStr, directionOrderStr, startR = 0, star
         startCol: sc,
         destRow: dr,
         destCol: dc,
-        phase: "backtrack",
+        phase: "unsolvable",
       },
       highlights: { [`${sr}-${sc}`]: "swap" },
-      explanation:
-        `Start cell (${sr}, ${sc}) is blocked by a wall! No solution possible.`,
+      explanation: `Start cell (${sr}, ${sc}) is blocked by a wall! No solution possible.`,
       stats: { comparisons: 1, swaps: 0, step: 1 },
       recursionStack: [],
     });
@@ -3933,16 +4332,31 @@ export const sieveSteps = (nVal) => {
 
 export const removeDuplicatesSteps = (arr) => {
   const steps = [];
-  const nums = arr.map(Number).filter((x) => !isNaN(x));
-  if (nums.length === 0) return [];
+  const rawNums = arr.map(Number).filter((x) => !isNaN(x));
+  if (rawNums.length === 0) return [];
+
+  // Remove duplicates via two pointers requires a sorted array (LeetCode 26)
+  const nums = [...rawNums].sort((a, b) => a - b);
+  const wasSorted = rawNums.every((val, i, a) => !i || a[i - 1] <= val);
+
+  if (!wasSorted) {
+    steps.push({
+      data: [...nums],
+      pointerState: { slow: 0, fast: 0, uniqueCount: 1 },
+      highlights: { 0: "sorted" },
+      explanation:
+        "Input array was sorted first: Two-pointer duplicate removal requires adjacent elements to identify duplicates.",
+      stats: { comparisons: 0, swaps: 0, step: 0 },
+    });
+  }
 
   steps.push({
     data: [...nums],
-    pointerState: { slow: 0, fast: 0 },
-    highlights: {},
+    pointerState: { slow: 0, fast: 0, uniqueCount: 1 },
+    highlights: { 0: "sorted" },
     explanation:
-      "Two Pointer initialization: slow writer at 0, fast scanner at 0.",
-    stats: { comparisons: 0, swaps: 0, step: 0 },
+      `Two Pointer initialization: Slow writer at index 0, fast scanner at index 0. First element (${nums[0]}) is always unique.`,
+    stats: { comparisons: 0, swaps: 0, step: steps.length },
   });
 
   let slow = 0;
@@ -3950,9 +4364,13 @@ export const removeDuplicatesSteps = (arr) => {
     const isDup = nums[fast] === nums[slow];
     steps.push({
       data: [...nums],
-      pointerState: { slow, fast },
+      pointerState: { slow, fast, uniqueCount: slow + 1 },
       highlights: { [slow]: "sorted", [fast]: "pivot" },
-      explanation: `Comparing fast pointer value (${nums[fast]}) with slow writer value (${nums[slow]}). ${isDup ? "Duplicate!" : "Unique element found!"}`,
+      explanation: `Comparing fast scanner nums[${fast}] (${nums[fast]}) with slow writer nums[${slow}] (${nums[slow]}). ${
+        isDup
+          ? "Duplicate value detected! Fast scanner skips ahead."
+          : "New unique element found!"
+      }`,
       stats: { comparisons: fast, swaps: 0, step: steps.length },
     });
 
@@ -3961,22 +4379,23 @@ export const removeDuplicatesSteps = (arr) => {
       nums[slow] = nums[fast];
       steps.push({
         data: [...nums],
-        pointerState: { slow, fast },
+        pointerState: { slow, fast, uniqueCount: slow + 1 },
         highlights: { [slow]: "sorted", [fast]: "pivot" },
-        explanation: `Moved slow writer to index ${slow} and updated value to ${nums[fast]}.`,
+        explanation: `Incremented slow writer to index ${slow} and copied new unique value ${nums[fast]} to nums[${slow}].`,
         stats: { comparisons: fast, swaps: 0, step: steps.length },
       });
     }
   }
 
+  const uniqueSlice = nums.slice(0, slow + 1);
   steps.push({
     data: [...nums],
-    pointerState: { slow, fast: nums.length - 1 },
+    pointerState: { slow, fast: nums.length - 1, uniqueCount: slow + 1 },
     highlights: Array.from({ length: slow + 1 }).reduce(
       (acc, _, idx) => ({ ...acc, [idx]: "sorted" }),
       {},
     ),
-    explanation: `Array compacted. Unique element count: ${slow + 1}.`,
+    explanation: `Array compacted! Unique element count: ${slow + 1}. Unique elements: [${uniqueSlice.join(", ")}].`,
     stats: { comparisons: nums.length, swaps: 0, step: steps.length },
   });
 
@@ -4728,22 +5147,23 @@ export const wordSearchSteps = (grid, word) => {
   const visited = Array.from({ length: rows }, () =>
     new Array(cols).fill(false),
   );
+  const deadEnds = Array.from({ length: rows }, () => Array(cols).fill(0));
   const path = [];
   let found = false;
+  let finalPath = [];
+
   steps.push({
-    data: { grid, word, path: [], visited: visited.map((r) => [...r]) },
+    data: { grid, word, path: [], deadEnds: deadEnds.map((r) => [...r]), visited: visited.map((r) => [...r]) },
     highlights: {},
-    explanation: `Word Search: Find "${word}" in ${rows}x${cols} grid. DFS backtracking from each starting cell.`,
+    explanation: `Word Search: Find "${word}" in ${rows}×${cols} grid using DFS backtracking.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
-    recursionStack: [],
+    recursionStack: [`dfs(start, word="${word}")`],
   });
+
   const dfs = (r, c, idx, pathArr = []) => {
     if (found) return;
     const currentPath = [...pathArr, `dfs(r=${r}, c=${c}, char='${word[idx]}')` ];
-    if (idx === word.length) {
-      found = true;
-      return;
-    }
+
     if (
       r < 0 ||
       r >= rows ||
@@ -4752,27 +5172,53 @@ export const wordSearchSteps = (grid, word) => {
       visited[r][c] ||
       grid[r][c] !== word[idx]
     ) {
+      if (r >= 0 && r < rows && c >= 0 && c < cols) {
+        deadEnds[r][c] = 1;
+      }
       steps.push({
         data: {
           grid,
           word,
           path: [...path],
+          deadEnds: deadEnds.map((r2) => [...r2]),
           visited: visited.map((r2) => [...r2]),
         },
         highlights: { invalid: [r, c] },
-        explanation: `Cell (${r},${c}): ${r < 0 || r >= rows || c < 0 || c >= cols ? "Out of bounds" : visited[r][c] ? "Already visited" : `'${grid[r]?.[c]}' ≠ '${word[idx]}'`} — backtrack.`,
+        explanation: `Cell (${r},${c}): ${r < 0 || r >= rows || c < 0 || c >= cols ? "Out of bounds" : visited[r][c] ? "Already visited" : `'${grid[r]?.[c]}' ≠ '${word[idx]}' (mismatch)`} — pruning branch & backtrack.`,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
         recursionStack: currentPath,
       });
       return;
     }
+
     visited[r][c] = true;
     path.push([r, c]);
+
+    if (idx === word.length - 1) {
+      found = true;
+      finalPath = [...path];
+      steps.push({
+        data: {
+          grid,
+          word,
+          path: [...path],
+          deadEnds: deadEnds.map((r2) => [...r2]),
+          visited: visited.map((r2) => [...r2]),
+        },
+        highlights: { current: [r, c], matchIndex: idx, found: true },
+        explanation: `🎉 Complete Match! All ${word.length} characters matched: "${word}" found at path: ${path.map(([pr, pc]) => `(${pr},${pc})`).join(" → ")}!`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        recursionStack: currentPath,
+      });
+      return;
+    }
+
     steps.push({
       data: {
         grid,
         word,
         path: [...path],
+        deadEnds: deadEnds.map((r2) => [...r2]),
         visited: visited.map((r2) => [...r2]),
       },
       highlights: { current: [r, c], matchIndex: idx },
@@ -4780,58 +5226,65 @@ export const wordSearchSteps = (grid, word) => {
       stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       recursionStack: currentPath,
     });
+
     const dirs = [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
+      [1, 0, "Down"],
+      [-1, 0, "Up"],
+      [0, 1, "Right"],
+      [0, -1, "Left"],
     ];
-    for (const [dr, dc] of dirs) {
-      dfs(r + dr, c + dc, idx + 1, currentPath);
+    for (const [dr, dc, dirName] of dirs) {
       if (found) break;
+      dfs(r + dr, c + dc, idx + 1, currentPath);
     }
+
     if (!found) {
       visited[r][c] = false;
+      deadEnds[r][c] = 1;
       path.pop();
       steps.push({
         data: {
           grid,
           word,
           path: [...path],
+          deadEnds: deadEnds.map((r2) => [...r2]),
           visited: visited.map((r2) => [...r2]),
         },
         highlights: { backtrack: [r, c] },
-        explanation: `Backtrack from (${r},${c}): no valid continuation. Remove from path.`,
+        explanation: `⚠️ Backtrack from (${r},${c}): no valid continuation found in 4 directions. Removed from path.`,
         stats: { comparisons: steps.length, swaps: 0, step: steps.length },
         recursionStack: currentPath,
       });
     }
   };
+
   outer: for (let r = 0; r < rows && !found; r++) {
     for (let c = 0; c < cols && !found; c++) {
       if (grid[r][c] === word[0]) {
         steps.push({
-          data: { grid, word, path: [], visited: visited.map((r2) => [...r2]) },
+          data: { grid, word, path: [], deadEnds: deadEnds.map((r2) => [...r2]), visited: visited.map((r2) => [...r2]) },
           highlights: { start: [r, c] },
-          explanation: `Try starting DFS from cell (${r},${c})='${grid[r][c]}' matching word[0]='${word[0]}'.`,
+          explanation: `Try starting DFS from candidate cell (${r},${c})='${grid[r][c]}' matching word[0]='${word[0]}'.`,
           stats: { comparisons: r * cols + c, swaps: 0, step: steps.length },
-          recursionStack: [],
+          recursionStack: [`dfs(r=${r}, c=${c}, char='${word[0]}')`],
         });
         dfs(r, c, 0, []);
       }
     }
   }
+
   steps.push({
     data: {
       grid,
       word,
-      path: [...path],
+      path: finalPath.length > 0 ? [...finalPath] : [...path],
+      deadEnds: deadEnds.map((r2) => [...r2]),
       visited: visited.map((r2) => [...r2]),
     },
     highlights: { result: found },
     explanation: `Word Search result: "${word}" ${found ? "✅ FOUND" : "❌ NOT FOUND"} in grid.`,
     stats: { comparisons: steps.length, swaps: 0, step: steps.length },
-    recursionStack: [],
+    recursionStack: found ? [`MATCH: "${word}"`] : [`COMPLETE: NOT FOUND`],
   });
   return steps;
 };
@@ -5708,46 +6161,243 @@ export const floydWarshallSteps = (matrix) => {
 };
 
 // --- TWO SUM TWO POINTER ---
-export const twoSumTwoPointerSteps = (arr, target) => {
+export const twoSumTwoPointerSteps = (arr, target = 10) => {
   const steps = [];
-  const a = [...arr].sort((x, y) => x - y);
+  const rawNums = arr.map(Number).filter((x) => !isNaN(x));
+  if (rawNums.length === 0) return [];
+
+  const a = [...rawNums].sort((x, y) => x - y);
+  const targetVal =
+    target !== undefined && target !== null && !isNaN(Number(target))
+      ? Number(target)
+      : 10;
   let l = 0,
     r = a.length - 1;
+
   steps.push({
-    data: { arr: a, left: l, right: r, target },
-    highlights: { left: l, right: r },
-    explanation: `Two Sum (Two Pointer) on sorted [${a.join(", ")}]. Target=${target}. Pointers at l=${l}, r=${r}.`,
+    data: [...a],
+    pointerState: { left: l, right: r, sum: null, target: targetVal },
+    highlights: { [l]: "pivot", [r]: "pivot" },
+    explanation: `Two Sum (Two Pointer) on sorted array [${a.join(", ")}]. Target sum = ${targetVal}. Left pointer at index ${l}, right pointer at index ${r}.`,
     stats: { comparisons: 0, swaps: 0, step: 0 },
   });
+
   while (l < r) {
     const sum = a[l] + a[r];
     steps.push({
-      data: { arr: a, left: l, right: r, target },
-      highlights: { left: l, right: r, sum },
-      explanation: `a[${l}]=${a[l]} + a[${r}]=${a[r]} = ${sum}. ${sum === target ? "✅ Found target!" : sum < target ? `${sum} < ${target}: move left pointer right →` : `${sum} > ${target}: move right pointer left ←`}`,
-      activeLine: 4,
-      stats: { comparisons: l + 1, swaps: 0, step: steps.length },
+      data: [...a],
+      pointerState: { left: l, right: r, sum, target: targetVal },
+      highlights: { [l]: "active", [r]: "active" },
+      explanation: `arr[${l}] (${a[l]}) + arr[${r}] (${a[r]}) = ${sum}. ${sum === targetVal ? "✅ Found target sum!" : sum < targetVal ? `${sum} < ${targetVal}: advance left pointer right →` : `${sum} > ${targetVal}: decrement right pointer left ←`}`,
+      stats: { comparisons: steps.length, swaps: 0, step: steps.length },
     });
-    if (sum === target) {
+
+    if (sum === targetVal) {
       steps.push({
-        data: { arr: a, left: l, right: r, target },
-        highlights: { found: [l, r] },
-        explanation: `✅ Found pair: [${a[l]}, ${a[r]}] at indices [${l}, ${r}] sum to ${target}!`,
-        stats: { comparisons: l + 1, swaps: 0, step: steps.length },
+        data: [...a],
+        pointerState: { left: l, right: r, sum, target: targetVal },
+        highlights: { [l]: "sorted", [r]: "sorted" },
+        explanation: `✅ Found pair: [${a[l]}, ${a[r]}] at indices [${l}, ${r}] sum to ${targetVal}!`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length },
       });
       return steps;
-    } else if (sum < target) {
+    } else if (sum < targetVal) {
       l++;
     } else {
       r--;
     }
   }
+
   steps.push({
-    data: { arr: a, left: l, right: r, target },
-    highlights: { notFound: true },
-    explanation: `Pointers crossed. No pair found that sums to ${target}.`,
+    data: [...a],
+    pointerState: { left: -1, right: -1, sum: null, target: targetVal },
+    highlights: {},
+    explanation: `Pointers crossed. No pair found that sums to ${targetVal}.`,
     stats: { comparisons: a.length, swaps: 0, step: steps.length },
   });
+
+  return steps;
+};
+
+// --- THREE SUM ---
+export const threeSumSteps = (arr, target = 0) => {
+  const steps = [];
+  const rawNums = arr.map(Number).filter((x) => !isNaN(x));
+  if (rawNums.length < 3) return [];
+
+  const nums = [...rawNums].sort((a, b) => a - b);
+  const targetVal =
+    target !== undefined && target !== null && !isNaN(Number(target))
+      ? Number(target)
+      : 0;
+  const n = nums.length;
+
+  steps.push({
+    data: [...nums],
+    pointerState: { i: 0, left: 1, right: n - 1, sum: null, target: targetVal },
+    highlights: { 0: "pivot", 1: "active", [n - 1]: "active" },
+    explanation: `Three Sum on sorted array [${nums.join(", ")}]. Target sum = ${targetVal}. Fix index i and use two pointers (left and right) on the remaining sub-array.`,
+    stats: { comparisons: 0, swaps: 0, step: 0 },
+  });
+
+  let foundTriplets = [];
+
+  for (let i = 0; i < n - 2; i++) {
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+
+    let left = i + 1;
+    let right = n - 1;
+
+    while (left < right) {
+      const sum = nums[i] + nums[left] + nums[right];
+
+      steps.push({
+        data: [...nums],
+        pointerState: { i, left, right, sum, target: targetVal },
+        highlights: { [i]: "pivot", [left]: "active", [right]: "active" },
+        explanation: `Checking: nums[${i}] (${nums[i]}) + nums[${left}] (${nums[left]}) + nums[${right}] (${nums[right]}) = ${sum}. Target is ${targetVal}.`,
+        stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+      });
+
+      if (sum === targetVal) {
+        foundTriplets.push([nums[i], nums[left], nums[right]]);
+        steps.push({
+          data: [...nums],
+          pointerState: { i, left, right, sum, target: targetVal },
+          highlights: { [i]: "sorted", [left]: "sorted", [right]: "sorted" },
+          explanation: `✅ Found triplet: [${nums[i]}, ${nums[left]}, ${nums[right]}] at indices [${i}, ${left}, ${right}] summing to ${targetVal}!`,
+          stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        });
+
+        while (left < right && nums[left] === nums[left + 1]) left++;
+        while (left < right && nums[right] === nums[right - 1]) right--;
+
+        left++;
+        right--;
+      } else if (sum < targetVal) {
+        steps.push({
+          data: [...nums],
+          pointerState: { i, left, right, sum, target: targetVal },
+          highlights: { [i]: "pivot", [left]: "swap" },
+          explanation: `Sum ${sum} < target ${targetVal}. Increment left pointer →`,
+          stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        });
+        left++;
+      } else {
+        steps.push({
+          data: [...nums],
+          pointerState: { i, left, right, sum, target: targetVal },
+          highlights: { [i]: "pivot", [right]: "swap" },
+          explanation: `Sum ${sum} > target ${targetVal}. Decrement right pointer ←`,
+          stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        });
+        right--;
+      }
+    }
+  }
+
+  steps.push({
+    data: [...nums],
+    pointerState: { i: -1, left: -1, right: -1, sum: null, target: targetVal },
+    highlights: {},
+    explanation:
+      foundTriplets.length > 0
+        ? `Three Sum search complete! Found ${foundTriplets.length} unique triplet(s): ${foundTriplets.map((t) => `[${t.join(", ")}]`).join(", ")}.`
+        : `Three Sum search complete. No triplet found with sum = ${targetVal}.`,
+    stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+  });
+
+  return steps;
+};
+
+// --- FOUR SUM ---
+export const fourSumSteps = (arr, target = 0) => {
+  const steps = [];
+  const rawNums = arr.map(Number).filter((x) => !isNaN(x));
+  if (rawNums.length < 4) return [];
+
+  const nums = [...rawNums].sort((a, b) => a - b);
+  const targetVal =
+    target !== undefined && target !== null && !isNaN(Number(target))
+      ? Number(target)
+      : 0;
+  const n = nums.length;
+
+  steps.push({
+    data: [...nums],
+    pointerState: { i: 0, j: 1, left: 2, right: n - 1, sum: null, target: targetVal },
+    highlights: { 0: "pivot", 1: "pivot", 2: "active", [n - 1]: "active" },
+    explanation: `Four Sum on sorted array [${nums.join(", ")}]. Target sum = ${targetVal}. Fix indices i and j, then scan with left and right pointers.`,
+    stats: { comparisons: 0, swaps: 0, step: 0 },
+  });
+
+  let foundQuads = [];
+
+  for (let i = 0; i < n - 3; i++) {
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+
+    for (let j = i + 1; j < n - 2; j++) {
+      if (j > i + 1 && nums[j] === nums[j - 1]) continue;
+
+      let left = j + 1;
+      let right = n - 1;
+
+      while (left < right) {
+        const sum = nums[i] + nums[j] + nums[left] + nums[right];
+
+        steps.push({
+          data: [...nums],
+          pointerState: { i, j, left, right, sum, target: targetVal },
+          highlights: {
+            [i]: "pivot",
+            [j]: "pivot",
+            [left]: "active",
+            [right]: "active",
+          },
+          explanation: `Checking: nums[${i}] (${nums[i]}) + nums[${j}] (${nums[j]}) + nums[${left}] (${nums[left]}) + nums[${right}] (${nums[right]}) = ${sum}. Target is ${targetVal}.`,
+          stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+        });
+
+        if (sum === targetVal) {
+          foundQuads.push([nums[i], nums[j], nums[left], nums[right]]);
+          steps.push({
+            data: [...nums],
+            pointerState: { i, j, left, right, sum, target: targetVal },
+            highlights: {
+              [i]: "sorted",
+              [j]: "sorted",
+              [left]: "sorted",
+              [right]: "sorted",
+            },
+            explanation: `✅ Found quadruplet: [${nums[i]}, ${nums[j]}, ${nums[left]}, ${nums[right]}] summing to ${targetVal}!`,
+            stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+          });
+
+          while (left < right && nums[left] === nums[left + 1]) left++;
+          while (left < right && nums[right] === nums[right - 1]) right--;
+
+          left++;
+          right--;
+        } else if (sum < targetVal) {
+          left++;
+        } else {
+          right--;
+        }
+      }
+    }
+  }
+
+  steps.push({
+    data: [...nums],
+    pointerState: { i: -1, j: -1, left: -1, right: -1, sum: null, target: targetVal },
+    highlights: {},
+    explanation:
+      foundQuads.length > 0
+        ? `Four Sum search complete! Found ${foundQuads.length} quadruplet(s): ${foundQuads.map((q) => `[${q.join(", ")}]`).join(", ")}.`
+        : `Four Sum search complete. No quadruplet found with sum = ${targetVal}.`,
+    stats: { comparisons: steps.length, swaps: 0, step: steps.length },
+  });
+
   return steps;
 };
 // ============================================================
@@ -6182,62 +6832,253 @@ export const generateSubsetsUsingBitmaskSteps = (arr) => {
 
 
 // ============================================================
-// KNIGHT'S TOUR
+// KNIGHT'S TOUR & SHORTEST PATH (BFS + BACKTRACKING MODES)
 // ============================================================
-export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = null, destC = null) => {
-  const steps = [];
-  const size = Math.min(Math.max(parseInt(n) || 5, 5), 7);
-  const board = Array.from({ length: size }, () => Array(size).fill(-1));
-  let moveCount = 0;
 
-  // Clamp start and dest position to board bounds
+export const knightsTourBFSSteps = (n = 5, startR = 0, startC = 0, destR = 4, destC = 4) => {
+  const steps = [];
+  const size = Math.min(Math.max(parseInt(n) || 5, 4), 8);
+  const totalCells = size * size;
+
+  // Clamp start and destination coordinates
   const sr = Math.min(Math.max(parseInt(startR) || 0, 0), size - 1);
   const sc = Math.min(Math.max(parseInt(startC) || 0, 0), size - 1);
-  
-  // Default destination to some other cell if not provided or same as start
-  let dr = destR !== null ? Math.min(Math.max(parseInt(destR), 0), size - 1) : size - 1;
-  let dc = destC !== null ? Math.min(Math.max(parseInt(destC), 0), size - 1) : size - 1;
-  if (dr === sr && dc === sc) {
-    dr = (sr + 2) % size;
-    dc = (sc + 1) % size;
-  }
+  const dr = destR !== null && !isNaN(parseInt(destR))
+    ? Math.min(Math.max(parseInt(destR), 0), size - 1)
+    : size - 1;
+  const dc = destC !== null && !isNaN(parseInt(destC))
+    ? Math.min(Math.max(parseInt(destC), 0), size - 1)
+    : size - 1;
 
-  // Knight move offsets
+  // 8 standard Knight L-moves
   const moves = [
     [2, 1], [1, 2], [-1, 2], [-2, 1],
     [-2, -1], [-1, -2], [1, -2], [2, -1],
   ];
 
-  const isValid = (r, c, move) => {
-    if (r < 0 || r >= size || c < 0 || c >= size || board[r][c] !== -1) return false;
-    // Don't land on destination until the final move
-    if (r === dr && c === dc && move < size * size - 1) return false;
-    return true;
+  const dist = Array.from({ length: size }, () => Array(size).fill(-1));
+  const parent = Array.from({ length: size }, () => Array(size).fill(null));
+
+  dist[sr][sc] = 0;
+  const queue = [[sr, sc, 0]];
+
+  const addStep = (r, c, phase, explanation, shortestPath = [], candidateMoves = []) => {
+    if (steps.length >= 1000 && phase !== 'done' && phase !== 'init') return;
+    const visitedCount = dist.reduce((acc, row) => acc + row.filter(v => v !== -1).length, 0);
+
+    const highlights = {};
+    if (shortestPath && shortestPath.length > 0) {
+      shortestPath.forEach(([pr, pc]) => {
+        highlights[`${pr}-${pc}`] = 'sorted';
+      });
+    }
+    if (candidateMoves && candidateMoves.length > 0) {
+      candidateMoves.forEach(([mr, mc]) => {
+        if (!highlights[`${mr}-${mc}`]) highlights[`${mr}-${mc}`] = 'compare';
+      });
+    }
+    highlights[`${r}-${c}`] = phase === 'done' ? 'sorted' : 'pivot';
+
+    const queueStrList = queue.map(([qr, qc, qd]) => `(${qr},${qc}, d=${qd})`);
+
+    steps.push({
+      data: {
+        dist: dist.map(row => [...row]),
+        board: dist.map(row => [...row]),
+        size,
+        currentRow: r,
+        currentCol: c,
+      },
+      knightState: {
+        mode: 'bfs',
+        dist: dist.map(row => [...row]),
+        board: dist.map(row => [...row]),
+        size,
+        currentRow: r,
+        currentCol: c,
+        startRow: sr,
+        startCol: sc,
+        destRow: dr,
+        destCol: dc,
+        minSteps: shortestPath.length > 0 ? shortestPath.length - 1 : null,
+        shortestPath,
+        queue: queueStrList,
+        phase,
+        visitedCount,
+        totalCells,
+      },
+      highlights,
+      explanation,
+      stats: {
+        comparisons: steps.length,
+        visited: visitedCount,
+        queueSize: queue.length,
+        step: steps.length,
+      },
+      recursionStack: queueStrList.slice(0, 10),
+    });
   };
 
-  // Warnsdorff's heuristic: count onward moves from a cell
-  const degree = (r, c, move) =>
-    moves.reduce((cnt, [drr, dcc]) => cnt + (isValid(r + drr, c + dcc, move + 1) ? 1 : 0), 0);
+  addStep(sr, sc, 'init',
+    `Initialize ${size}×${size} chessboard. Knight Start: (${sr}, ${sc}) → Target Destination: (${dr}, ${dc}). Initialized BFS queue with start cell at Distance 0.`);
+
+  if (sr === dr && sc === dc) {
+    addStep(sr, sc, 'done',
+      `Start and Target are the same cell (${sr}, ${sc}). Minimum steps required = 0 moves! 🎉`, [[sr, sc]]);
+    return steps;
+  }
+
+  let finalPath = [];
+
+  while (queue.length > 0) {
+    const [r, c, d] = queue.shift();
+
+    if (r === dr && c === dc) {
+      let curr = [dr, dc];
+      while (curr) {
+        finalPath.push(curr);
+        curr = parent[curr[0]][curr[1]];
+      }
+      finalPath.reverse();
+      const pathStr = finalPath.map(([pr, pc]) => `(${pr},${pc})`).join(' → ');
+      addStep(r, c, 'done',
+        `🎯 Target Destination reached at (${dr}, ${dc}) in ${d} minimum knight moves! Shortest Path: ${pathStr} 🎉`, finalPath);
+      break;
+    }
+
+    const validMoves = [];
+    for (const [drr, dcc] of moves) {
+      const nr = r + drr, nc = c + dcc;
+      if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+        validMoves.push([nr, nc]);
+      }
+    }
+
+    addStep(r, c, 'explore',
+      `Dequeued Knight at (${r}, ${c}) [Distance: ${d}]. Evaluating ${validMoves.length} potential L-moves on the board...`, [], validMoves);
+
+    for (const [nr, nc] of validMoves) {
+      if (dist[nr][nc] === -1) {
+        dist[nr][nc] = d + 1;
+        parent[nr][nc] = [r, c];
+        queue.push([nr, nc, d + 1]);
+        addStep(nr, nc, 'discover',
+          `Move from (${r}, ${c}) → (${nr}, ${nc}) is unvisited. Set Distance = ${d + 1} and enqueued to BFS.`);
+      }
+    }
+  }
+
+  return steps;
+};
+
+export const knightsTourBacktrackingSteps = (n = 5, startR = 0, startC = 0, destR = 4, destC = 4) => {
+  const steps = [];
+  const size = Math.min(Math.max(parseInt(n) || 5, 4), 8);
+  const totalCells = size * size;
+  const board = Array.from({ length: size }, () => Array(size).fill(-1));
+  let moveCount = 0;
+
+  const sr = Math.min(Math.max(parseInt(startR) || 0, 0), size - 1);
+  const sc = Math.min(Math.max(parseInt(startC) || 0, 0), size - 1);
+  const hasFixedDest = destR !== null && destC !== null && !isNaN(parseInt(destR)) && !isNaN(parseInt(destC));
+  const dr = hasFixedDest ? Math.min(Math.max(parseInt(destR), 0), size - 1) : null;
+  const dc = hasFixedDest ? Math.min(Math.max(parseInt(destC), 0), size - 1) : null;
+
+  const moves = [
+    [2, 1], [1, 2], [-1, 2], [-2, 1],
+    [-2, -1], [-1, -2], [1, -2], [2, -1],
+  ];
+
+  const isValid = (r, c) => r >= 0 && r < size && c >= 0 && c < size && board[r][c] === -1;
+
+  const countDegree = (r, c, move = 0) => {
+    let count = 0;
+    for (const [drr, dcc] of moves) {
+      const nr = r + drr, nc = c + dcc;
+      if (isValid(nr, nc)) {
+        if (hasFixedDest && nr === dr && nc === dc && move < totalCells - 2) {
+          // Reserve destination ingress for final move
+        } else {
+          count++;
+        }
+      }
+    }
+    return count;
+  };
+
+  const secondaryDegree = (r, c, move = 0) => {
+    let sum = 0;
+    for (const [drr, dcc] of moves) {
+      const nr = r + drr, nc = c + dcc;
+      if (isValid(nr, nc)) sum += countDegree(nr, nc, move);
+    }
+    return sum;
+  };
+
+  const destFreeNeighbors = () => {
+    if (!hasFixedDest) return 8;
+    let cnt = 0;
+    for (const [drr, dcc] of moves) {
+      if (isValid(dr + drr, dc + dcc)) cnt++;
+    }
+    return cnt;
+  };
 
   const addStep = (r, c, phase, explanation, currentPath = []) => {
-    // Cap intermediate steps to 1000 to avoid memory & gc lag, but always allow init, done, or fail steps
-    if (steps.length >= 1000 && phase !== 'done' && phase !== 'fail' && phase !== 'init') {
-      return;
-    }
+    if (steps.length >= 1500 && phase !== 'done' && phase !== 'fail' && phase !== 'init') return;
+    const visitedCount = board.reduce((acc, row) => acc + row.filter(v => v !== -1).length, 0);
     steps.push({
       data: { board: board.map(row => [...row]), size, currentRow: r, currentCol: c },
-      knightState: { board: board.map(row => [...row]), size, currentRow: r, currentCol: c, moveCount, phase, startRow: sr, startCol: sc, destRow: dr, destCol: dc },
+      knightState: {
+        mode: 'backtracking',
+        board: board.map(row => [...row]),
+        size,
+        currentRow: r,
+        currentCol: c,
+        moveCount,
+        visitedCount,
+        phase,
+        startRow: sr,
+        startCol: sc,
+        destRow: dr,
+        destCol: dc,
+        hasFixedDest,
+        totalCells,
+      },
       highlights: { [`${r}-${c}`]: phase === 'place' ? 'pivot' : phase === 'backtrack' ? 'swap' : 'sorted' },
       explanation,
-      stats: { comparisons: steps.length, swaps: moveCount, step: steps.length },
+      stats: { comparisons: steps.length, moves: moveCount + 1, step: steps.length },
       recursionStack: currentPath,
     });
   };
-  addStep(sr, sc, 'init',
-    `Initialize ${size}×${size} chessboard. Start: (${sr},${sc}) → Destination: (${dr},${dc}).`);
+
+  const initMsg = hasFixedDest
+    ? `Initialize ${size}×${size} chessboard (${totalCells} squares). Knight Start: (${sr}, ${sc}) → Target End: (${dr}, ${dc}). Goal: Visit all ${totalCells} squares and conclude at (${dr}, ${dc}).`
+    : `Initialize ${size}×${size} chessboard (${totalCells} squares). Knight Start: (${sr}, ${sc}). Goal: Visit every square exactly once.`;
+
+  addStep(sr, sc, 'init', initMsg);
+
+  if (size % 2 === 1) {
+    if ((sr + sc) % 2 !== 0) {
+      addStep(sr, sc, 'fail',
+        `Parity Rule: On an odd ${size}×${size} board (${totalCells} squares), Start cell must have even parity ((row + col) is even). (${sr}, ${sc}) has odd parity and cannot visit all squares.`);
+      return steps;
+    }
+    if (hasFixedDest && (dr + dc) % 2 !== 0) {
+      addStep(sr, sc, 'fail',
+        `Parity Rule: On an odd ${size}×${size} board (${totalCells} squares), both Start and End must have even parity. Target End (${dr}, ${dc}) has odd parity and cannot be the final square.`);
+      return steps;
+    }
+  } else {
+    if (hasFixedDest && (sr + sc) % 2 === (dr + dc) % 2) {
+      addStep(sr, sc, 'fail',
+        `Parity Rule: On an even ${size}×${size} board (${totalCells} squares), Start and End must have opposite color parity.`);
+      return steps;
+    }
+  }
 
   let callCount = 0;
-  const maxCalls = 30000;
+  const maxCalls = 50000;
   let aborted = false;
 
   const solve = (r, c, move, path = []) => {
@@ -6248,44 +7089,73 @@ export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = null, de
       return false;
     }
 
-    const currentPath = [...path, `solve(${r}, ${c}, mv=${move})` ];
+    const currentPath = [...path, `solve(${r}, ${c}, mv=${move + 1})`];
     board[r][c] = move;
     moveCount = move;
     addStep(r, c, 'place', `Move #${move + 1}: Knight placed at (${r}, ${c}).`, currentPath);
 
-    if (move === size * size - 1) {
-      if (r === dr && c === dc) {
-        addStep(r, c, 'done', `Knight's Tour complete! Visited all ${size * size} cells, ending at (${dr}, ${dc}).`, currentPath);
+    if (move === totalCells - 1) {
+      if (!hasFixedDest || (r === dr && c === dc)) {
+        addStep(r, c, 'done', `Knight's Tour complete! Visited all ${totalCells} squares on the ${size}×${size} chessboard${hasFixedDest ? ` ending at (${dr}, ${dc})` : ''}! 🎉`, currentPath);
         return true;
       }
       board[r][c] = -1;
       return false;
     }
 
-    // Gather candidate moves sorted by Warnsdorff's degree (ascending)
-    const candidates = moves
-      .map(([drr, dcc]) => [r + drr, c + dcc])
-      .filter(([nr, nc]) => isValid(nr, nc, move))
-      .map(([nr, nc]) => ({ nr, nc, deg: degree(nr, nc, move) }))
-      .sort((a, b) => a.deg - b.deg);
+    if (hasFixedDest && move < totalCells - 1 && destFreeNeighbors() === 0) {
+      let canJump = false;
+      for (const [drr, dcc] of moves) {
+        if (r + drr === dr && c + dcc === dc) {
+          canJump = true; break;
+        }
+      }
+      if (!canJump || move !== totalCells - 2) {
+        board[r][c] = -1;
+        addStep(r, c, 'backtrack', `Destination (${dr}, ${dc}) has no incoming unvisited moves. Backtracking...`, currentPath);
+        return false;
+      }
+    }
+
+    const candidates = [];
+    for (const [drr, dcc] of moves) {
+      const nr = r + drr, nc = c + dcc;
+      if (isValid(nr, nc)) {
+        if (hasFixedDest && nr === dr && nc === dc && move < totalCells - 2) continue;
+        candidates.push({
+          nr,
+          nc,
+          deg: countDegree(nr, nc, move),
+          secDeg: secondaryDegree(nr, nc, move),
+        });
+      }
+    }
+    candidates.sort((a, b) => a.deg - b.deg || a.secDeg - b.secDeg);
 
     for (const { nr, nc } of candidates) {
       if (solve(nr, nc, move + 1, currentPath)) return true;
     }
 
     board[r][c] = -1;
-    addStep(r, c, 'backtrack', `Backtracking from (${r}, ${c}).`, currentPath);
+    addStep(r, c, 'backtrack', `Dead end reached at (${r}, ${c}). Backtracking...`, currentPath);
     return false;
   };
 
   if (!solve(sr, sc, 0)) {
     if (aborted) {
-      addStep(sr, sc, 'fail', `Search aborted (limit of ${maxCalls} calls exceeded to prevent page freeze). No valid tour found.`);
+      addStep(sr, sc, 'fail', `Search limit reached (${maxCalls} calls). No valid tour found from (${sr}, ${sc})${hasFixedDest ? ` to (${dr}, ${dc})` : ''}.`);
     } else {
-      addStep(sr, sc, 'fail', `No complete tour ending at (${dr}, ${dc}) found starting from (${sr}, ${sc}).`);
+      addStep(sr, sc, 'fail', `No complete tour found starting from (${sr}, ${sc})${hasFixedDest ? ` ending at (${dr}, ${dc})` : ''}.`);
     }
   }
   return steps;
+};
+
+export const knightsTourSteps = (n = 5, startR = 0, startC = 0, destR = 4, destC = 4, mode = 'bfs') => {
+  if (mode === 'backtracking') {
+    return knightsTourBacktrackingSteps(n, startR, startC, destR, destC);
+  }
+  return knightsTourBFSSteps(n, startR, startC, destR, destC);
 };
 
 
