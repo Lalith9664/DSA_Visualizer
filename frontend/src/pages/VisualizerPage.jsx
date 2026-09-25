@@ -23,6 +23,18 @@ import {
   ChevronLeft,
   ChevronRight,
   List,
+  Maximize2,
+  Minimize2,
+  RotateCw,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  RotateCcw,
+  Shuffle,
+  Sliders,
+  X,
+  Code2,
 } from "lucide-react";
 
 // Heavy components — lazy-loaded so they don't block the initial bundle
@@ -556,6 +568,8 @@ const VisualizerPage = () => {
     setCurrentStep,
     isPlaying,
     setIsPlaying,
+    speed,
+    setSpeed,
     steps,
     setSteps,
     setCurrentAlgoId,
@@ -564,6 +578,8 @@ const VisualizerPage = () => {
     favorites,
     toggleFavorite,
     addToRecent,
+    nextStep,
+    prevStep,
     resetVisualizer,
   } = useVisualizer();
 
@@ -573,6 +589,129 @@ const VisualizerPage = () => {
   const [isNavigating, setIsNavigating] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [mobileFullscreenPanel, setMobileFullscreenPanel] = useState(null); // null | 'input' | 'reference'
+  const [isNativeLandscape, setIsNativeLandscape] = useState(
+    () => typeof window !== "undefined" && window.innerWidth > window.innerHeight
+  );
+  const [forceRotateLandscape, setForceRotateLandscape] = useState(true);
+
+  // Monitor resize & physical orientation changes
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      setIsNativeLandscape(window.innerWidth > window.innerHeight);
+    };
+
+    window.addEventListener("resize", handleOrientationChange);
+    window.addEventListener("orientationchange", handleOrientationChange);
+    return () => {
+      window.removeEventListener("resize", handleOrientationChange);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+    };
+  }, []);
+
+  // Fullscreen & Orientation Lock Controller
+  const toggleFullscreen = async (enable) => {
+    const targetState = typeof enable === "boolean" ? enable : !isExpanded;
+
+    if (targetState) {
+      setIsExpanded(true);
+      // 1. Browser Native Fullscreen Request
+      try {
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) {
+          await docEl.requestFullscreen().catch(() => {});
+        } else if (docEl.webkitRequestFullscreen) {
+          await docEl.webkitRequestFullscreen().catch(() => {});
+        }
+      } catch (e) {
+        console.warn("Fullscreen request error:", e);
+      }
+
+      // 2. Lock Orientation to Landscape
+      try {
+        if (window.screen?.orientation?.lock) {
+          await window.screen.orientation.lock("landscape").catch(() => {});
+        } else if (window.screen?.lockOrientation) {
+          window.screen.lockOrientation("landscape");
+        } else if (window.screen?.mozLockOrientation) {
+          window.screen.mozLockOrientation("landscape");
+        } else if (window.screen?.msLockOrientation) {
+          window.screen.msLockOrientation("landscape");
+        }
+      } catch (e) {
+        console.warn("Screen orientation lock error:", e);
+      }
+    } else {
+      setIsExpanded(false);
+      setMobileFullscreenPanel(null);
+
+      // 1. Exit Browser Fullscreen
+      try {
+        if (
+          document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement
+        ) {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen().catch(() => {});
+          } else if (document.webkitExitFullscreen) {
+            await document.webkitExitFullscreen().catch(() => {});
+          } else if (document.mozCancelFullScreen) {
+            await document.mozCancelFullScreen().catch(() => {});
+          }
+        }
+      } catch (e) {
+        console.warn("Exit fullscreen error:", e);
+      }
+
+      // 2. Unlock Screen Orientation & Restore Portrait
+      try {
+        if (window.screen?.orientation?.unlock) {
+          window.screen.orientation.unlock();
+        }
+        if (window.screen?.orientation?.lock) {
+          await window.screen.orientation.lock("portrait").catch(() => {});
+        } else if (window.screen?.unlockOrientation) {
+          window.screen.unlockOrientation();
+        }
+      } catch (e) {
+        console.warn("Orientation unlock error:", e);
+      }
+    }
+  };
+
+  // Synchronize state if user exits fullscreen via hardware back/ESC/browser gesture
+  useEffect(() => {
+    const handleFsChange = () => {
+      const isNativeFs = Boolean(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement
+      );
+      if (!isNativeFs && isExpanded) {
+        setIsExpanded(false);
+        setMobileFullscreenPanel(null);
+        try {
+          if (window.screen?.orientation?.unlock) {
+            window.screen.orientation.unlock();
+          }
+          if (window.screen?.orientation?.lock) {
+            window.screen.orientation.lock("portrait").catch(() => {});
+          }
+        } catch (err) {
+          console.warn("Orientation unlock error:", err);
+        }
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFsChange);
+    document.addEventListener("webkitfullscreenchange", handleFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFsChange);
+      document.removeEventListener("webkitfullscreenchange", handleFsChange);
+    };
+  }, [isExpanded]);
+
   // Maze dimension state (Rat in a Maze)
   const [mazeRows, setMazeRows] = useState(4);
   const [mazeCols, setMazeCols] = useState(4);
@@ -3330,17 +3469,104 @@ const VisualizerPage = () => {
 
       {/* 2. DUAL COLUMN WORKSPACE — split pane layout */}
       {isExpanded ? (
-        /* FULLSCREEN SIDE-BY-SIDE MODE: covers sidebar, nav, everything */
-        <div className="fixed inset-0 z-50 w-screen h-screen bg-gradient-to-br from-[#F4F7FE] to-white dark:from-[#0B0F19] dark:to-[#161B26] flex flex-row p-6 gap-6 overflow-hidden">
-          
-          {/* LEFT SIDE CONTENT: visualizer canvas and controls deck */}
-          <div className="flex-1 h-full flex flex-col justify-between transition-all duration-300 min-w-0">
-            {/* Main Visualizer screen in fullscreen */}
-            <div className="flex-1 w-full flex items-center justify-center min-h-0 relative">
+        /* FULLSCREEN MODE (Responsive Mobile Landscape + Desktop Wide Deck) */
+        <div
+          className={`
+            z-50 bg-gradient-to-br from-[#F4F7FE] to-white dark:from-[#0B0F19] dark:to-[#161B26] overflow-hidden select-none
+            ${
+              !isNativeLandscape && forceRotateLandscape
+                ? "mobile-forced-landscape"
+                : "fixed inset-0 w-screen h-screen"
+            }
+          `}
+        >
+          {/* ========================================================= */}
+          {/* MOBILE FULLSCREEN LANDSCAPE VIEW (md:hidden)              */}
+          {/* ========================================================= */}
+          <div className="flex md:hidden flex-col w-full h-full p-2.5 sm:p-3 justify-between relative">
+            {/* 1. Mobile Top HUD / Header Bar */}
+            <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-xl bg-white/70 dark:bg-slate-900/80 backdrop-blur-md border border-white/40 dark:border-white/10 shadow-sm z-30">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-xs font-bold text-text-primary truncate">
+                  {algo.name}
+                </span>
+                <span className="text-[9px] uppercase font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                  Step {totalSteps > 0 ? currentStep + 1 : 0}/{totalSteps}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* Custom Input Drawer Toggle */}
+                <button
+                  onClick={() =>
+                    setMobileFullscreenPanel(
+                      mobileFullscreenPanel === "input" ? null : "input"
+                    )
+                  }
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-1 cursor-pointer ${
+                    mobileFullscreenPanel === "input"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-black/5 dark:bg-white/5 text-text-secondary border-black/5 dark:border-white/10"
+                  }`}
+                  title="Configure Inputs"
+                >
+                  <Sliders className="w-3 h-3" />
+                  <span>Input</span>
+                </button>
+
+                {/* Reference Code Drawer Toggle */}
+                <button
+                  onClick={() =>
+                    setMobileFullscreenPanel(
+                      mobileFullscreenPanel === "reference" ? null : "reference"
+                    )
+                  }
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-1 cursor-pointer ${
+                    mobileFullscreenPanel === "reference"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-black/5 dark:bg-white/5 text-text-secondary border-black/5 dark:border-white/10"
+                  }`}
+                  title="Algorithm Reference"
+                >
+                  <Code2 className="w-3 h-3" />
+                  <span>Code</span>
+                </button>
+
+                {/* Simulated Landscape Orientation Rotate Toggle */}
+                {!isNativeLandscape && (
+                  <button
+                    onClick={() => setForceRotateLandscape(!forceRotateLandscape)}
+                    className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 text-text-secondary border border-black/5 dark:border-white/10 cursor-pointer"
+                    title={
+                      forceRotateLandscape
+                        ? "Switch to Portrait Fit"
+                        : "Switch to Forced Landscape"
+                    }
+                  >
+                    <RotateCw className="w-3.5 h-3.5 text-accent" />
+                  </button>
+                )}
+
+                {/* Exit Fullscreen Button */}
+                <button
+                  onClick={() => toggleFullscreen(false)}
+                  className="px-2.5 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-500 dark:text-red-400 border border-red-500/30 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-all active:scale-95"
+                  title="Exit Fullscreen"
+                >
+                  <Minimize2 className="w-3 h-3" />
+                  <span>Exit</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Mobile Center Stage: Visualizer Canvas */}
+            <div className="flex-1 w-full min-h-0 relative my-1.5 flex items-center justify-center overflow-hidden">
               <Suspense
                 fallback={
-                  <div className="skeuo-screen w-full flex items-center justify-center min-h-[320px] h-80 bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
-                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-t-purple-500 border-r-cyan-500 border-b-transparent border-l-transparent" />
+                  <div className="skeuo-screen w-full h-full flex items-center justify-center bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <div className="animate-spin rounded-full h-8 w-8 border-4 border-t-purple-500 border-r-cyan-500 border-b-transparent border-l-transparent" />
                   </div>
                 }
               >
@@ -3348,66 +3574,205 @@ const VisualizerPage = () => {
                   algorithm={algo}
                   loading={isNavigating}
                   isExpanded={isExpanded}
-                  onToggleExpand={() => setIsExpanded(false)}
+                  onToggleExpand={() => toggleFullscreen(false)}
                 />
               </Suspense>
             </div>
 
-            {/* Final Output Block in Fullscreen — appears on last step */}
-            <Suspense fallback={null}>
-              <div className="px-1 mb-2">
-                <FinalOutputPanel algorithm={algo} />
-              </div>
-            </Suspense>
+            {/* 3. Mobile Bottom Playback Control Dock */}
+            <div className="px-2.5 py-2 rounded-2xl bg-white/80 dark:bg-slate-900/90 backdrop-blur-xl border border-white/40 dark:border-white/10 shadow-lg flex items-center justify-between gap-2 z-30">
+              {/* Playback action buttons */}
+              <div className="flex items-center gap-1.5">
+                {/* Play / Pause */}
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
+                    isPlaying ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"
+                  }`}
+                >
+                  {isPlaying ? (
+                    <>
+                      <Pause className="w-3.5 h-3.5" />
+                      <span>Pause</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Play</span>
+                    </>
+                  )}
+                </button>
 
-            {/* Floating Control Cockpit and Input Panel at the bottom */}
-            <div className="w-full mt-4 z-10 flex flex-col md:flex-row gap-4 items-stretch">
-              {/* Left side: Custom Input Panel */}
-              <div className="flex-1 min-w-0">
-                {inputPanelContent}
+                {/* Step Back */}
+                <button
+                  onClick={prevStep}
+                  disabled={isPlaying || !canPrev}
+                  className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 disabled:opacity-30 border border-black/5 dark:border-white/10 text-text-primary cursor-pointer active:scale-95 transition-all"
+                  title="Previous Step"
+                >
+                  <SkipBack className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Step Forward */}
+                <button
+                  onClick={nextStep}
+                  disabled={isPlaying || !canNext}
+                  className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 disabled:opacity-30 border border-black/5 dark:border-white/10 text-text-primary cursor-pointer active:scale-95 transition-all"
+                  title="Next Step"
+                >
+                  <SkipForward className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Reset */}
+                <button
+                  onClick={handleClear}
+                  className="p-1.5 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 border border-black/5 dark:border-white/10 text-text-primary cursor-pointer active:scale-95 transition-all"
+                  title="Reset Algorithm"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Randomize Input */}
+                <button
+                  onClick={handleRandomInput}
+                  className="p-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 cursor-pointer active:scale-95 transition-all"
+                  title="Randomize Values"
+                >
+                  <Shuffle className="w-3.5 h-3.5" />
+                </button>
               </div>
 
-              {/* Right side: Control Console */}
-              <div className="flex-1 min-w-0">
-                <ControlPanel
-                  onGenerate={handleApplyCustomInput}
-                  onRandomInput={handleRandomInput}
-                  onClear={handleClear}
-                  onReset={handleClear}
-                  canPrev={canPrev}
-                  canNext={canNext}
-                />
+              {/* Speed Pills */}
+              <div className="flex items-center gap-1 bg-black/5 dark:bg-black/20 p-1 rounded-xl">
+                {[0.5, 1, 2, 5].map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => setSpeed(val)}
+                    className={`px-1.5 py-0.5 rounded-lg text-[9px] font-mono font-bold transition-all cursor-pointer ${
+                      speed === val
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {val}x
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
 
-          {/* Sliding Drawer toggle button */}
-          <button
-            onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-            className={`fixed top-24 z-50 flex items-center justify-center w-12 h-14 rounded-l-full bg-slate-100 dark:bg-[#161b26] border-2 border-emerald-600 dark:border-emerald-500 border-r-0 shadow-lg text-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800/80 transition-all duration-300 ${isDrawerOpen ? "right-[444px]" : "right-0"}`}
-            title={isDrawerOpen ? "Close Reference Panel" : "Open Reference Panel"}
-          >
-            {isDrawerOpen ? (
-              <ChevronRight className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            ) : (
-              <List className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            )}
-          </button>
-
-          {/* Sliding Drawer Container (shrinks and slides side-by-side) */}
-          <div
-            className={`relative h-full z-40 bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-2xl border-l border-white/20 dark:border-white/5 transition-all duration-300 flex flex-col p-6 overflow-y-auto gap-4 flex-shrink-0 ${isDrawerOpen ? "w-[420px] opacity-100" : "w-0 opacity-0 pointer-events-none p-0 border-l-0"}`}
-          >
-            {isDrawerOpen && (
-              <div className="flex flex-col gap-4 animate-fadeIn">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <span className="text-sm font-extrabold text-text-primary uppercase tracking-wider">
-                    Reference Panel
-                  </span>
+            {/* 4. Mobile Fullscreen Slide-in Panels (Inputs or Reference) */}
+            {mobileFullscreenPanel && (
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-40 flex items-center justify-end p-2 sm:p-4">
+                <div className="w-full max-w-sm h-full clay-card p-4 rounded-2xl bg-white dark:bg-[#161B26] overflow-y-auto flex flex-col gap-3 shadow-2xl border border-white/20">
+                  <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-2">
+                    <span className="text-xs font-bold text-text-primary uppercase tracking-wider">
+                      {mobileFullscreenPanel === "input"
+                        ? "Configure Inputs"
+                        : "Reference Deck"}
+                    </span>
+                    <button
+                      onClick={() => setMobileFullscreenPanel(null)}
+                      className="w-6 h-6 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center text-text-secondary hover:text-text-primary cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {mobileFullscreenPanel === "input"
+                      ? inputPanelContent
+                      : rightBlockContent}
+                  </div>
                 </div>
-                {rightBlockContent}
               </div>
             )}
+          </div>
+
+          {/* ========================================================= */}
+          {/* DESKTOP FULLSCREEN SIDE-BY-SIDE MODE (hidden md:flex)     */}
+          {/* ========================================================= */}
+          <div className="hidden md:flex w-full h-full flex-row p-6 gap-6 overflow-hidden">
+            {/* LEFT SIDE CONTENT: visualizer canvas and controls deck */}
+            <div className="flex-1 h-full flex flex-col justify-between transition-all duration-300 min-w-0">
+              {/* Main Visualizer screen in fullscreen */}
+              <div className="flex-1 w-full flex items-center justify-center min-h-0 relative">
+                <Suspense
+                  fallback={
+                    <div className="skeuo-screen w-full flex items-center justify-center min-h-[320px] h-80 bg-white/80 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                      <div className="animate-spin rounded-full h-10 w-10 border-4 border-t-purple-500 border-r-cyan-500 border-b-transparent border-l-transparent" />
+                    </div>
+                  }
+                >
+                  <VisualizerCanvas
+                    algorithm={algo}
+                    loading={isNavigating}
+                    isExpanded={isExpanded}
+                    onToggleExpand={() => toggleFullscreen(false)}
+                  />
+                </Suspense>
+              </div>
+
+              {/* Final Output Block in Fullscreen — appears on last step */}
+              <Suspense fallback={null}>
+                <div className="px-1 mb-2">
+                  <FinalOutputPanel algorithm={algo} />
+                </div>
+              </Suspense>
+
+              {/* Floating Control Cockpit and Input Panel at the bottom */}
+              <div className="w-full mt-4 z-10 flex flex-col md:flex-row gap-4 items-stretch">
+                {/* Left side: Custom Input Panel */}
+                <div className="flex-1 min-w-0">{inputPanelContent}</div>
+
+                {/* Right side: Control Console */}
+                <div className="flex-1 min-w-0">
+                  <ControlPanel
+                    onGenerate={handleApplyCustomInput}
+                    onRandomInput={handleRandomInput}
+                    onClear={handleClear}
+                    onReset={handleClear}
+                    canPrev={canPrev}
+                    canNext={canNext}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Sliding Drawer toggle button */}
+            <button
+              onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+              className={`fixed top-24 z-50 flex items-center justify-center w-12 h-14 rounded-l-full bg-slate-100 dark:bg-[#161b26] border-2 border-emerald-600 dark:border-emerald-500 border-r-0 shadow-lg text-slate-800 dark:text-slate-200 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800/80 transition-all duration-300 ${
+                isDrawerOpen ? "right-[444px]" : "right-0"
+              }`}
+              title={
+                isDrawerOpen ? "Close Reference Panel" : "Open Reference Panel"
+              }
+            >
+              {isDrawerOpen ? (
+                <ChevronRight className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <List className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              )}
+            </button>
+
+            {/* Sliding Drawer Container (shrinks and slides side-by-side) */}
+            <div
+              className={`relative h-full z-40 bg-gradient-to-br from-white to-[#F4F7FE] dark:from-[#161B26] dark:to-[#0B0F19] shadow-2xl border-l border-white/20 dark:border-white/5 transition-all duration-300 flex flex-col p-6 overflow-y-auto gap-4 flex-shrink-0 ${
+                isDrawerOpen
+                  ? "w-[420px] opacity-100"
+                  : "w-0 opacity-0 pointer-events-none p-0 border-l-0"
+              }`}
+            >
+              {isDrawerOpen && (
+                <div className="flex flex-col gap-4 animate-fadeIn">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                    <span className="text-sm font-extrabold text-text-primary uppercase tracking-wider">
+                      Reference Panel
+                    </span>
+                  </div>
+                  {rightBlockContent}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ) : (
@@ -3427,7 +3792,7 @@ const VisualizerPage = () => {
                 algorithm={algo}
                 loading={isNavigating}
                 isExpanded={isExpanded}
-                onToggleExpand={() => setIsExpanded(!isExpanded)}
+                onToggleExpand={() => toggleFullscreen(true)}
               />
             </Suspense>
 

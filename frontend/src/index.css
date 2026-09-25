@@ -600,3 +600,18 @@ body {
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
+/* Mobile Simulated Landscape Fullscreen Mode */
+@media (max-width: 768px) {
+  .mobile-forced-landscape {
+    position: fixed !important;
+    top: 0 !important;
+    left: 100vw !important;
+    width: 100vh !important;
+    height: 100vw !important;
+    transform: rotate(90deg) !important;
+    transform-origin: top left !important;
+    z-index: 9999 !important;
+    overflow: hidden !important;
+  }
+}
+

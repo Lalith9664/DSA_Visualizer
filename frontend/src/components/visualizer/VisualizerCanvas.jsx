@@ -66,7 +66,7 @@ const VisualizerCanvas = ({
     }
 
     return (
-      <div className={`w-full relative z-10 ${isExpanded ? "h-full" : ""}`}>
+      <div className={`w-full relative z-10 ${isExpanded ? "h-full flex flex-col items-center justify-center my-auto" : ""}`}>
         {getCanvas()}
       </div>
     );
@@ -390,7 +390,7 @@ const VisualizerCanvas = ({
     const isMultiPointer = ptrI >= 0 || ptrJ >= 0;
 
     return (
-      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+      <div className={`w-full ${isExpanded ? "h-full my-auto flex-1" : "min-h-[300px]"} flex flex-col justify-center items-center gap-4 sm:gap-6 p-4 font-sans`}>
         {/* Top Target / Sum / Pointer Badges Header */}
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-1 pb-3 select-none">
           {targetVal !== null && (
@@ -447,7 +447,7 @@ const VisualizerCanvas = ({
         </div>
 
         {/* Array Bars */}
-        <div className="w-full h-56 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+        <div className={`w-full ${isExpanded ? "h-64 sm:h-72 md:h-80" : "h-56"} flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2`}>
           {arr.map((val, idx) => {
             const isI = idx === ptrI;
             const isJ = idx === ptrJ;
@@ -629,7 +629,7 @@ const VisualizerCanvas = ({
     const maxValue = Math.max(...arr.map(Number).filter((x) => !isNaN(x)), 1);
 
     return (
-      <div className="w-full min-h-[300px] flex flex-col justify-between items-center p-4 font-sans">
+      <div className={`w-full ${isExpanded ? "h-full my-auto flex-1" : "min-h-[300px]"} flex flex-col justify-center items-center gap-4 sm:gap-6 p-4 font-sans`}>
         {/* Header with rotation info */}
         <div className="flex flex-wrap items-center justify-center gap-6 pt-1 pb-3 select-none">
           <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-primary/10 border border-primary/20">
@@ -648,7 +648,7 @@ const VisualizerCanvas = ({
         </div>
 
         {/* Array Bars / Cells */}
-        <div className="w-full h-56 flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2">
+        <div className={`w-full ${isExpanded ? "h-64 sm:h-72 md:h-80" : "h-56"} flex items-end justify-center gap-2 sm:gap-4 px-2 pb-2`}>
           {arr.map((val, idx) => {
             const isSwap =
               highlights[idx] === "swap" || idx === start || idx === end;
@@ -11352,7 +11352,7 @@ const VisualizerCanvas = ({
 
   return (
     <div
-      className={`skeuo-screen w-full select-none relative group transition-all duration-300 ${isExpanded ? "h-full min-h-[450px] flex items-center justify-center" : ""}`}
+      className={`skeuo-screen w-full select-none relative group transition-all duration-300 ${isExpanded ? "h-full min-h-0 md:min-h-[400px] flex flex-col items-center justify-center" : ""}`}
     >
       <div className="skeuo-screen-overlay" />
 
@@ -11366,7 +11366,7 @@ const VisualizerCanvas = ({
 
       {/* Render canvas or loading/empty state */}
       <div
-        className={`w-full ${isExpanded ? "h-full flex items-center justify-center" : ""}`}
+        className={`w-full ${isExpanded ? "h-full flex flex-col items-center justify-center my-auto" : ""}`}
       >
         {showCallStack ? (
           <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch p-1 z-10">
