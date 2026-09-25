@@ -455,7 +455,7 @@ ${formData.message || "None provided"}
                     </h3>
                     <p className="text-xs sm:text-sm text-text-secondary">
                       Thank you, <span className="font-semibold text-text-primary">{submittedData.name || "friend"}</span>! Your{" "}
-                      <span className="font-semibold text-primary lowercase">{activeTab.replace("-", " ")}</span> has been securely mailed to the developer via Web3Forms.
+                      <span className="font-semibold text-primary lowercase">{activeTab.replace("-", " ")}</span> has been securely mailed to the developer.
                     </p>
                   </div>
 
