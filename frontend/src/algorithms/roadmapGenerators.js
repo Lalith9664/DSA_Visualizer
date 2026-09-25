@@ -3506,27 +3506,63 @@ export function letterCombinationsSteps(rawInput) {
 
   if (!digits) {
     return [{
-      data: { digits: "", currentPrefix: "", combinations: [], activeDigit: "", letters: "" },
+      data: {
+        digits: "",
+        currentPrefix: "",
+        combinations: [],
+        activeDigit: "",
+        letters: "",
+        activeChar: "",
+        activeDigitIndex: -1,
+        branchPath: [],
+        totalExpected: 0,
+        actionType: "init"
+      },
       explanation: "No valid digits (2-9) provided.",
       stats: { step: 0 }
     }];
   }
 
   const combinations = [];
+  const totalExpected = digits.split('').reduce((acc, d) => acc * (KEYPAD[d]?.length || 1), 1);
 
   steps.push({
-    data: { digits, currentPrefix: "", combinations: [], activeDigit: "", letters: "" },
-    explanation: `Initialize: Map digits "${digits}" to corresponding letter groups.`,
+    data: {
+      digits,
+      currentPrefix: "",
+      combinations: [],
+      activeDigit: "",
+      letters: "",
+      activeChar: "",
+      activeDigitIndex: -1,
+      branchPath: [],
+      totalExpected,
+      actionType: "init"
+    },
+    explanation: `Initialize: Map digits "${digits}" to corresponding letter groups. Total combinations to find: ${totalExpected}.`,
     stats: { step: 0 },
     recursionStack: [],
   });
 
-  const backtrack = (idx, currentPrefix, path = []) => {
-    const currentPath = [...path, `backtrack(idx=${idx}, prefix="${currentPrefix}")` ];
+  const backtrack = (idx, currentPrefix, branchPath = [], path = []) => {
+    const currentPath = [...path, `backtrack(idx=${idx}, prefix="${currentPrefix}")`];
+    
     if (idx === digits.length) {
       if (currentPrefix) combinations.push(currentPrefix);
       steps.push({
-        data: { digits, currentPrefix, combinations: [...combinations], activeDigit: "", letters: "" },
+        data: {
+          digits,
+          currentPrefix,
+          combinations: [...combinations],
+          activeDigit: "",
+          letters: "",
+          activeChar: "",
+          activeDigitIndex: idx,
+          branchPath: [...branchPath],
+          totalExpected,
+          actionType: "leaf_found",
+          latestCombination: currentPrefix
+        },
         explanation: `Reached leaf node. Found valid combination: "${currentPrefix}".`,
         stats: { step: steps.length },
         recursionStack: currentPath,
@@ -3538,21 +3574,81 @@ export function letterCombinationsSteps(rawInput) {
     const letters = KEYPAD[digit] || "";
 
     steps.push({
-      data: { digits, currentPrefix, combinations: [...combinations], activeDigit: digit, letters },
+      data: {
+        digits,
+        currentPrefix,
+        combinations: [...combinations],
+        activeDigit: digit,
+        letters,
+        activeChar: "",
+        activeDigitIndex: idx,
+        branchPath: [...branchPath],
+        totalExpected,
+        actionType: "explore_digit"
+      },
       explanation: `Digit '${digit}' maps to [${letters.split('').join(', ')}]. Appending to current prefix "${currentPrefix}".`,
       stats: { step: steps.length },
       recursionStack: currentPath,
     });
 
     for (let char of letters) {
-      backtrack(idx + 1, currentPrefix + char, currentPath);
+      const nextBranch = [...branchPath, { digit, char, idx }];
+
+      steps.push({
+        data: {
+          digits,
+          currentPrefix: currentPrefix + char,
+          combinations: [...combinations],
+          activeDigit: digit,
+          letters,
+          activeChar: char,
+          activeDigitIndex: idx,
+          branchPath: nextBranch,
+          totalExpected,
+          actionType: "pick_char"
+        },
+        explanation: `Digit '${digit}' maps to [${letters.split('').join(', ')}]. Appending '${char}' to form prefix "${currentPrefix + char}".`,
+        stats: { step: steps.length },
+        recursionStack: [...currentPath, `pick('${char}')`],
+      });
+
+      backtrack(idx + 1, currentPrefix + char, nextBranch, currentPath);
+
+      steps.push({
+        data: {
+          digits,
+          currentPrefix,
+          combinations: [...combinations],
+          activeDigit: digit,
+          letters,
+          activeChar: char,
+          activeDigitIndex: idx,
+          branchPath: [...branchPath],
+          totalExpected,
+          actionType: "backtrack"
+        },
+        explanation: `Backtrack: Pop '${char}', returning to state "${currentPrefix}".`,
+        stats: { step: steps.length },
+        recursionStack: currentPath,
+      });
     }
   };
 
-  backtrack(0, "", []);
+  backtrack(0, "", [], []);
 
   steps.push({
-    data: { digits, currentPrefix: "", combinations: [...combinations], activeDigit: "", letters: "" },
+    data: {
+      digits,
+      currentPrefix: "",
+      combinations: [...combinations],
+      activeDigit: "",
+      letters: "",
+      activeChar: "",
+      activeDigitIndex: -1,
+      branchPath: [],
+      totalExpected,
+      actionType: "complete"
+    },
     explanation: `Backtracking complete. All ${combinations.length} combinations generated.`,
     stats: { step: steps.length },
     recursionStack: [],

@@ -491,6 +491,9 @@ const getCustomInputPlaceholder = (algo) => {
     if (algo.id === "knights-tour") {
       return "Enter board size N (5, 6 or 7). Knight visits all N×N cells once.";
     }
+    if (algo.id === "letter-combinations") {
+      return "Enter phone digits 2-9 (e.g., 23, 4, 79, 234)";
+    }
     return "Enter positive integer for recursion (e.g., 3 or 5)";
   }
   if (algo.inputType === "puzzle") {

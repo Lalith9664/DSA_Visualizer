@@ -2,6 +2,7 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useVisualizer } from "../../context/VisualizerContext";
 import { Play, Maximize2, Minimize2 } from "lucide-react";
+import LetterCombinationsCanvas from "./LetterCombinationsCanvas";
 
 const VisualizerCanvas = ({
   algorithm,
@@ -5123,143 +5124,11 @@ const VisualizerCanvas = ({
   // --- Letter Combinations of a Phone Number ---
   const renderLetterCombinationsCanvas = () => {
     const snapData = currentSnap?.data || data || {};
-    const digits = snapData.digits || "23";
-    const currentPrefix = snapData.currentPrefix || "";
-    const activeDigit = snapData.activeDigit || "";
-    const letters = snapData.letters || "";
-    const combinations = snapData.combinations || [];
-
-    const keypadLayout = [
-      { num: "1", letters: "" },
-      { num: "2", letters: "abc" },
-      { num: "3", letters: "def" },
-      { num: "4", letters: "ghi" },
-      { num: "5", letters: "jkl" },
-      { num: "6", letters: "mno" },
-      { num: "7", letters: "pqrs" },
-      { num: "8", letters: "tuv" },
-      { num: "9", letters: "wxyz" },
-      { num: "*", letters: "" },
-      { num: "0", letters: "" },
-      { num: "#", letters: "" },
-    ];
-
     return (
-      <div className="w-full min-h-[340px] flex flex-col md:flex-row gap-6 p-6 font-sans text-left relative overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl">
-        <div className="w-full md:w-56 flex flex-col items-center gap-2 flex-shrink-0">
-          <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider">
-            Phone Keypad
-          </span>
-          <div className="grid grid-cols-3 gap-2 p-3 bg-slate-950 rounded-2xl border border-slate-850 shadow-inner w-full max-w-[200px]">
-            {keypadLayout.map((k) => {
-              const isActive = k.num === activeDigit;
-              const isTarget = digits.includes(k.num);
-
-              let borderClass = "border-slate-850";
-              let bgClass = "bg-slate-900 text-slate-600";
-              if (isActive) {
-                borderClass = "border-amber-500";
-                bgClass = "bg-amber-500/20 text-amber-500 font-extrabold shadow-[0_0_10px_rgba(245,158,11,0.4)]";
-              } else if (isTarget) {
-                borderClass = "border-primary/50";
-                bgClass = "bg-primary/5 text-primary-light";
-              }
-
-              return (
-                <div
-                  key={k.num}
-                  className={`aspect-square rounded-xl border flex flex-col items-center justify-center font-mono transition-all duration-300 relative select-none ${bgClass} ${borderClass}`}
-                >
-                  <span className="text-xs font-black">{k.num}</span>
-                  {k.letters && (
-                    <span className="text-[6.5px] uppercase font-bold tracking-widest">
-                      {k.letters}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex-1 flex flex-col justify-between gap-4">
-          <div className="flex flex-col gap-3">
-            <span className="text-[10px] font-extrabold tracking-widest text-text-secondary uppercase">
-              Keypad Backtracking Path
-            </span>
-
-            <div className="grid grid-cols-2 gap-3 font-mono text-[10px] text-slate-400">
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-850">
-                <span className="text-[6.5px] text-slate-500 uppercase block mb-0.5">
-                  Input Digits
-                </span>
-                <span className="text-slate-200 font-bold text-xs">
-                  {digits || "None"}
-                </span>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-850">
-                <span className="text-[6.5px] text-slate-500 uppercase block mb-0.5">
-                  Current Prefix
-                </span>
-                <span className="text-amber-500 font-bold text-xs">
-                  "{currentPrefix}"
-                </span>
-              </div>
-            </div>
-
-            {activeDigit && (
-              <div className="p-3.5 rounded-2xl border border-amber-500/20 bg-amber-500/5 font-mono text-xs flex flex-col gap-1.5 animate-pulse">
-                <div className="flex justify-between items-center text-[7px] font-black tracking-widest text-amber-500 uppercase">
-                  <span>Exploring Digit mapping: '{activeDigit}'</span>
-                  <span>Letters: {letters.split("").join(" | ")}</span>
-                </div>
-                <div className="flex gap-2.5 mt-1">
-                  {letters.split("").map((char) => {
-                    const isPicked = currentPrefix.endsWith(char);
-                    return (
-                      <div
-                        key={char}
-                        className={`px-2 py-1 rounded text-[10px] border font-bold transition-all duration-300 ${
-                          isPicked
-                            ? "bg-amber-500 border-amber-500 text-white shadow-sm"
-                            : "bg-slate-950 border-slate-800 text-slate-500"
-                        }`}
-                      >
-                        {currentPrefix + char}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5 p-3 rounded-2xl border border-slate-800 bg-slate-950/40">
-            <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider font-bold">
-              Combinations Generated ({combinations.length})
-            </span>
-            <div className="flex gap-1.5 flex-wrap max-h-24 overflow-y-auto font-mono text-[9px] py-1">
-              <AnimatePresence>
-                {combinations.map((comb) => (
-                  <motion.div
-                    key={comb}
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-bold"
-                  >
-                    {comb}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              {combinations.length === 0 && (
-                <span className="text-[8px] font-mono text-slate-700 uppercase py-1">
-                  None yet
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <LetterCombinationsCanvas
+        snapData={snapData}
+        isExpanded={isExpanded}
+      />
     );
   };
 
