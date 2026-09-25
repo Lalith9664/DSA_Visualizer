@@ -5,7 +5,8 @@ import { useVisualizer } from '../../context/VisualizerContext';
 import { CATEGORIES, ALGORITHMS } from '../../data/algorithmsData';
 import { 
   Database, Link2, Layers, Repeat, Network, Key, Sliders, 
-  Search, GitFork, ArrowRightLeft, LayoutGrid, Heart, History, Award, X, Home, Cpu
+  Search, GitFork, ArrowRightLeft, LayoutGrid, Heart, History, Award, X, Home, Cpu,
+  MessageSquarePlus,
 } from 'lucide-react';
 
 // Icon Map for Categories
@@ -283,6 +284,20 @@ const BottomNav = () => {
               {/* Drawer Content */}
               <div className="overflow-y-auto max-h-[40vh] pr-1">
                 {renderSheetContent()}
+              </div>
+
+              {/* Drawer Footer Link */}
+              <div className="pt-2 border-t border-panel-border/10 flex-shrink-0">
+                <button
+                  onClick={() => {
+                    navigate('/contact');
+                    setActiveTab(null);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 flex items-center justify-center gap-2 text-xs font-bold text-text-primary hover:text-primary transition-all cursor-pointer"
+                >
+                  <MessageSquarePlus className="w-4 h-4 text-primary" />
+                  <span>Report Bug / Request Algorithm</span>
+                </button>
               </div>
             </motion.div>
           </>

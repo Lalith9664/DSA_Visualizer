@@ -17,6 +17,10 @@ import {
   ArrowRight,
   Compass,
   Cpu,
+  Bug,
+  Lightbulb,
+  MessageSquarePlus,
+  Sparkles,
 } from "lucide-react";
 
 const ICON_MAP = {
@@ -97,6 +101,14 @@ const LandingPage = () => {
           >
             Explore Algorithms
           </Button>
+          <Button
+            onClick={() => navigate("/contact")}
+            variant="accent"
+            className="px-6 py-3 clay-btn shadow-md bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:brightness-105"
+            icon={MessageSquarePlus}
+          >
+            Report Bug / Request Algo
+          </Button>
         </div>
       </section>
 
@@ -154,6 +166,102 @@ const LandingPage = () => {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* 3. COMMUNITY & FEEDBACK SECTION */}
+      <section className="clay-card p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-white/90 via-slate-50/70 to-slate-100/50 dark:from-[#161B26]/90 dark:via-[#131722]/80 dark:to-[#0B0F19]/90 border border-white/40 dark:border-white/5 flex flex-col gap-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-black/5 dark:border-white/5 pb-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-primary uppercase">
+              Community & Maintenance
+            </span>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-text-primary">
+              Have a Suggestion or Found a Bug?
+            </h2>
+          </div>
+          <Button
+            onClick={() => navigate("/contact")}
+            variant="primary"
+            className="clay-btn clay-btn-primary px-5 py-2.5 text-xs font-bold shrink-0"
+            icon={MessageSquarePlus}
+          >
+            Open Dispatch Center
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Card 1: Bug Report */}
+          <div
+            onClick={() => navigate("/contact?type=bug")}
+            className="clay-card p-5 rounded-2xl bg-white/70 dark:bg-slate-800/60 hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-4 border border-red-500/10 hover:border-red-500/30 group"
+          >
+            <div className="flex flex-col gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Bug className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-bold text-text-primary group-hover:text-red-500 transition-colors">
+                  Report a Defect or Bug
+                </h3>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Notice an incorrect traversal step, visual glitch, or animation freeze? Let us know with automatic diagnostics.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-red-500 mt-2">
+              <span>File Bug Report</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+
+          {/* Card 2: Request Algorithm */}
+          <div
+            onClick={() => navigate("/contact?type=algorithm")}
+            className="clay-card p-5 rounded-2xl bg-white/70 dark:bg-slate-800/60 hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-4 border border-purple-500/10 hover:border-purple-500/30 group"
+          >
+            <div className="flex flex-col gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Lightbulb className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-bold text-text-primary group-hover:text-purple-500 transition-colors">
+                  Request an Algorithm
+                </h3>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Want a new Tree, Graph, Dynamic Programming, or Sorting algorithm added to the visualizer decks?
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-purple-500 mt-2">
+              <span>Suggest Algorithm</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+
+          {/* Card 3: Feature Ideas */}
+          <div
+            onClick={() => navigate("/contact?type=feature")}
+            className="clay-card p-5 rounded-2xl bg-white/70 dark:bg-slate-800/60 hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col justify-between gap-4 border border-emerald-500/10 hover:border-emerald-500/30 group"
+          >
+            <div className="flex flex-col gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-bold text-text-primary group-hover:text-emerald-500 transition-colors">
+                  Propose Feature Ideas
+                </h3>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Suggest enhancements like GIF exports, sound effects, step explanations, or new learning modes.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-500 mt-2">
+              <span>Submit Idea</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -10,6 +10,7 @@ import {
   Compass,
   Terminal,
   Monitor,
+  MessageSquarePlus,
 } from "lucide-react";
 import Button from "./Button";
 
@@ -127,6 +128,17 @@ const Navbar = () => {
         >
           <Monitor className="w-4 h-4" />
         </button>
+
+        {/* Contact & Bug Report button */}
+        <Link to="/contact" title="Report Bug / Request Algorithm">
+          <Button
+            variant="default"
+            className="h-10 px-2.5 sm:px-3 clay-btn clay-btn-default flex items-center gap-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary"
+          >
+            <MessageSquarePlus className="w-4 h-4 text-primary shrink-0" />
+            <span className="hidden xl:inline text-[11px] font-bold">Feedback</span>
+          </Button>
+        </Link>
 
         {/* Bookmark Count badge */}
         <Link to="/" className="relative hidden sm:block" title="Favorites">

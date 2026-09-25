@@ -6,6 +6,7 @@ import MainLayout from './layouts/MainLayout';
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage'));
 const VisualizerPage = lazy(() => import('./pages/VisualizerPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -57,6 +58,8 @@ function App() {
               <Route path="/dashboard" element={<LandingPage />} />
               <Route path="/category/:categoryId" element={<CategoryPage />} />
               <Route path="/visualizer/:algoId" element={<VisualizerPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/feedback" element={<ContactPage />} />
             </Route>
 
             {/* Fallback route */}

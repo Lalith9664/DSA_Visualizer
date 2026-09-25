@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Flame,
   FileText,
+  MessageSquarePlus,
 } from "lucide-react";
 
 // Icon Map for Categories
@@ -198,6 +199,29 @@ const Sidebar = () => {
           </div>
         </div>
       )}
+
+      {/* 5. Support & Feedback Section */}
+      <div className="pt-2 mt-auto border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+        <Link
+          to="/contact"
+          className="clay-card p-3 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 hover:border-primary/40 flex items-center justify-between group transition-all"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
+              <MessageSquarePlus className="w-4 h-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-text-primary group-hover:text-primary transition-colors">
+                Report & Request
+              </span>
+              <span className="text-[9px] text-text-secondary">
+                Bug report / Request algo
+              </span>
+            </div>
+          </div>
+          <ArrowRight className="w-3.5 h-3.5 text-primary opacity-75 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+        </Link>
+      </div>
 
     </aside>
   );
