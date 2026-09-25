@@ -584,19 +584,29 @@ const VisualizerPage = () => {
     nextStep,
     prevStep,
     resetVisualizer,
+    isFullscreen,
+    setIsFullscreen,
   } = useVisualizer();
 
   const [activeTab, setActiveTab] = useState("overview"); // 'overview', 'details', 'applications'
   const [targetInput, setTargetInput] = useState("");
   const [deleteInput, setDeleteInput] = useState("");
   const [isNavigating, setIsNavigating] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const isExpanded = isFullscreen;
+  const setIsExpanded = setIsFullscreen;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [mobileFullscreenPanel, setMobileFullscreenPanel] = useState(null); // null | 'input' | 'reference'
   const [isNativeLandscape, setIsNativeLandscape] = useState(
     () => typeof window !== "undefined" && window.innerWidth > window.innerHeight
   );
   const [forceRotateLandscape, setForceRotateLandscape] = useState(true);
+
+  // Clean up fullscreen state on unmount
+  useEffect(() => {
+    return () => {
+      setIsFullscreen(false);
+    };
+  }, [setIsFullscreen]);
 
   // Monitor resize & physical orientation changes
   useEffect(() => {
@@ -3475,7 +3485,7 @@ const VisualizerPage = () => {
         /* FULLSCREEN MODE (Responsive Mobile Landscape + Desktop Wide Deck) */
         <div
           className={`
-            z-50 bg-gradient-to-br from-[#F4F7FE] to-white dark:from-[#0B0F19] dark:to-[#161B26] overflow-hidden select-none
+            z-[9999] bg-gradient-to-br from-[#F4F7FE] to-white dark:from-[#0B0F19] dark:to-[#161B26] overflow-hidden select-none
             ${
               !isNativeLandscape && forceRotateLandscape
                 ? "mobile-forced-landscape"

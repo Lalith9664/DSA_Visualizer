@@ -6,7 +6,17 @@ import DesktopModeNotification from "../components/common/DesktopModeNotificatio
 import { useVisualizer } from "../context/VisualizerContext";
 
 const MainLayout = ({ children }) => {
-  const { sidebarOpen } = useVisualizer();
+  const { sidebarOpen, isFullscreen } = useVisualizer();
+
+  if (isFullscreen) {
+    return (
+      <div className="w-screen h-screen bg-bg text-text-primary flex flex-col font-sans overflow-hidden select-none">
+        <main className="w-full h-full p-0 m-0 overflow-hidden flex-1">
+          {children}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg text-text-primary flex flex-col font-sans transition-all duration-300">

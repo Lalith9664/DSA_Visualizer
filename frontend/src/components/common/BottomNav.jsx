@@ -26,10 +26,12 @@ const ICON_MAP = {
 };
 
 const BottomNav = () => {
-  const { favorites, recentlyViewed } = useVisualizer();
+  const { favorites, recentlyViewed, isFullscreen } = useVisualizer();
   const [activeTab, setActiveTab] = useState(null); // 'bookmarks', 'explore', 'history', 'progress', null
   const navigate = useNavigate();
   const location = useLocation();
+
+  if (isFullscreen) return null;
 
   // Compute learning progress dummy based on viewed/favorited algorithms
   const completedCount = Math.min(10, new Set([...recentlyViewed, ...favorites]).size);

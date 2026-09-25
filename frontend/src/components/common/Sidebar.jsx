@@ -80,10 +80,10 @@ const ALGORITHMS_CATEGORIES = [
 ];
 
 const Sidebar = () => {
-  const { sidebarOpen, favorites, recentlyViewed } = useVisualizer();
+  const { sidebarOpen, favorites, recentlyViewed, isFullscreen } = useVisualizer();
   const location = useLocation();
 
-  if (!sidebarOpen) return null;
+  if (!sidebarOpen || isFullscreen) return null;
 
   const dsCategories = CATEGORIES.filter((cat) => DATA_STRUCTURES_CATEGORIES.includes(cat.id));
   const algoCategories = CATEGORIES.filter((cat) => ALGORITHMS_CATEGORIES.includes(cat.id));

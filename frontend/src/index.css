@@ -610,8 +610,38 @@ body {
     height: 100vw !important;
     transform: rotate(90deg) !important;
     transform-origin: top left !important;
-    z-index: 9999 !important;
+    z-index: 99999 !important;
     overflow: hidden !important;
   }
 }
+
+/* Hide all top navbar, bottom nav dock, sidebars and menu bars during fullscreen mode */
+:fullscreen nav,
+:fullscreen aside,
+:fullscreen .clay-card nav,
+:-webkit-full-screen nav,
+:-webkit-full-screen aside,
+:-moz-full-screen nav,
+:-moz-full-screen aside,
+:-ms-fullscreen nav,
+:-ms-fullscreen aside,
+.fullscreen-active nav,
+.fullscreen-active aside,
+.fullscreen-active header,
+body.fullscreen-active nav,
+body.fullscreen-active aside,
+body.fullscreen-active header {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* In fullscreen mode, eliminate all margins and outer scrollbars */
+body.fullscreen-active,
+html.fullscreen-active {
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 

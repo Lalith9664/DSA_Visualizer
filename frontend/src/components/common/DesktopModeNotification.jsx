@@ -13,7 +13,10 @@ import {
   Laptop
 } from 'lucide-react';
 
+import { useVisualizer } from '../../context/VisualizerContext';
+
 const DesktopModeNotification = () => {
+  const { isFullscreen } = useVisualizer();
   const [isMobileScreen, setIsMobileScreen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
@@ -62,8 +65,8 @@ const DesktopModeNotification = () => {
     setShowModal(true);
   };
 
-  // If not a mobile screen, do not render anything
-  if (!isMobileScreen) {
+  // If not a mobile screen or fullscreen mode is active, do not render anything
+  if (!isMobileScreen || isFullscreen) {
     return null;
   }
 

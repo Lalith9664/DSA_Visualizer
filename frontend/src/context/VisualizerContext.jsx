@@ -31,6 +31,20 @@ export const VisualizerProvider = ({ children }) => {
   // Sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Sync fullscreen class to document element and body
+  useEffect(() => {
+    if (isFullscreen) {
+      document.documentElement.classList.add('fullscreen-active');
+      document.body.classList.add('fullscreen-active');
+    } else {
+      document.documentElement.classList.remove('fullscreen-active');
+      document.body.classList.remove('fullscreen-active');
+    }
+  }, [isFullscreen]);
+
   // Favorites & Recents in LocalStorage
   const [favorites, setFavorites] = useState(() => {
     try {
@@ -164,6 +178,8 @@ export const VisualizerProvider = ({ children }) => {
         nextStep,
         prevStep,
         resetVisualizer,
+        isFullscreen,
+        setIsFullscreen,
       }}
     >
       {children}

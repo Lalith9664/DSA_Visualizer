@@ -15,7 +15,7 @@ import {
 import Button from "./Button";
 
 const Navbar = () => {
-  const { theme, toggleTheme, favorites, sidebarOpen, setSidebarOpen } =
+  const { theme, toggleTheme, favorites, sidebarOpen, setSidebarOpen, isFullscreen } =
     useVisualizer();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -88,6 +88,8 @@ const Navbar = () => {
     setSearchResults([]);
     navigate(`/visualizer/${algoId}`);
   };
+
+  if (isFullscreen) return null;
 
   return (
     <nav className="fixed top-4 left-2 right-2 sm:left-4 sm:right-4 z-50 h-16 rounded-[20px] bg-white/40 dark:bg-[#161b26]/35 backdrop-blur-xl border border-white/30 dark:border-white/5 shadow-[0_8px_32px_0_rgba(31,38,135,0.06)] flex items-center justify-between px-3 sm:px-6 transition-all duration-300">
