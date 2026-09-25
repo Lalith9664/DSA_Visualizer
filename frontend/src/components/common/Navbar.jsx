@@ -41,11 +41,45 @@ const Navbar = () => {
       setSearchResults([]);
       return;
     }
-    const filtered = Object.values(ALGORITHMS).filter(
-      (algo) =>
-        (algo?.name?.toLowerCase() || "").includes(query.toLowerCase()) ||
-        (algo?.category?.toLowerCase() || "").includes(query.toLowerCase())
-    );
+    const q = query.trim().toLowerCase();
+    const seenNames = new Set();
+    const seenIds = new Set();
+    const filtered = [];
+
+    for (const [key, algo] of Object.entries(ALGORITHMS)) {
+      if (!algo || !algo.name) continue;
+      const normalizedName = algo.name.trim().toLowerCase();
+      const algoId = algo.id || key;
+
+      // Avoid duplicate algorithms (aliases or duplicate dictionary keys)
+      if (seenNames.has(normalizedName) || seenIds.has(algoId)) {
+        continue;
+      }
+
+      const nameMatch = normalizedName.includes(q);
+      const catMatch = (algo.category?.toLowerCase() || "").includes(q);
+
+      if (nameMatch || catMatch) {
+        seenNames.add(normalizedName);
+        seenIds.add(algoId);
+        filtered.push({
+          ...algo,
+          targetId: key || algo.id,
+        });
+      }
+    }
+
+    // Sort results: exact prefix match first, then alphabetically
+    filtered.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const aStarts = aName.startsWith(q);
+      const bStarts = bName.startsWith(q);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return aName.localeCompare(bName);
+    });
+
     setSearchResults(filtered);
   };
 
@@ -104,8 +138,8 @@ const Navbar = () => {
           <div className="absolute top-12 left-1/2 -translate-x-1/2 w-[85vw] sm:w-full clay-card p-3 flex flex-col gap-1.5 max-h-64 overflow-y-auto bg-white/95 dark:bg-slate-900/95 z-50">
              {searchResults.map((algo) => (
               <button
-                key={algo.id}
-                onClick={() => handleSelectResult(algo.id)}
+                key={algo.targetId || algo.id}
+                onClick={() => handleSelectResult(algo.targetId || algo.id)}
                 className="w-full text-left px-3 py-2 rounded-xl hover:bg-primary/10 dark:hover:bg-primary/20 flex flex-col sm:flex-row sm:justify-between sm:items-start sm:items-center gap-1 sm:gap-2 text-xs text-text-primary font-semibold transition-all duration-200"
               >
                 <span className="whitespace-normal break-words flex-1 pr-2 text-left">{algo.name}</span>
