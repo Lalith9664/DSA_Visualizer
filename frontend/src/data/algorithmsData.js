@@ -172,6 +172,7 @@ export const CATEGORIES = [
       "bt-insert",
       "bt-delete",
       "rbt-insert",
+      "rbt-delete",
       "diameter-of-tree",
       "balanced-tree",
       "symmetric-tree",
@@ -4118,6 +4119,47 @@ export const ALGORITHMS = {
     code: {
       python:
         "# Red-Black Tree insert fix\ndef fix_insert(self, node):\n    while node.parent and node.parent.color == 'RED':\n        uncle = self.get_uncle(node)\n        if uncle and uncle.color == 'RED':\n            node.parent.color = 'BLACK'\n            uncle.color = 'BLACK'\n            node.parent.parent.color = 'RED'\n            node = node.parent.parent\n        else:\n            self.rotate(node)\n    self.root.color = 'BLACK'",
+    },
+  },
+  "rbt-delete": {
+    id: "rbt-delete",
+    name: "Red-Black Tree Delete",
+    category: "trees",
+    difficulty: "Hard",
+    description:
+      "Performs authentic Red-Black Tree deletion following the CLRS standard algorithm. Locates target node Z, determines child case (0, 1, or 2 children with in-order successor), physically removes the node while preserving original color, and executes genuine Red-Black fix-up with temporary double-black handling, Case 1-5 transitions, recoloring, and tree rotations while validating all 5 Red-Black properties.",
+    timeComplexity: {
+      best: "O(log n)",
+      average: "O(log n)",
+      worst: "O(log n)",
+    },
+    spaceComplexity: "O(1)",
+    applications: [
+      "C++ STL std::map and std::set element erasure",
+      "Java java.util.TreeMap node deletion",
+      "Linux kernel completely fair scheduler process removal",
+      "High-throughput transactional databases",
+    ],
+    advantages: [
+      "Guaranteed logarithmic O(log n) worst-case deletion performance",
+      "Performs at most 3 rotations during deletion fix-up",
+      "Strict black-height balance across all root-to-leaf paths",
+    ],
+    disadvantages: [
+      "Complex deletion fix-up cases with temporary double-black states",
+      "Requires parent pointers and multiple recoloring/rotation steps",
+    ],
+    realWorldUses: [
+      "C++ STL std::map::erase()",
+      "Java java.util.TreeMap.remove()",
+      "Linux CFS scheduler entity removal",
+    ],
+    defaultInput: "50 30 70 20 40 60 80 10 25 35 45",
+    defaultTarget: "20",
+    inputType: "tree",
+    code: {
+      python:
+        "def rb_delete(self, key):\n    z = self.search(self.root, key)\n    if not z:\n        return\n    y = z\n    orig_color = y.color\n    if not z.left:\n        x = z.right\n        self.transplant(z, z.right)\n    elif not z.right:\n        x = z.left\n        self.transplant(z, z.left)\n    else:\n        y = self.minimum(z.right)\n        orig_color = y.color\n        x = y.right\n        if y.parent != z:\n            self.transplant(y, y.right)\n            y.right = z.right\n            y.right.parent = y\n        self.transplant(z, y)\n        y.left = z.left\n        y.left.parent = y\n        y.color = z.color\n    if orig_color == BLACK:\n        self.delete_fixup(x)\n\ndef delete_fixup(self, x):\n    while x != self.root and x.color == BLACK:\n        if x == x.parent.left:\n            w = x.parent.right\n            if w.color == RED:\n                w.color = BLACK; x.parent.color = RED\n                self.left_rotate(x.parent)\n                w = x.parent.right\n            if w.left.color == BLACK and w.right.color == BLACK:\n                w.color = RED; x = x.parent\n            else:\n                if w.right.color == BLACK:\n                    w.left.color = BLACK; w.color = RED\n                    self.right_rotate(w)\n                    w = x.parent.right\n                w.color = x.parent.color; x.parent.color = BLACK; w.right.color = BLACK\n                self.left_rotate(x.parent)\n                x = self.root\n        else:\n            w = x.parent.left\n            if w.color == RED:\n                w.color = BLACK; x.parent.color = RED\n                self.right_rotate(x.parent)\n                w = x.parent.left\n            if w.right.color == BLACK and w.left.color == BLACK:\n                w.color = RED; x = x.parent\n            else:\n                if w.left.color == BLACK:\n                    w.right.color = BLACK; w.color = RED\n                    self.left_rotate(w)\n                    w = x.parent.left\n                w.color = x.parent.color; x.parent.color = BLACK; w.left.color = BLACK\n                self.right_rotate(x.parent)\n                x = self.root\n    x.color = BLACK",
     },
   },
   "array-traversal": {

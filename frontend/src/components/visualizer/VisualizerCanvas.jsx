@@ -4390,7 +4390,23 @@ const VisualizerCanvas = ({
         </div>
 
         {/* Tree SVG Graph Arena */}
-        <div className="w-full h-64 relative z-10 my-1">
+        <div className="w-full min-h-[300px] h-[340px] relative z-10 my-1">
+          {/* Active Rotation HUD */}
+          {treeState?.activeRotation && (
+            <div className="absolute top-2 left-2 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-600/90 text-white text-xs font-mono font-bold shadow-lg backdrop-blur-md animate-fadeIn z-30">
+              <span className="animate-spin text-sm">⟳</span>
+              <span>{treeState.activeRotation.direction?.toUpperCase()} ROTATION</span>
+              <span className="opacity-80 text-[10px] bg-black/30 px-1.5 py-0.5 rounded">Pivot: {treeState.activeRotation.pivot}</span>
+            </div>
+          )}
+
+          {/* Recolor Event HUD */}
+          {treeState?.recolorEvent && (
+            <div className="absolute top-2 right-2 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/95 text-black text-xs font-mono font-bold shadow-lg backdrop-blur-md animate-fadeIn z-30">
+              <span>🎨 Recolor: Node {treeState.recolorEvent.nodeVal} ({treeState.recolorEvent.from?.toUpperCase()} → {treeState.recolorEvent.to?.toUpperCase()})</span>
+            </div>
+          )}
+
           <svg className="w-full h-full absolute inset-0 z-0 pointer-events-none">
             {/* Draw connecting edge lines */}
             {nodes.map((node) => {
@@ -4477,14 +4493,33 @@ const VisualizerCanvas = ({
             let nodeColorClass = getHighlightClass(node.id);
             const isRbt =
               treeState?.rbt || node.color === "red" || node.color === "black";
+            const isDoubleBlack = Boolean(
+              node.isDoubleBlack || highlights[node.id] === "double-black",
+            );
+            const isNilNode = Boolean(node.isNil || node.val === "NIL");
 
             if (isRbt) {
               const isRed = node.color === "red";
               const isHighlight = highlights[node.id] === "compare";
-              if (isHighlight) {
+              const isPivot = highlights[node.id] === "pivot" || node.role === "Pivot";
+              const isSucc = highlights[node.id] === "successor" || node.role === "Successor";
+
+              if (isDoubleBlack) {
+                nodeColorClass =
+                  "bg-black text-cyan-300 border-cyan-400 scale-120 shadow-[0_0_24px_rgba(34,211,238,0.9)] ring-4 ring-cyan-400/80 animate-pulse";
+              } else if (isPivot) {
+                nodeColorClass =
+                  "bg-purple-600 text-white border-amber-300 scale-115 shadow-xl ring-4 ring-purple-400/60";
+              } else if (isSucc) {
+                nodeColorClass =
+                  "bg-amber-500 text-black border-white scale-110 shadow-lg ring-4 ring-amber-400/60";
+              } else if (isHighlight) {
                 nodeColorClass = isRed
                   ? "bg-rose-500 text-white border-white scale-110 shadow-lg ring-4 ring-rose-400/50"
                   : "bg-slate-900 text-white border-white scale-110 shadow-lg ring-4 ring-slate-400/50";
+              } else if (isNilNode) {
+                nodeColorClass =
+                  "bg-slate-950 text-slate-400 border-slate-700/80 text-[10px] scale-90";
               } else {
                 nodeColorClass = isRed
                   ? "bg-rose-600 text-white border-rose-500 shadow-md ring-2 ring-rose-500/30"
@@ -4513,7 +4548,9 @@ const VisualizerCanvas = ({
 
             const nodeShapeClass = isBTreeOrAdvanced
               ? "rounded-md px-3.5 py-2.5 h-auto w-auto max-w-[150px] text-center text-[10px] whitespace-nowrap shadow-md"
-              : `${nodeSizeClass} rounded-full`;
+              : isNilNode
+                ? "rounded-lg px-2 py-1.5 h-auto w-auto min-w-[36px]"
+                : `${nodeSizeClass} rounded-full`;
 
             return (
               <div
@@ -4529,6 +4566,19 @@ const VisualizerCanvas = ({
                   ${isCurrentActive ? "scale-115 ring-4 ring-purple-500/40 shadow-lg" : ""}
                 `}
               >
+                {/* Double Black Floating Badge */}
+                {isDoubleBlack && (
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap px-1.5 py-0.5 rounded-full bg-cyan-400 text-black text-[7px] font-black uppercase tracking-wider shadow-lg animate-bounce z-20 flex items-center gap-1">
+                    <span>2x BLACK</span>
+                  </div>
+                )}
+                {/* Node Role Tag */}
+                {node.role && !isDoubleBlack && (
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap px-1.5 py-0.5 rounded-md bg-purple-600 text-white text-[7px] font-bold uppercase tracking-wider shadow z-20">
+                    {node.role}
+                  </div>
+                )}
+
                 <span className="leading-none">{node.val}</span>
                 {node.result !== undefined && node.result !== null && (
                   <span className="text-[7px] text-amber-400 font-semibold leading-none mt-0.5">

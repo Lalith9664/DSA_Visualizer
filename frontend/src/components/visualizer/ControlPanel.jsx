@@ -2,13 +2,14 @@ import React from 'react';
 import { useVisualizer } from '../../context/VisualizerContext';
 import Button from '../common/Button';
 import Slider from '../common/Slider';
-import { Play, Pause, RotateCcw, SkipForward, SkipBack, Shuffle, Trash2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipForward, SkipBack, Shuffle, Trash2, FastForward } from 'lucide-react';
 
 const ControlPanel = ({
   onGenerate,
   onRandomInput,
   onClear,
   onReset,
+  onSkipCase,
   canPrev,
   canNext
 }) => {
@@ -87,6 +88,20 @@ const ControlPanel = ({
           <SkipForward className="w-4 h-4" />
           <span>Step Next</span>
         </Button>
+
+        {/* Skip Case */}
+        {onSkipCase && (
+          <Button
+            onClick={onSkipCase}
+            disabled={isPlaying || !canNext}
+            variant="default"
+            className="clay-btn text-purple-600 dark:text-purple-400 font-bold"
+            title="Skip Case / Jump to Next Case"
+          >
+            <FastForward className="w-4 h-4" />
+            <span>Skip Case</span>
+          </Button>
+        )}
 
         {/* Reset */}
         <Button

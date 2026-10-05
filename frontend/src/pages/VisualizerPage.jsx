@@ -43,6 +43,7 @@ const VisualizerCanvas = lazy(
 );
 const CodePanel = lazy(() => import("../components/visualizer/CodePanel"));
 const FinalOutputPanel = lazy(() => import("../components/visualizer/FinalOutputPanel"));
+const RBTStatePanel = lazy(() => import("../components/visualizer/RBTStatePanel"));
 
 // Trees category algorithms list
 const TREE_ALGOS = new Set([
@@ -58,6 +59,7 @@ const TREE_ALGOS = new Set([
   "bt-insert",
   "bt-delete",
   "rbt-insert",
+  "rbt-delete",
   "tree-diameter",
   "diameter-of-binary-tree",
   "tree-top-view",
@@ -342,6 +344,18 @@ const SECOND_INPUT_CONFIG = {
     randomVal: (arr) =>
       arr[Math.floor(Math.random() * arr.length)]?.toString() || "3",
   },
+  "rbt-insert": {
+    label: "Insert Value",
+    defaultVal: "25",
+    randomVal: (arr) =>
+      (Math.max(...arr) + Math.floor(Math.random() * 5) + 1).toString(),
+  },
+  "rbt-delete": {
+    label: "Delete Value",
+    defaultVal: "20",
+    randomVal: (arr) =>
+      arr[Math.floor(Math.random() * arr.length)]?.toString() || "20",
+  },
   "linked-list-insertion": {
     label: "Val & Index (e.g. 99 2)",
     defaultVal: "99 2",
@@ -539,6 +553,7 @@ const VisualizerPage = () => {
     algoId === "bst-insert" ||
     algoId === "avl-insert" ||
     algoId === "bt-insert" ||
+    algoId === "rbt-insert" ||
     algoId === "array-insertion" ||
     algoId === "doubly-linked-list-insertion" ||
     algoId === "linked-list-insertion";
@@ -546,16 +561,25 @@ const VisualizerPage = () => {
     algoId === "bst-delete" ||
     algoId === "avl-delete" ||
     algoId === "bt-delete" ||
+    algoId === "rbt-delete" ||
     algoId === "array-deletion" ||
     algoId === "doubly-linked-list-deletion" ||
     algoId === "linked-list-deletion";
+  const isTree =
+    ALGORITHMS[algoId]?.category === "trees" ||
+    TREE_ALGOS.has(algoId);
   const isCombinedTreeAlgo =
+    isTree ||
+    isInsert ||
+    isDelete ||
     algoId === "bst-insert" ||
     algoId === "bst-delete" ||
     algoId === "avl-insert" ||
     algoId === "avl-delete" ||
     algoId === "bt-insert" ||
     algoId === "bt-delete" ||
+    algoId === "rbt-insert" ||
+    algoId === "rbt-delete" ||
     algoId === "linked-list-traversal" ||
     algoId === "linked-list-insertion" ||
     algoId === "linked-list-deletion" ||
@@ -953,6 +977,7 @@ const VisualizerPage = () => {
         btInsertSteps,
         btDeleteSteps,
         rbtInsertSteps,
+        rbtDeleteSteps,
         // ── roadmapGenerators.js ─────────────────────────────────────────────────────────────
         arrayTraversalSteps,
         arrayInsertionSteps,
@@ -1568,8 +1593,13 @@ const VisualizerPage = () => {
             computedSteps = isDeletionAction
               ? btDeleteSteps(arr, treeTarget)
               : btInsertSteps(arr, treeTarget);
-          } else if (algo.id === "rbt-insert") {
-            computedSteps = rbtInsertSteps(arr);
+          } else if (algo.id === "rbt-insert" || algo.id === "rbt-delete") {
+            if (algo.id === "rbt-delete" || isDeletionAction) {
+              const delVal = treeTarget !== undefined && treeTarget !== "" ? treeTarget : (rawTarget || "20");
+              computedSteps = rbtDeleteSteps(arr, delVal);
+            } else {
+              computedSteps = rbtInsertSteps(arr, treeTarget);
+            }
           } else if (
             algo.id === "tree-diameter" ||
             algo.id === "diameter-of-binary-tree"
@@ -2198,7 +2228,15 @@ const VisualizerPage = () => {
     
     setCustomInput(finalInput);
     setTargetInput("");
-    generateSteps(current, valText, false, true);
+    if (algoId === "rbt-delete") {
+      generateSteps(finalInput, deleteInput.trim() || "20", true, true);
+    } else if (algoId === "rbt-insert") {
+      generateSteps(finalInput, valText, false, true);
+    } else if (isTree) {
+      generateSteps(finalInput, valText, false, true);
+    } else {
+      generateSteps(current, valText, false, true);
+    }
   };
 
   const handleDeleteAction = () => {
@@ -2227,14 +2265,42 @@ const VisualizerPage = () => {
       if (isNaN(idx) || idx < 0 || idx >= current.length) return;
       current.splice(idx, 1);
       finalInput = current.join(" ");
+      setCustomInput(finalInput);
+      setDeleteInput("");
+      generateSteps(currentStr, valText, true, true);
+    } else if (algoId === "rbt-delete") {
+      setDeleteInput("");
+      generateSteps(currentStr, valText, true, true);
+    } else if (algoId === "rbt-insert") {
+      if (!current.includes(valText)) return;
+      finalInput = current.filter((x) => x !== valText).join(" ");
+      setCustomInput(finalInput);
+      setDeleteInput("");
+      generateSteps(finalInput, "", false, true);
     } else {
       if (!current.includes(valText)) return;
       finalInput = current.filter((x) => x !== valText).join(" ");
+      setCustomInput(finalInput);
+      setDeleteInput("");
+      generateSteps(currentStr, valText, true, true);
     }
-    
-    setCustomInput(finalInput);
-    setDeleteInput("");
-    generateSteps(currentStr, valText, true, true);
+  };
+
+  const handleSkipCase = () => {
+    if (steps.length === 0) return;
+    const currSnap = steps[currentStep] || {};
+    const currCase = currSnap.treeState?.rbtState?.caseId;
+    const currCaseName = currSnap.treeState?.rbtState?.currentCase;
+
+    for (let i = currentStep + 1; i < steps.length; i++) {
+      const nextSnap = steps[i] || {};
+      const nextCase = nextSnap.treeState?.rbtState?.caseId;
+      const nextCaseName = nextSnap.treeState?.rbtState?.currentCase;
+      if (nextCase !== currCase || nextCaseName !== currCaseName || i === steps.length - 1) {
+        setCurrentStep(i);
+        return;
+      }
+    }
   };
 
   const handleRandomInput = async () => {
@@ -3731,6 +3797,18 @@ const VisualizerPage = () => {
                 </div>
               </Suspense>
 
+              {/* Red-Black Tree State Engine & Properties Validation in Fullscreen */}
+              {(algo.id === "rbt-delete" || algo.id === "rbt-insert" || steps[currentStep]?.treeState?.rbtState) && (
+                <div className="w-full mb-3">
+                  <Suspense fallback={null}>
+                    <RBTStatePanel
+                      treeState={steps[currentStep]?.treeState}
+                      stats={steps[currentStep]?.stats}
+                    />
+                  </Suspense>
+                </div>
+              )}
+
               {/* Floating Control Cockpit and Input Panel at the bottom */}
               <div className="w-full mt-4 z-10 flex flex-col md:flex-row gap-4 items-stretch">
                 {/* Left side: Custom Input Panel */}
@@ -3743,6 +3821,7 @@ const VisualizerPage = () => {
                     onRandomInput={handleRandomInput}
                     onClear={handleClear}
                     onReset={handleClear}
+                    onSkipCase={handleSkipCase}
                     canPrev={canPrev}
                     canNext={canNext}
                   />
@@ -3815,9 +3894,20 @@ const VisualizerPage = () => {
               onRandomInput={handleRandomInput}
               onClear={handleClear}
               onReset={handleClear}
+              onSkipCase={handleSkipCase}
               canPrev={canPrev}
               canNext={canNext}
             />
+
+            {/* Red-Black Tree State Engine & Properties Validation */}
+            {(algo.id === "rbt-delete" || algo.id === "rbt-insert" || steps[currentStep]?.treeState?.rbtState) && (
+              <Suspense fallback={null}>
+                <RBTStatePanel
+                  treeState={steps[currentStep]?.treeState}
+                  stats={steps[currentStep]?.stats}
+                />
+              </Suspense>
+            )}
 
             {/* Input Panel Card */}
             {inputPanelContent}

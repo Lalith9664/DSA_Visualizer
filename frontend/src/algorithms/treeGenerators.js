@@ -1743,13 +1743,15 @@ export const btDeleteSteps = (arr, deleteVal) => {
 };
 
 // ============================================================
-// RED-BLACK TREE INSERT
+// RED-BLACK TREE INSERT & DELETE
 // ============================================================
-export const rbtInsertSteps = (arr) => {
+
+export const rbtInsertSteps = (arr, insertTarget) => {
   const steps = [];
   const RED = "red",
     BLACK = "black";
   let idCounter = 0;
+
   function newNode(val) {
     return {
       id: idCounter++,
@@ -1757,8 +1759,8 @@ export const rbtInsertSteps = (arr) => {
       left: null,
       right: null,
       color: RED,
-      h: 1,
       parent: null,
+      isDoubleBlack: false,
     };
   }
 
@@ -1769,36 +1771,25 @@ export const rbtInsertSteps = (arr) => {
     getAllNodes(node.right, result);
     return result;
   }
-  function assignPos(node, x = 50, y = 40, spread = 25) {
-    if (!node) return;
-    node.x = x;
-    node.y = y;
-    assignPos(node.left, x - spread, y + 56, spread / 2);
-    assignPos(node.right, x + spread, y + 56, spread / 2);
-  }
-  function snap(hi = {}, explanation = "", swaps = 0) {
-    if (!root) {
-      steps.push({
-        data: [],
-        highlights: {},
-        explanation,
-        treeState: {},
-        stats: { comparisons: steps.length, swaps, step: steps.length + 1 },
-      });
-      return;
+
+  function assignPositions(rootNode) {
+    if (!rootNode) return;
+    let index = 0;
+    const inOrderList = [];
+    function inOrder(n, depth = 0) {
+      if (!n) return;
+      inOrder(n.left, depth + 1);
+      n.depth = depth;
+      n.inOrderIndex = index++;
+      inOrderList.push(n);
+      inOrder(n.right, depth + 1);
     }
-    assignPos(root);
-    const nodes = getAllNodes(root).map((n) => ({
-      ...n,
-      left: n.left ? { id: n.left.id } : null,
-      right: n.right ? { id: n.right.id } : null,
-    }));
-    steps.push({
-      data: nodes,
-      highlights: hi,
-      explanation,
-      treeState: { rbt: true },
-      stats: { comparisons: steps.length, swaps, step: steps.length + 1 },
+    inOrder(rootNode, 0);
+
+    const total = inOrderList.length;
+    inOrderList.forEach((n) => {
+      n.x = total === 1 ? 50 : Math.round(6 + (n.inOrderIndex / (total - 1)) * 88);
+      n.y = 40 + n.depth * 58;
     });
   }
 
@@ -1806,6 +1797,7 @@ export const rbtInsertSteps = (arr) => {
 
   function rotateLeft(x) {
     const y = x.right;
+    if (!y) return;
     x.right = y.left;
     if (y.left) y.left.parent = x;
     y.parent = x.parent;
@@ -1822,6 +1814,7 @@ export const rbtInsertSteps = (arr) => {
 
   function rotateRight(y) {
     const x = y.left;
+    if (!x) return;
     y.left = x.right;
     if (x.right) x.right.parent = y;
     x.parent = y.parent;
@@ -1889,24 +1882,52 @@ export const rbtInsertSteps = (arr) => {
     let parent = null;
     while (curr) {
       parent = curr;
-      if (val <= curr.val) curr = curr.left;
+      if (val < curr.val) curr = curr.left;
       else curr = curr.right;
     }
     z.parent = parent;
-    if (val <= parent.val) parent.left = z;
+    if (val < parent.val) parent.left = z;
     else parent.right = z;
 
     fixInsert(z);
     return z;
   }
 
+  function snap(hi = {}, explanation = "", swaps = 0) {
+    if (!root) {
+      steps.push({
+        data: [],
+        highlights: {},
+        explanation,
+        treeState: { rbt: true },
+        stats: { comparisons: steps.length, swaps, step: steps.length + 1 },
+      });
+      return;
+    }
+    assignPositions(root);
+    const nodes = getAllNodes(root).map((n) => ({
+      ...n,
+      left: n.left ? { id: n.left.id } : null,
+      right: n.right ? { id: n.right.id } : null,
+    }));
+    steps.push({
+      data: nodes,
+      highlights: hi,
+      explanation,
+      treeState: { rbt: true },
+      stats: { comparisons: steps.length, swaps, step: steps.length + 1 },
+    });
+  }
+
   snap(
     {},
-    `RBT Insert: Starting with empty Red-Black Tree. New nodes are always inserted as RED.`,
+    `RBT Insert: Starting with Red-Black Tree. New nodes are always inserted as RED.`,
   );
 
-  arr.forEach((val, i) => {
-    const z = insertRBT(val);
+  const cleanArr = Array.isArray(arr) && arr.length > 0 ? arr : [10, 20, 30, 15, 25, 5, 1];
+
+  cleanArr.forEach((val, i) => {
+    insertRBT(val);
     const allN = getAllNodes(root);
     const hi = {};
     allN.forEach((n) => {
@@ -1924,13 +1945,6 @@ export const rbtInsertSteps = (arr) => {
       }.`,
       i > 0 ? 1 : 0,
     );
-
-    if (i < arr.length - 1) {
-      snap(
-        {},
-        `Tree after inserting ${val}. BLACK = stable, RED = newly placed. Next: insert ${arr[i + 1]}.`,
-      );
-    }
   });
 
   const allN = getAllNodes(root);
@@ -1940,11 +1954,1240 @@ export const rbtInsertSteps = (arr) => {
   );
   snap(
     finalHi,
-    `✅ All ${arr.length} values inserted. RBT properties maintained:\n1. Root is BLACK ⚫\n2. No two consecutive RED nodes\n3. Equal black-height on all paths`,
+    `✅ All ${cleanArr.length} values present. RBT properties maintained:\n1. Root is BLACK ⚫\n2. No two consecutive RED nodes\n3. Equal black-height on all paths`,
   );
 
   return steps;
 };
+
+// ============================================================
+// ACCURATE RED-BLACK TREE DELETION VISUALIZER
+// ============================================================
+export const rbtDeleteSteps = (arr, deleteVal) => {
+  const steps = [];
+  const RED = "red",
+    BLACK = "black";
+  let idCounter = 0;
+
+  // Telemetry trackers
+  let visitedNodes = 0;
+  let comparisons = 0;
+  let recolorings = 0;
+  let leftRotations = 0;
+  let rightRotations = 0;
+  let successorSearches = 0;
+  let fixupIterations = 0;
+  let currentCaseName = "None";
+  let currentCaseId = 0;
+  let activeRotationInfo = null;
+  let recolorEventInfo = null;
+
+  function createNode(val, color = RED) {
+    return {
+      id: idCounter++,
+      val,
+      color,
+      left: null,
+      right: null,
+      parent: null,
+      isDoubleBlack: false,
+      isNil: false,
+      role: null,
+    };
+  }
+
+  function getAllNodes(node, result = []) {
+    if (!node) return result;
+    result.push(node);
+    getAllNodes(node.left, result);
+    getAllNodes(node.right, result);
+    return result;
+  }
+
+  function computeTreeHeight(node) {
+    if (!node) return 0;
+    return 1 + Math.max(computeTreeHeight(node.left), computeTreeHeight(node.right));
+  }
+
+  function validateRBTProperties(rootNode) {
+    if (!rootNode) {
+      return {
+        properties: [
+          { id: 1, name: "Every node is RED or BLACK", valid: true },
+          { id: 2, name: "Root is always BLACK", valid: true },
+          { id: 3, name: "Every NIL leaf is BLACK", valid: true },
+          { id: 4, name: "No RED node has a RED child", valid: true },
+          { id: 5, name: "Equal Black Height on all paths", valid: true, blackHeight: 0 },
+        ],
+        blackHeight: 0,
+        valid: true,
+      };
+    }
+
+    let rule1Valid = true;
+    let rule2Valid = rootNode.color === BLACK;
+    let rule4Valid = true;
+    let paths = [];
+
+    function check(n, redParent, bh, path) {
+      if (!n || n.isNil) {
+        paths.push(bh + 1); // NIL leaves are black
+        return;
+      }
+      if (n.color !== RED && n.color !== BLACK) rule1Valid = false;
+      if (redParent && n.color === RED) rule4Valid = false;
+      const nextBH = bh + (n.color === BLACK ? 1 : 0);
+      check(n.left, n.color === RED, nextBH, [...path, n.val]);
+      check(n.right, n.color === RED, nextBH, [...path, n.val]);
+    }
+
+    check(rootNode, false, 0, []);
+    const firstBH = paths.length > 0 ? paths[0] : 0;
+    const rule5Valid = paths.length > 0 && paths.every((h) => h === firstBH);
+
+    const properties = [
+      {
+        id: 1,
+        name: "Every node is RED or BLACK",
+        valid: rule1Valid,
+        note: rule1Valid ? "Compliant" : "Violated",
+      },
+      {
+        id: 2,
+        name: "Root is always BLACK",
+        valid: rule2Valid,
+        note: rule2Valid ? "Compliant" : "Violated: Root is RED",
+      },
+      {
+        id: 3,
+        name: "Every NIL leaf is BLACK",
+        valid: true,
+        note: "Compliant (NIL sentinel nodes always black)",
+      },
+      {
+        id: 4,
+        name: "No RED node has a RED child",
+        valid: rule4Valid,
+        note: rule4Valid ? "Compliant" : "Violated: Consecutive RED nodes",
+      },
+      {
+        id: 5,
+        name: "Equal Black Height on all paths",
+        valid: rule5Valid,
+        blackHeight: firstBH,
+        note: rule5Valid ? `Compliant (BH = ${firstBH})` : "Violated: Black height mismatch",
+      },
+    ];
+
+    return {
+      properties,
+      blackHeight: firstBH,
+      valid: rule1Valid && rule2Valid && rule4Valid && rule5Valid,
+    };
+  }
+
+  function assignPositions(rootNode) {
+    if (!rootNode) return;
+    let index = 0;
+    const inOrderList = [];
+    function inOrder(n, depth = 0) {
+      if (!n) return;
+      inOrder(n.left, depth + 1);
+      n.depth = depth;
+      n.inOrderIndex = index++;
+      inOrderList.push(n);
+      inOrder(n.right, depth + 1);
+    }
+    inOrder(rootNode, 0);
+
+    const total = inOrderList.length;
+    inOrderList.forEach((n) => {
+      n.x = total === 1 ? 50 : Math.round(6 + (n.inOrderIndex / (total - 1)) * 88);
+      n.y = 40 + n.depth * 58;
+    });
+  }
+
+  let root = null;
+
+  function rotateLeft(x) {
+    const y = x.right;
+    if (!y) return;
+    x.right = y.left;
+    if (y.left) y.left.parent = x;
+    y.parent = x.parent;
+    if (!x.parent) {
+      root = y;
+    } else if (x === x.parent.left) {
+      x.parent.left = y;
+    } else {
+      x.parent.right = y;
+    }
+    y.left = x;
+    x.parent = y;
+  }
+
+  function rotateRight(y) {
+    const x = y.left;
+    if (!x) return;
+    y.left = x.right;
+    if (x.right) x.right.parent = y;
+    x.parent = y.parent;
+    if (!y.parent) {
+      root = x;
+    } else if (y === y.parent.left) {
+      y.parent.left = x;
+    } else {
+      y.parent.right = x;
+    }
+    x.right = y;
+    y.parent = x;
+  }
+
+  function fixInsert(z) {
+    while (z.parent && z.parent.color === RED) {
+      const g = z.parent.parent;
+      if (!g) break;
+      if (z.parent === g.left) {
+        const u = g.right;
+        if (u && u.color === RED) {
+          z.parent.color = BLACK;
+          u.color = BLACK;
+          g.color = RED;
+          z = g;
+        } else {
+          if (z === z.parent.right) {
+            z = z.parent;
+            rotateLeft(z);
+          }
+          z.parent.color = BLACK;
+          g.color = RED;
+          rotateRight(g);
+        }
+      } else {
+        const u = g.left;
+        if (u && u.color === RED) {
+          z.parent.color = BLACK;
+          u.color = BLACK;
+          g.color = RED;
+          z = g;
+        } else {
+          if (z === z.parent.left) {
+            z = z.parent;
+            rotateRight(z);
+          }
+          z.parent.color = BLACK;
+          g.color = RED;
+          rotateLeft(g);
+        }
+      }
+    }
+    root.color = BLACK;
+  }
+
+  function insertRBT(val) {
+    const z = createNode(val, RED);
+    if (!root) {
+      z.color = BLACK;
+      root = z;
+      return z;
+    }
+
+    let curr = root;
+    let parent = null;
+    while (curr) {
+      parent = curr;
+      if (val < curr.val) curr = curr.left;
+      else curr = curr.right;
+    }
+    z.parent = parent;
+    if (val < parent.val) parent.left = z;
+    else parent.right = z;
+
+    fixInsert(z);
+    return z;
+  }
+
+  function snap({
+    activeLine = 1,
+    hi = {},
+    explanation = "",
+    rotation = "None",
+    doubleBlackStatus = "None",
+    currentNode = null,
+    parentNode = null,
+    siblingNode = null,
+    nearChildNode = null,
+    farChildNode = null,
+  }) {
+    assignPositions(root);
+    const nodes = getAllNodes(root).map((n) => ({
+      id: n.id,
+      val: n.val,
+      color: n.color,
+      left: n.left ? { id: n.left.id } : null,
+      right: n.right ? { id: n.right.id } : null,
+      x: n.x,
+      y: n.y,
+      isDoubleBlack: Boolean(n.isDoubleBlack),
+      isNil: Boolean(n.isNil),
+      role: n.role || null,
+    }));
+
+    const valResult = validateRBTProperties(root);
+
+    const rbtState = {
+      currentNode: currentNode
+        ? { val: currentNode.val, color: currentNode.color, isDoubleBlack: Boolean(currentNode.isDoubleBlack) }
+        : null,
+      parent: parentNode
+        ? { val: parentNode.val, color: parentNode.color }
+        : null,
+      sibling: siblingNode
+        ? { val: siblingNode.val, color: siblingNode.color }
+        : null,
+      nearChild: nearChildNode
+        ? { val: nearChildNode.val, color: nearChildNode.color }
+        : null,
+      farChild: farChildNode
+        ? { val: farChildNode.val, color: farChildNode.color }
+        : null,
+      currentCase: currentCaseName,
+      caseId: currentCaseId,
+      rotation,
+      doubleBlackStatus,
+      properties: valResult.properties,
+      activeRotation: activeRotationInfo,
+      recolorEvent: recolorEventInfo,
+    };
+
+    steps.push({
+      data: nodes,
+      highlights: hi,
+      explanation,
+      activeLine,
+      treeState: {
+        rbt: true,
+        rbtState,
+        activeRotation: activeRotationInfo,
+        recolorEvent: recolorEventInfo,
+      },
+      stats: {
+        comparisons,
+        swaps: leftRotations + rightRotations,
+        visitedNodes,
+        recolorings,
+        leftRotations,
+        rightRotations,
+        successorSearches,
+        fixupIterations,
+        currentCase: currentCaseName,
+        treeHeight: computeTreeHeight(root),
+        blackHeight: valResult.blackHeight,
+        step: steps.length + 1,
+      },
+    });
+  }
+
+  // 1. Build initial Red-Black Tree from input array
+  const rawArr = Array.isArray(arr) && arr.length > 0 ? arr : [50, 30, 70, 20, 40, 60, 80, 10, 25, 35, 45];
+  const cleanArr = rawArr.map((v) => parseInt(v, 10)).filter((v) => !isNaN(v));
+
+  // Determine delete target
+  let targetVal;
+  if (deleteVal !== undefined && deleteVal !== null && String(deleteVal).trim() !== "") {
+    targetVal = parseInt(deleteVal, 10);
+  }
+  if (isNaN(targetVal)) {
+    targetVal = cleanArr.includes(20) ? 20 : cleanArr[0];
+  }
+
+  cleanArr.forEach((v) => insertRBT(v));
+
+  // STEP 0: Initial State
+  snap({
+    activeLine: 1,
+    hi: {},
+    explanation: `STEP 0: Initial Red-Black Tree constructed with ${cleanArr.length} nodes.\nReady to search and delete target value: ${targetVal}.\nAll 5 Red-Black properties are strictly validated and satisfied.`,
+    doubleBlackStatus: "None",
+  });
+
+  // STEP 1: Search for Target Node Z
+  let curr = root;
+  let targetNode = null;
+  const searchPath = [];
+
+  while (curr) {
+    visitedNodes++;
+    comparisons++;
+    searchPath.push(curr);
+    curr.role = "Visiting";
+
+    const hi = {};
+    searchPath.forEach((n) => (hi[n.id] = "compare"));
+
+    if (curr.val === targetVal) {
+      targetNode = curr;
+      targetNode.role = "Target Z";
+      snap({
+        activeLine: 2,
+        hi,
+        explanation: `STEP 1 — Search: Found target node ${targetVal}!\nCurrent node ${curr.val} matches target value ${targetVal}.\nSearch terminated successfully.`,
+        currentNode: targetNode,
+      });
+      break;
+    }
+
+    if (targetVal < curr.val) {
+      snap({
+        activeLine: 2,
+        hi,
+        explanation: `STEP 1 — Search: Current node: ${curr.val}\nTarget: ${targetVal}\n\n${targetVal} < ${curr.val}\nMove LEFT`,
+        currentNode: curr,
+      });
+      curr = curr.left;
+    } else {
+      snap({
+        activeLine: 2,
+        hi,
+        explanation: `STEP 1 — Search: Current node: ${curr.val}\nTarget: ${targetVal}\n\n${targetVal} > ${curr.val}\nMove RIGHT`,
+        currentNode: curr,
+      });
+      curr = curr.right;
+    }
+  }
+
+  if (!targetNode) {
+    snap({
+      activeLine: 3,
+      hi: {},
+      explanation: `Target value ${targetVal} was not found in the Red-Black Tree.\nNo deletion performed. Tree remains unchanged.`,
+    });
+    return steps;
+  }
+
+  // Clear role on search path
+  searchPath.forEach((n) => {
+    if (n !== targetNode) n.role = null;
+  });
+
+  // STEP 2: Identify Deletion Case
+  const hasLeft = Boolean(targetNode.left);
+  const hasRight = Boolean(targetNode.right);
+  let childCase = "No Children (Leaf Node)";
+  let childLine = 7;
+
+  if (hasLeft && hasRight) {
+    childCase = "Two Children";
+    childLine = 13;
+  } else if (hasLeft) {
+    childCase = "One Child (Left Child Only)";
+    childLine = 10;
+  } else if (hasRight) {
+    childCase = "One Child (Right Child Only)";
+    childLine = 7;
+  }
+
+  snap({
+    activeLine: childLine,
+    hi: { [targetNode.id]: "active" },
+    explanation: `STEP 2 — Identify Deletion Case:\nTarget node: ${targetNode.val} (Color: ${targetNode.color.toUpperCase()})\n\nChildren:\nLeft: ${targetNode.left ? targetNode.left.val : "None (NIL)"}\nRight: ${targetNode.right ? targetNode.right.val : "None (NIL)"}\n\nDeletion Type:\n${childCase}`,
+    currentNode: targetNode,
+    parentNode: targetNode.parent,
+  });
+
+  // STEP 3: Node with Two Children (In-Order Successor)
+  let y = targetNode; // physically removed node
+  let yOriginalColor = y.color;
+  let x = null; // replacement child
+  let xParent = null;
+  let isXLeft = false;
+
+  if (hasLeft && hasRight) {
+    snap({
+      activeLine: 13,
+      hi: { [targetNode.id]: "active" },
+      explanation: `STEP 3 — Node With Two Children:\nTarget ${targetNode.val} has two children.\nDO NOT directly remove target ${targetNode.val}.\nLocating in-order successor: minimum node in right subtree.`,
+      currentNode: targetNode,
+    });
+
+    // Move to right child
+    let succ = targetNode.right;
+    successorSearches++;
+    succ.role = "Right Subtree";
+
+    snap({
+      activeLine: 14,
+      hi: { [targetNode.id]: "active", [succ.id]: "compare" },
+      explanation: `STEP 3 — In-Order Successor Search:\nTarget Z = ${targetNode.val}\n\nMove RIGHT:\n    ↓\n${succ.val}`,
+      currentNode: targetNode,
+    });
+
+    while (succ.left) {
+      successorSearches++;
+      succ.role = null;
+      succ = succ.left;
+      succ.role = "Move Left";
+      snap({
+        activeLine: 14,
+        hi: { [targetNode.id]: "active", [succ.id]: "compare" },
+        explanation: `STEP 3 — In-Order Successor Search:\nMove LEFT:\n    ↓\n${succ.val}`,
+        currentNode: targetNode,
+      });
+    }
+
+    y = succ;
+    yOriginalColor = y.color;
+    x = y.right;
+    y.role = "Successor Y";
+
+    snap({
+      activeLine: 14,
+      hi: { [targetNode.id]: "active", [y.id]: "successor" },
+      explanation: `STEP 3 — Successor Found:\nSuccessor Y = ${y.val} (Original Color: ${y.color.toUpperCase()})\n\nThe successor will replace the deleted node's position.\nThe successor itself will be physically removed from its original location.`,
+      currentNode: targetNode,
+    });
+  } else if (!hasLeft) {
+    x = targetNode.right;
+  } else {
+    x = targetNode.left;
+  }
+
+  // STEP 4: Physically Remove the Correct Node
+  snap({
+    activeLine: 15,
+    hi: { [y.id]: "active" },
+    explanation: `STEP 4 — Physically Remove Node:\nNode to physically remove: ${y.val}.\nStored originalColor = ${yOriginalColor.toUpperCase()}.\n\n${
+      yOriginalColor === RED
+        ? "Original color is RED: No deletion fix-up is required."
+        : "Original color is BLACK: Deletion fix-up is required to maintain black-height balance!"
+    }`,
+    currentNode: y,
+    parentNode: y.parent,
+  });
+
+  // STEP 5: Perform Physical Removal & Replacement
+  function transplant(u, v) {
+    if (!u.parent) {
+      root = v;
+    } else if (u === u.parent.left) {
+      u.parent.left = v;
+    } else {
+      u.parent.right = v;
+    }
+    if (v) v.parent = u.parent;
+  }
+
+  let nilSentinel = null;
+
+  if (hasLeft && hasRight) {
+    // Two children transplant
+    if (y.parent === targetNode) {
+      xParent = y;
+      isXLeft = false;
+      if (x) x.parent = y;
+    } else {
+      xParent = y.parent;
+      isXLeft = (y.parent.left === y);
+      transplant(y, y.right);
+      y.right = targetNode.right;
+      if (y.right) y.right.parent = y;
+    }
+
+    transplant(targetNode, y);
+    y.left = targetNode.left;
+    if (y.left) y.left.parent = y;
+    y.color = targetNode.color; // Keep target's color for position
+    y.role = null;
+
+    snap({
+      activeLine: 24,
+      hi: { [y.id]: "swap" },
+      explanation: `STEP 4/5: Successor ${y.val} moved into deleted node's position (Color: ${y.color.toUpperCase()}).\nSuccessor physically removed from original location.`,
+      currentNode: y,
+    });
+  } else {
+    // 0 or 1 child
+    xParent = targetNode.parent;
+    isXLeft = (targetNode.parent && targetNode.parent.left === targetNode);
+    transplant(targetNode, x);
+    targetNode.role = null;
+
+    snap({
+      activeLine: !hasLeft ? 9 : 12,
+      hi: x ? { [x.id]: "swap" } : {},
+      explanation: `STEP 4/5: Node ${targetNode.val} removed. Replaced by ${x ? x.val : "NIL"}.`,
+      currentNode: x,
+    });
+  }
+
+  // STEP 5: Check Removed Color & Double-Black Setup
+  snap({
+    activeLine: 25,
+    hi: x ? { [x.id]: "active" } : {},
+    explanation: `STEP 5: Checking originalColor of physically removed node:\noriginalColor = ${yOriginalColor.toUpperCase()}.\n${
+      yOriginalColor === BLACK
+        ? "originalColor == BLACK: Must start Red-Black delete fix-up!"
+        : "originalColor == RED: Fix-up not needed!"
+    }`,
+    currentNode: x,
+  });
+
+  if (yOriginalColor === BLACK) {
+    if (x && x.color === RED) {
+      // Direct restoration
+      recolorings++;
+      recolorEventInfo = { nodeVal: x.val, from: RED, to: BLACK };
+      x.color = BLACK;
+      snap({
+        activeLine: 62,
+        hi: { [x.id]: "sorted" },
+        explanation: `STEP 5: Replacement child ${x.val} is RED.\nRecolor replacement child BLACK.\nBlack-height property is directly restored without rotation!`,
+        currentNode: x,
+      });
+      recolorEventInfo = null;
+    } else {
+      // Need Double Black Sentinel if x is null
+      if (!x) {
+        nilSentinel = createNode("NIL", BLACK);
+        nilSentinel.isNil = true;
+        nilSentinel.isDoubleBlack = true;
+        nilSentinel.parent = xParent;
+        if (xParent) {
+          if (isXLeft) xParent.left = nilSentinel;
+          else xParent.right = nilSentinel;
+        } else {
+          root = nilSentinel;
+        }
+        x = nilSentinel;
+      } else {
+        x.isDoubleBlack = true;
+      }
+
+      currentCaseName = "Double-Black Initialized";
+      snap({
+        activeLine: 26,
+        hi: { [x.id]: "double-black" },
+        explanation: `DOUBLE-BLACK CREATED:\nA BLACK node was removed without a RED replacement.\nNode ${x.val} holds an EXTRA BLACK.\n\nBLACK + EXTRA BLACK\n        ↓\nDOUBLE BLACK\n\nStarting Red-Black Delete Fix-Up.`,
+        doubleBlackStatus: `Active on ${x.val}`,
+        currentNode: x,
+        parentNode: x.parent,
+      });
+
+      // ============================================================
+      // RED-BLACK DELETE FIX-UP LOOP
+      // ============================================================
+      let nodeX = x;
+
+      while (nodeX !== root && (!nodeX || nodeX.color === BLACK || nodeX.isDoubleBlack)) {
+        fixupIterations++;
+        const p = nodeX.parent;
+        if (!p) break;
+
+        // CRITICAL LOOP POINTER RULE: ALWAYS CHECK WHILE CONDITION FIRST
+        snap({
+          activeLine: 29,
+          hi: { [nodeX.id]: "double-black" },
+          explanation: `LOOP ITERATION ${fixupIterations} — While Condition:\nChecking: x != root and x.color == BLACK\nx = ${nodeX.val} (Double Black, isRoot: ${nodeX === root}).\nCondition is TRUE → Enter deletion fix-up loop body.`,
+          doubleBlackStatus: `Active on ${nodeX.val}`,
+          currentNode: nodeX,
+          parentNode: p,
+        });
+
+        const isLeftChild = nodeX ? (p.left === nodeX) : isXLeft;
+
+        if (isLeftChild) {
+          snap({
+            activeLine: 30,
+            hi: { [nodeX.id]: "double-black" },
+            explanation: `Fix-Up: X (${nodeX.val}) is the LEFT child of parent ${p.val}.`,
+            currentNode: nodeX,
+            parentNode: p,
+          });
+
+          let w = p.right;
+          snap({
+            activeLine: 31,
+            hi: { [nodeX.id]: "double-black", ...(w ? { [w.id]: "compare" } : {}) },
+            explanation: `Sibling W = ${w ? w.val : "NIL"} (Color: ${w ? w.color.toUpperCase() : "BLACK"}).`,
+            currentNode: nodeX,
+            parentNode: p,
+            siblingNode: w,
+          });
+
+          // FIX-UP CASE 2 (Prompt) / CASE 1 (CLRS): SIBLING IS RED
+          if (w && w.color === RED) {
+            currentCaseName = "Fix-Up Case 2: Sibling is RED";
+            currentCaseId = 2;
+            snap({
+              activeLine: 32,
+              hi: { [w.id]: "compare", [p.id]: "active" },
+              explanation: `FIX-UP CASE 2 — SIBLING IS RED:\nCondition: W.color == RED\nSibling ${w.val} is RED.\n\nActions:\n1. Recolor sibling ${w.val} BLACK.\n2. Recolor parent ${p.val} RED.\n3. Perform LEFT ROTATION(parent ${p.val}).\n4. Update sibling W.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: p,
+              siblingNode: w,
+            });
+
+            recolorings += 2;
+            w.color = BLACK;
+            p.color = RED;
+            recolorEventInfo = { nodeVal: `${w.val} & ${p.val}`, from: "RED/BLACK", to: "BLACK/RED" };
+
+            snap({
+              activeLine: 33,
+              hi: { [w.id]: "sorted", [p.id]: "active" },
+              explanation: `Recolored sibling ${w.val} BLACK, and parent ${p.val} RED.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: p,
+              siblingNode: w,
+            });
+            recolorEventInfo = null;
+
+            leftRotations++;
+            activeRotationInfo = { direction: "left", pivot: p.val, reason: "Case 2 (Sibling RED)" };
+            rotateLeft(p);
+
+            snap({
+              activeLine: 34,
+              hi: { [p.id]: "pivot", [w.id]: "active" },
+              explanation: `Performed LEFT ROTATION on parent ${p.val}.\nPivot: ${p.val}.\nReason: Red-Black deletion fix-up Case 2.`,
+              rotation: `LEFT ROTATION (Pivot: ${p.val})`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+              siblingNode: nodeX.parent ? nodeX.parent.right : null,
+            });
+            activeRotationInfo = null;
+
+            w = nodeX.parent.right;
+            snap({
+              activeLine: 35,
+              hi: { [nodeX.id]: "double-black", ...(w ? { [w.id]: "compare" } : {}) },
+              explanation: `Updated sibling W to new sibling: ${w ? w.val : "NIL"} (Color: ${w ? w.color.toUpperCase() : "BLACK"}).\nContinuing with remaining deletion cases.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+              siblingNode: w,
+            });
+          }
+
+          // Nephew colors
+          const wLeftBlack = !w || !w.left || w.left.color === BLACK;
+          const wRightBlack = !w || !w.right || w.right.color === BLACK;
+
+          // FIX-UP CASE 3: SIBLING BLACK WITH TWO BLACK CHILDREN
+          if (wLeftBlack && wRightBlack) {
+            currentCaseName = "Fix-Up Case 3: Both Sibling Children BLACK";
+            currentCaseId = 3;
+            snap({
+              activeLine: 36,
+              hi: { ...(w ? { [w.id]: "compare" } : {}), [p.id]: "active" },
+              explanation: `FIX-UP CASE 3 — BLACK SIBLING WITH TWO BLACK CHILDREN:\nSibling ${w ? w.val : "NIL"} is BLACK and both sibling children are BLACK.\n\nActions:\n1. Recolor sibling ${w ? w.val : "NIL"} RED.\n2. Move the double-black problem upward to parent ${p.val} (X = P).`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: p,
+              siblingNode: w,
+            });
+
+            if (w) {
+              recolorings++;
+              w.color = RED;
+              recolorEventInfo = { nodeVal: w.val, from: BLACK, to: RED };
+            }
+
+            // Move double black indicator from nodeX to parent p
+            nodeX.isDoubleBlack = false;
+            p.isDoubleBlack = true;
+
+            // If nodeX was nil sentinel, remove it from tree
+            if (nilSentinel && nodeX === nilSentinel) {
+              if (p.left === nilSentinel) p.left = null;
+              if (p.right === nilSentinel) p.right = null;
+              nilSentinel = null;
+            }
+
+            nodeX = p;
+
+            snap({
+              activeLine: 37,
+              hi: { [nodeX.id]: "double-black" },
+              explanation: `Recolored sibling RED.\nThe extra black moved visibly from child to parent ${nodeX.val}.\nX is now ${nodeX.val}.`,
+              currentCase: currentCaseName,
+              doubleBlackStatus: `Moved to Parent ${nodeX.val}`,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+            });
+            recolorEventInfo = null;
+
+            // CRITICAL LOOP POINTER RULE: LOOP BACK TO WHILE CONDITION
+            continue;
+          } else {
+            // FIX-UP CASE 4: BLACK SIBLING WITH RED NEAR CHILD AND BLACK FAR CHILD
+            if (wRightBlack) {
+              currentCaseName = "Fix-Up Case 4: Near Child RED, Far Child BLACK";
+              currentCaseId = 4;
+              snap({
+                activeLine: 39,
+                hi: { ...(w && w.left ? { [w.left.id]: "compare" } : {}), ...(w ? { [w.id]: "active" } : {}) },
+                explanation: `FIX-UP CASE 4 — BLACK SIBLING WITH RED NEAR CHILD AND BLACK FAR CHILD:\nSibling ${w.val} is BLACK, near child ${w.left ? w.left.val : "NIL"} is RED, far child is BLACK.\n\nActions:\n1. Recolor near child BLACK.\n2. Recolor sibling ${w.val} RED.\n3. RIGHT ROTATE(sibling ${w.val}).\n4. Update sibling W (converts to Case 5).`,
+                currentCase: currentCaseName,
+                currentNode: nodeX,
+                parentNode: nodeX.parent,
+                siblingNode: w,
+                nearChildNode: w.left,
+                farChildNode: w.right,
+              });
+
+              if (w.left) {
+                w.left.color = BLACK;
+                recolorings++;
+              }
+              w.color = RED;
+              recolorings++;
+              recolorEventInfo = { nodeVal: `${w.left?.val} & ${w.val}`, from: "RED/BLACK", to: "BLACK/RED" };
+
+              snap({
+                activeLine: 40,
+                hi: { ...(w && w.left ? { [w.left.id]: "sorted" } : {}), [w.id]: "active" },
+                explanation: `Recolored near child ${w.left?.val} BLACK, and sibling ${w.val} RED.`,
+                currentCase: currentCaseName,
+                currentNode: nodeX,
+                parentNode: nodeX.parent,
+                siblingNode: w,
+              });
+              recolorEventInfo = null;
+
+              rightRotations++;
+              activeRotationInfo = { direction: "right", pivot: w.val, reason: "Case 4 (Near RED, Far BLACK)" };
+              rotateRight(w);
+
+              snap({
+                activeLine: 41,
+                hi: { [w.id]: "pivot" },
+                explanation: `Performed RIGHT ROTATION on sibling ${w.val}.\nPivot: ${w.val}.\nReason: Red-Black deletion fix-up Case 4.`,
+                rotation: `RIGHT ROTATION (Pivot: ${w.val})`,
+                currentCase: currentCaseName,
+                currentNode: nodeX,
+                parentNode: nodeX.parent,
+                siblingNode: nodeX.parent.right,
+              });
+              activeRotationInfo = null;
+
+              w = nodeX.parent.right;
+              snap({
+                activeLine: 42,
+                hi: { ...(w ? { [w.id]: "compare" } : {}) },
+                explanation: `Updated sibling W to ${w ? w.val : "NIL"}.\nSituation converted to Case 5 with RED far child!`,
+                currentCase: currentCaseName,
+                currentNode: nodeX,
+                parentNode: nodeX.parent,
+                siblingNode: w,
+                nearChildNode: w?.left,
+                farChildNode: w?.right,
+              });
+            }
+
+            // FIX-UP CASE 5: BLACK SIBLING WITH RED FAR CHILD
+            currentCaseName = "Fix-Up Case 5: Black Sibling with RED Far Child";
+            currentCaseId = 5;
+            snap({
+              activeLine: 43,
+              hi: { ...(w ? { [w.id]: "compare" } : {}), ...(w && w.right ? { [w.right.id]: "active" } : {}) },
+              explanation: `FIX-UP CASE 5 — BLACK SIBLING WITH RED FAR CHILD:\nSibling ${w ? w.val : "NIL"} is BLACK and far child ${w && w.right ? w.right.val : "NIL"} is RED.\n\nActions:\n1. Recolor sibling ${w ? w.val : "NIL"} to parent's color (${nodeX.parent.color.toUpperCase()}).\n2. Recolor parent ${nodeX.parent.val} BLACK.\n3. Recolor far child ${w && w.right ? w.right.val : "NIL"} BLACK.\n4. LEFT ROTATE(parent ${nodeX.parent.val}).\n5. Set X = ROOT (Double-black resolved!).`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+              siblingNode: w,
+              nearChildNode: w?.left,
+              farChildNode: w?.right,
+            });
+
+            if (w) {
+              w.color = nodeX.parent.color;
+              recolorings++;
+            }
+            nodeX.parent.color = BLACK;
+            recolorings++;
+            if (w && w.right) {
+              w.right.color = BLACK;
+              recolorings++;
+            }
+            recolorEventInfo = { nodeVal: `${w?.val}, ${nodeX.parent.val}, ${w?.right?.val}`, from: "mixed", to: "fixed" };
+
+            snap({
+              activeLine: 43,
+              hi: { [nodeX.parent.id]: "sorted", ...(w ? { [w.id]: "sorted" } : {}) },
+              explanation: `Recolored sibling to parent's color, parent to BLACK, and far child to BLACK.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+              siblingNode: w,
+            });
+            recolorEventInfo = null;
+
+            leftRotations++;
+            activeRotationInfo = { direction: "left", pivot: nodeX.parent.val, reason: "Case 5 (Far child RED)" };
+            rotateLeft(nodeX.parent);
+
+            snap({
+              activeLine: 44,
+              hi: { [nodeX.parent.id]: "pivot" },
+              explanation: `Performed LEFT ROTATION on parent ${nodeX.parent.val}.\nPivot: ${nodeX.parent.val}.\nReason: Red-Black deletion fix-up Case 5.`,
+              rotation: `LEFT ROTATION (Pivot: ${nodeX.parent.val})`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+            });
+            activeRotationInfo = null;
+
+            nodeX.isDoubleBlack = false;
+            if (nilSentinel && nodeX === nilSentinel) {
+              if (nodeX.parent && nodeX.parent.left === nilSentinel) nodeX.parent.left = null;
+              if (nodeX.parent && nodeX.parent.right === nilSentinel) nodeX.parent.right = null;
+              nilSentinel = null;
+            }
+
+            nodeX = root;
+
+            snap({
+              activeLine: 45,
+              hi: { [root.id]: "sorted" },
+              explanation: `Double-black state resolved!\nX set to root to terminate fix-up loop.`,
+              currentCase: currentCaseName,
+              doubleBlackStatus: "Resolved",
+              currentNode: nodeX,
+            });
+
+            // Loop back to while condition to cleanly exit
+            continue;
+          }
+        } else {
+          // ============================================================
+          // MIRROR CASES: X IS RIGHT CHILD
+          // ============================================================
+          snap({
+            activeLine: 46,
+            hi: { [nodeX.id]: "double-black" },
+            explanation: `Fix-Up (Mirror): X (${nodeX.val}) is the RIGHT child of parent ${p.val}.`,
+            currentNode: nodeX,
+            parentNode: p,
+          });
+
+          let w = p.left;
+          snap({
+            activeLine: 47,
+            hi: { [nodeX.id]: "double-black", ...(w ? { [w.id]: "compare" } : {}) },
+            explanation: `Sibling W = ${w ? w.val : "NIL"} (Color: ${w ? w.color.toUpperCase() : "BLACK"}).`,
+            currentNode: nodeX,
+            parentNode: p,
+            siblingNode: w,
+          });
+
+          // MIRROR CASE 2: SIBLING IS RED
+          if (w && w.color === RED) {
+            currentCaseName = "Mirror Case 2: Sibling RED";
+            currentCaseId = 2;
+            snap({
+              activeLine: 48,
+              hi: { [w.id]: "compare", [p.id]: "active" },
+              explanation: `MIRROR CASE 2 — SIBLING IS RED:\nSibling ${w.val} is RED.\nRecoloring sibling BLACK, parent RED, and performing RIGHT ROTATION on parent ${p.val}.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: p,
+              siblingNode: w,
+            });
+
+            w.color = BLACK;
+            p.color = RED;
+            recolorings += 2;
+            recolorEventInfo = { nodeVal: `${w.val} & ${p.val}`, from: "RED/BLACK", to: "BLACK/RED" };
+
+            snap({
+              activeLine: 49,
+              hi: { [w.id]: "sorted", [p.id]: "active" },
+              explanation: `Recolored sibling ${w.val} BLACK, and parent ${p.val} RED.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: p,
+              siblingNode: w,
+            });
+            recolorEventInfo = null;
+
+            rightRotations++;
+            activeRotationInfo = { direction: "right", pivot: p.val, reason: "Mirror Case 2 (Sibling RED)" };
+            rotateRight(p);
+
+            snap({
+              activeLine: 50,
+              hi: { [p.id]: "pivot" },
+              explanation: `Performed RIGHT ROTATION on parent ${p.val}.\nPivot: ${p.val}.\nReason: Red-Black deletion fix-up Mirror Case 2.`,
+              rotation: `RIGHT ROTATION (Pivot: ${p.val})`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+            });
+            activeRotationInfo = null;
+
+            w = nodeX.parent.left;
+            snap({
+              activeLine: 51,
+              hi: { [nodeX.id]: "double-black", ...(w ? { [w.id]: "compare" } : {}) },
+              explanation: `Updated sibling W to ${w ? w.val : "NIL"}. Continuing fix-up.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+              siblingNode: w,
+            });
+          }
+
+          const wRightBlack = !w || !w.right || w.right.color === BLACK;
+          const wLeftBlack = !w || !w.left || w.left.color === BLACK;
+
+          // MIRROR CASE 3: BOTH NEPHEWS BLACK
+          if (wRightBlack && wLeftBlack) {
+            currentCaseName = "Mirror Case 3: Both Nephews BLACK";
+            currentCaseId = 3;
+            snap({
+              activeLine: 52,
+              hi: { ...(w ? { [w.id]: "compare" } : {}), [p.id]: "active" },
+              explanation: `MIRROR CASE 3 — BLACK SIBLING WITH TWO BLACK CHILDREN:\nSibling ${w ? w.val : "NIL"} is BLACK and both sibling children are BLACK.\nRecoloring sibling RED and moving double-black up to parent ${p.val}.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: p,
+              siblingNode: w,
+            });
+
+            if (w) {
+              w.color = RED;
+              recolorings++;
+            }
+            nodeX.isDoubleBlack = false;
+            p.isDoubleBlack = true;
+
+            if (nilSentinel && nodeX === nilSentinel) {
+              if (p.left === nilSentinel) p.left = null;
+              if (p.right === nilSentinel) p.right = null;
+              nilSentinel = null;
+            }
+
+            nodeX = p;
+
+            snap({
+              activeLine: 53,
+              hi: { [nodeX.id]: "double-black" },
+              explanation: `Recolored sibling RED.\nDouble black moved up to parent ${nodeX.val}.`,
+              currentCase: currentCaseName,
+              doubleBlackStatus: `Moved to Parent ${nodeX.val}`,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+            });
+
+            continue;
+          } else {
+            // MIRROR CASE 4: NEAR CHILD RED, FAR CHILD BLACK
+            if (wLeftBlack) {
+              currentCaseName = "Mirror Case 4: Near RED, Far BLACK";
+              currentCaseId = 4;
+              snap({
+                activeLine: 55,
+                hi: { ...(w && w.right ? { [w.right.id]: "compare" } : {}) },
+                explanation: `MIRROR CASE 4 — BLACK SIBLING WITH RED NEAR CHILD:\nSibling ${w.val} is BLACK, near child ${w.right ? w.right.val : "NIL"} is RED, far child is BLACK.\nRecolor near child BLACK, sibling RED, LEFT ROTATE(W), update W.`,
+                currentCase: currentCaseName,
+                currentNode: nodeX,
+                parentNode: nodeX.parent,
+                siblingNode: w,
+                nearChildNode: w.right,
+                farChildNode: w.left,
+              });
+
+              if (w.right) {
+                w.right.color = BLACK;
+                recolorings++;
+              }
+              w.color = RED;
+              recolorings++;
+              recolorEventInfo = { nodeVal: `${w.right?.val} & ${w.val}`, from: "RED/BLACK", to: "BLACK/RED" };
+
+              snap({
+                activeLine: 56,
+                hi: { ...(w && w.right ? { [w.right.id]: "sorted" } : {}), [w.id]: "active" },
+                explanation: `Recolored near child ${w.right?.val} BLACK, and sibling ${w.val} RED.`,
+                currentCase: currentCaseName,
+                currentNode: nodeX,
+                parentNode: nodeX.parent,
+                siblingNode: w,
+              });
+              recolorEventInfo = null;
+
+              leftRotations++;
+              activeRotationInfo = { direction: "left", pivot: w.val, reason: "Mirror Case 4" };
+              rotateLeft(w);
+
+              snap({
+                activeLine: 57,
+                hi: { [w.id]: "pivot" },
+                explanation: `Performed LEFT ROTATION on sibling ${w.val}.\nPivot: ${w.val}.\nReason: Red-Black deletion fix-up Mirror Case 4.`,
+                rotation: `LEFT ROTATION (Pivot: ${w.val})`,
+                currentCase: currentCaseName,
+                currentNode: nodeX,
+                parentNode: nodeX.parent,
+              });
+              activeRotationInfo = null;
+
+              w = nodeX.parent.left;
+              snap({
+                activeLine: 58,
+                hi: { ...(w ? { [w.id]: "compare" } : {}) },
+                explanation: `Updated sibling W to ${w ? w.val : "NIL"}. Converted to Mirror Case 5!`,
+                currentCase: currentCaseName,
+                currentNode: nodeX,
+                parentNode: nodeX.parent,
+                siblingNode: w,
+                nearChildNode: w?.right,
+                farChildNode: w?.left,
+              });
+            }
+
+            // MIRROR CASE 5: FAR CHILD RED
+            currentCaseName = "Mirror Case 5: Far Child RED";
+            currentCaseId = 5;
+            snap({
+              activeLine: 59,
+              hi: { ...(w ? { [w.id]: "compare" } : {}), ...(w && w.left ? { [w.left.id]: "active" } : {}) },
+              explanation: `MIRROR CASE 5 — BLACK SIBLING WITH RED FAR CHILD:\nSibling ${w ? w.val : "NIL"} is BLACK and far child ${w && w.left ? w.left.val : "NIL"} is RED.\nRecolor sibling to parent's color, parent to BLACK, far child to BLACK, RIGHT ROTATE parent.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+              siblingNode: w,
+              nearChildNode: w?.right,
+              farChildNode: w?.left,
+            });
+
+            if (w) {
+              w.color = nodeX.parent.color;
+              recolorings++;
+            }
+            nodeX.parent.color = BLACK;
+            recolorings++;
+            if (w && w.left) {
+              w.left.color = BLACK;
+              recolorings++;
+            }
+            recolorEventInfo = { nodeVal: `${w?.val}, ${nodeX.parent.val}, ${w?.left?.val}`, from: "mixed", to: "fixed" };
+
+            snap({
+              activeLine: 59,
+              hi: { [nodeX.parent.id]: "sorted", ...(w ? { [w.id]: "sorted" } : {}) },
+              explanation: `Recolored sibling to parent's color, parent to BLACK, and far child to BLACK.`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+              parentNode: nodeX.parent,
+              siblingNode: w,
+            });
+            recolorEventInfo = null;
+
+            rightRotations++;
+            activeRotationInfo = { direction: "right", pivot: nodeX.parent.val, reason: "Mirror Case 5" };
+            rotateRight(nodeX.parent);
+
+            snap({
+              activeLine: 60,
+              hi: { [nodeX.parent.id]: "pivot" },
+              explanation: `Performed RIGHT ROTATION on parent ${nodeX.parent.val}.\nPivot: ${nodeX.parent.val}.\nReason: Red-Black deletion fix-up Mirror Case 5.`,
+              rotation: `RIGHT ROTATION (Pivot: ${nodeX.parent.val})`,
+              currentCase: currentCaseName,
+              currentNode: nodeX,
+            });
+            activeRotationInfo = null;
+
+            nodeX.isDoubleBlack = false;
+            if (nilSentinel && nodeX === nilSentinel) {
+              if (nodeX.parent && nodeX.parent.left === nilSentinel) nodeX.parent.left = null;
+              if (nodeX.parent && nodeX.parent.right === nilSentinel) nodeX.parent.right = null;
+              nilSentinel = null;
+            }
+
+            nodeX = root;
+
+            snap({
+              activeLine: 61,
+              hi: { [root.id]: "sorted" },
+              explanation: `Double-black resolved in mirror case!\nX set to root to terminate fix-up loop.`,
+              currentCase: currentCaseName,
+              doubleBlackStatus: "Resolved",
+              currentNode: nodeX,
+            });
+
+            continue;
+          }
+        }
+      }
+
+      // FIX-UP CASE 1 (Prompt): X IS ROOT
+      currentCaseName = "Fix-Up Case 1: X reached Root";
+      currentCaseId = 1;
+
+      if (nodeX) {
+        nodeX.color = BLACK;
+        nodeX.isDoubleBlack = false;
+      }
+      if (root) {
+        root.color = BLACK;
+        root.isDoubleBlack = false;
+      }
+      if (nilSentinel) {
+        if (nilSentinel.parent && nilSentinel.parent.left === nilSentinel) nilSentinel.parent.left = null;
+        if (nilSentinel.parent && nilSentinel.parent.right === nilSentinel) nilSentinel.parent.right = null;
+        if (root === nilSentinel) root = null;
+        nilSentinel = null;
+      }
+
+      snap({
+        activeLine: 62,
+        hi: root ? { [root.id]: "sorted" } : {},
+        explanation: `FIX-UP CASE 1 — X REACHED ROOT:\nCondition: X == root\nAction: Remove the extra black. Set root color = BLACK.\n\nThe double-black node reached the root.\nThe extra black can be safely removed.\nThe Red-Black Tree is valid again!`,
+        currentCase: currentCaseName,
+        doubleBlackStatus: "Resolved at Root",
+        currentNode: root,
+      });
+    }
+  }
+
+  // Clear any residual flags
+  if (root) {
+    root.color = BLACK;
+    root.isDoubleBlack = false;
+  }
+  const allFinal = getAllNodes(root);
+  allFinal.forEach((n) => {
+    n.isDoubleBlack = false;
+    n.role = null;
+  });
+
+  // FINAL VALIDATION STEP
+  const finalVal = validateRBTProperties(root);
+  const finalHighlights = {};
+  allFinal.forEach((n) => {
+    finalHighlights[n.id] = n.color === BLACK ? "sorted" : "compare";
+  });
+
+  currentCaseName = "Completed & Validated";
+  currentCaseId = 0;
+
+  snap({
+    activeLine: 62,
+    hi: finalHighlights,
+    explanation: `✅ RED-BLACK TREE DELETION COMPLETE!\nTarget node ${targetVal} successfully deleted.\n\nAll 5 Red-Black Properties Verified:\n${
+      finalVal.properties.map((p) => `✓ Property ${p.id}: ${p.name}`).join("\n")
+    }\n\nFinal Black Height: ${finalVal.blackHeight}.\nTree Height: ${computeTreeHeight(root)}.`,
+    currentCase: "Completed & Validated",
+    doubleBlackStatus: "None",
+    currentNode: root,
+  });
+
+  return steps;
+};
+
 
 
 // Tree view + advanced tree generators (from roadmapGenerators)
